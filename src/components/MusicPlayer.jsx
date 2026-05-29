@@ -73,8 +73,9 @@ export default function MusicPlayer({ music, isPlaying, onToggle, audioRef }) {
                 onClick={() => setIsMinimized(false)}
                 className="flex items-center gap-2 px-3 py-2 rounded-full border border-white/10"
                 style={{
-                  background: 'rgba(20,6,12,0.85)',
+                  background: 'color-mix(in srgb, var(--color-surface) 90%, transparent)',
                   backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
                   boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
                 }}
               >
@@ -104,8 +105,9 @@ export default function MusicPlayer({ music, isPlaying, onToggle, audioRef }) {
                 className="rounded-2xl border border-white/10 overflow-hidden"
                 style={{
                   width: '220px',
-                  background: 'rgba(12,4,8,0.92)',
+                  background: 'color-mix(in srgb, var(--color-surface) 95%, transparent)',
                   backdropFilter: 'blur(24px)',
+                  WebkitBackdropFilter: 'blur(24px)',
                   boxShadow: '0 24px 64px rgba(0,0,0,0.7)',
                 }}
               >
@@ -113,7 +115,8 @@ export default function MusicPlayer({ music, isPlaying, onToggle, audioRef }) {
                 <div className="flex justify-end gap-1.5 px-3 pt-3">
                   <button
                     onClick={() => setIsMinimized(true)}
-                    className="w-4 h-4 rounded-full bg-white/20 hover:bg-yellow-400 transition-colors flex items-center justify-center"
+                    className="w-4 h-4 rounded-full transition-colors flex items-center justify-center"
+                    style={{ background: 'color-mix(in srgb, var(--color-text) 20%, transparent)' }}
                     aria-label="Minimize"
                   >
                     <svg width="6" height="2" viewBox="0 0 6 2" fill="none">
@@ -156,13 +159,13 @@ export default function MusicPlayer({ music, isPlaying, onToggle, audioRef }) {
                     ref={progressBarRef}
                     onClick={handleSeek}
                     className="relative w-full h-1 rounded-full cursor-pointer"
-                    style={{ background: 'rgba(255,255,255,0.12)' }}
+                    style={{ background: 'color-mix(in srgb, var(--color-text) 15%, transparent)' }}
                   >
                     <div
                       className="absolute left-0 top-0 h-full rounded-full"
                       style={{
                         width: `${progress}%`,
-                        background: 'linear-gradient(to right, #E11D48, #F472B6)',
+                        background: 'var(--color-accent)',
                       }}
                     />
                     {/* Scrubber dot */}
@@ -193,10 +196,10 @@ export default function MusicPlayer({ music, isPlaying, onToggle, audioRef }) {
                   {/* Play / Pause */}
                   <button
                     onClick={onToggle}
-                    className="w-11 h-11 rounded-full flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
+                    className="w-11 h-11 rounded-full flex items-center justify-center transition-transform hover:scale-105 active:scale-95 text-white"
                     style={{
-                      background: 'linear-gradient(135deg, #E11D48, #9D174D)',
-                      boxShadow: '0 4px 20px rgba(225,29,72,0.5)',
+                      backgroundColor: 'var(--color-accent)',
+                      boxShadow: '0 4px 20px color-mix(in srgb, var(--color-accent) 50%, transparent)',
                     }}
                     aria-label={isPlaying ? 'Pause' : 'Play'}
                   >

@@ -111,7 +111,8 @@
     "closingTitle1": "You Are Loved",
     "closingTitle2": "Beyond Words",
     "closingParagraph": "No matter where life takes us, know that somewhere in the universe, there is a garden blooming with every feeling I have ever held for you. You deserve the world. You deserve all the flowers. You deserve everything.",
-    "celebrateBtnText": "celebrate ✨"
+    "celebrateBtnText": "celebrate ✨",
+    "theme": "classic-light"
   },
   {
     "slug": "untuk-lisa",
@@ -218,7 +219,8 @@
     "closingTitle1": "You Are Loved",
     "closingTitle2": "Beyond Words",
     "closingParagraph": "No matter where life takes us, know that somewhere in the universe, there is a garden blooming with every feeling I have ever held for you. You deserve the world. You deserve all the flowers. You deserve everything.",
-    "celebrateBtnText": "celebrate ✨"
+    "celebrateBtnText": "celebrate ✨",
+    "theme": "vintage-burgundy"
   },
   {
     "slug": "for-mey",
@@ -332,6 +334,7 @@
     "celebrateBtnText": "celebrate ✨",
     "secretPhoto": "/photos/1.jpg",
     "secretCaption": "this is just for you — my favourite memory of us.",
-    "createdAt": "2026-05-29"
+    "createdAt": "2026-05-29",
+    "theme": "ocean-breeze"
   }
 ]

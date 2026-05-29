@@ -64,7 +64,7 @@ function LockedCard({ index, onReveal }) {
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       className="glass rounded-2xl p-5 md:p-6 flex flex-col items-center justify-center cursor-pointer select-none min-h-[140px] border border-accent/10"
-      style={{ background: 'rgba(255,255,255,0.02)' }}
+      style={{ background: 'color-mix(in srgb, var(--color-text) 5%, transparent)' }}
       onClick={onReveal}
       whileHover={{ scale: 1.03, borderColor: 'rgba(225,29,72,0.3)' }}
       whileTap={{ scale: 0.97 }}

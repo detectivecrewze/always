@@ -76,6 +76,7 @@ export default function StudioDashboard() {
       galleryTitle1: 'Our Beautiful',
       galleryTitle2: 'Memories',
       music: { title: 'Kita Punya Waktu', artist: 'Banda Neira', file: '/music/track.mp3', cover: '/photos/cover.jpg' },
+      theme: 'classic-light',
       closingLine: 'always yours,',
       closingPreTitle: 'always & forever',
       closingTitle1: 'You Are Loved',

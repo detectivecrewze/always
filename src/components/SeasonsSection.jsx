@@ -105,11 +105,13 @@ export default function SeasonsSection({ seasons, seasonsTitle1, seasonsTitle2, 
                 variants={cardAnim}
                 layout
                 onClick={() => handleCardClick(idx)}
-                className="flex-shrink-0 w-[160px] md:w-auto md:flex-1 cursor-pointer snap-start rounded-[1.25rem] border border-white/10 flex flex-col items-center text-center p-6"
+                className="flex-shrink-0 w-[160px] md:w-auto md:flex-1 cursor-pointer snap-start rounded-[1.25rem] flex flex-col items-center text-center p-6"
                 style={{
                   minHeight: '200px',
-                  backgroundColor: isExpanded ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.03)',
+                  backgroundColor: isExpanded ? 'color-mix(in srgb, var(--color-text) 8%, transparent)' : 'color-mix(in srgb, var(--color-text) 3%, transparent)',
+                  border: '1px solid color-mix(in srgb, var(--color-text) 10%, transparent)',
                   backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
                 }}
                 animate={{
                   opacity: isOtherExpanded ? 0.4 : 1,

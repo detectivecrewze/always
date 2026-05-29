@@ -12,6 +12,7 @@ import SeasonsSection from '@/components/SeasonsSection';
 import MusicPlayer from '@/components/MusicPlayer';
 import Gallery from '@/components/Gallery';
 import ClosingSection from '@/components/ClosingSection';
+import { themes, defaultTheme } from '@/lib/themes';
 
 export default function GiftPage({ data }) {
   const [gateOpen, setGateOpen] = useState(false);
@@ -49,8 +50,20 @@ export default function GiftPage({ data }) {
     }
   }, [isPlaying]);
 
+  const currentThemeId = data.theme || defaultTheme;
+  const t = themes[currentThemeId] || themes[defaultTheme];
+  
+  const themeStyles = {
+    '--color-bg': t.bg,
+    '--color-surface': t.surface,
+    '--color-text': t.text,
+    '--color-text-muted': t.textMuted,
+    '--color-accent': t.accent,
+    '--color-particle': t.particle,
+  };
+
   return (
-    <main className="relative min-h-screen bg-bg overflow-hidden">
+    <main className="relative min-h-screen bg-bg text-text selection:bg-accent/30 font-sans overflow-hidden" style={themeStyles}>
       {/* Audio element — always mounted */}
       <audio ref={audioRef} src={data.music.file} loop preload="auto" />
 

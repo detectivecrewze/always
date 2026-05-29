@@ -27,28 +27,28 @@ export default function IntroSection({
         <div
           className="relative flex flex-col items-center text-center overflow-hidden"
           style={{
-            background: 'linear-gradient(160deg, rgba(42, 20, 12, 0.97) 0%, rgba(30, 12, 6, 0.99) 100%)',
+            backgroundColor: 'var(--color-surface)',
             borderRadius: '2px',
             padding: '3rem 2.5rem 3.5rem',
-            border: '1px solid rgba(200, 140, 80, 0.18)',
-            boxShadow: '0 32px 80px rgba(0,0,0,0.7), inset 0 0 60px rgba(180,80,20,0.04)',
+            border: '1px solid color-mix(in srgb, var(--color-accent) 20%, transparent)',
+            boxShadow: '0 32px 80px rgba(0,0,0,0.5), inset 0 0 60px color-mix(in srgb, var(--color-accent) 5%, transparent)',
           }}
         >
           {/* Subtle corner accent — top left */}
           <div className="absolute top-0 left-0 w-8 h-8 pointer-events-none"
-            style={{ borderTop: '1px solid rgba(200,140,80,0.3)', borderLeft: '1px solid rgba(200,140,80,0.3)' }}
+            style={{ borderTop: '1px solid color-mix(in srgb, var(--color-accent) 30%, transparent)', borderLeft: '1px solid color-mix(in srgb, var(--color-accent) 30%, transparent)' }}
           />
           {/* Subtle corner accent — top right */}
           <div className="absolute top-0 right-0 w-8 h-8 pointer-events-none"
-            style={{ borderTop: '1px solid rgba(200,140,80,0.3)', borderRight: '1px solid rgba(200,140,80,0.3)' }}
+            style={{ borderTop: '1px solid color-mix(in srgb, var(--color-accent) 30%, transparent)', borderRight: '1px solid color-mix(in srgb, var(--color-accent) 30%, transparent)' }}
           />
           {/* Subtle corner accent — bottom left */}
           <div className="absolute bottom-0 left-0 w-8 h-8 pointer-events-none"
-            style={{ borderBottom: '1px solid rgba(200,140,80,0.3)', borderLeft: '1px solid rgba(200,140,80,0.3)' }}
+            style={{ borderBottom: '1px solid color-mix(in srgb, var(--color-accent) 30%, transparent)', borderLeft: '1px solid color-mix(in srgb, var(--color-accent) 30%, transparent)' }}
           />
           {/* Subtle corner accent — bottom right */}
           <div className="absolute bottom-0 right-0 w-8 h-8 pointer-events-none"
-            style={{ borderBottom: '1px solid rgba(200,140,80,0.3)', borderRight: '1px solid rgba(200,140,80,0.3)' }}
+            style={{ borderBottom: '1px solid color-mix(in srgb, var(--color-accent) 30%, transparent)', borderRight: '1px solid color-mix(in srgb, var(--color-accent) 30%, transparent)' }}
           />
 
           {/* Ruled lines — very subtle warm amber, like aged letter paper */}
@@ -59,7 +59,7 @@ export default function IntroSection({
               style={{
                 top: `${90 + i * 38}px`,
                 height: '1px',
-                background: 'rgba(200, 140, 80, 0.07)',
+                background: 'color-mix(in srgb, var(--color-accent) 10%, transparent)',
               }}
             />
           ))}
@@ -67,13 +67,13 @@ export default function IntroSection({
           {/* Left margin line — like a real letter */}
           <div
             className="absolute top-0 bottom-0 pointer-events-none"
-            style={{ left: '48px', width: '1px', background: 'rgba(200, 120, 60, 0.1)' }}
+            style={{ left: '48px', width: '1px', background: 'color-mix(in srgb, var(--color-accent) 15%, transparent)' }}
           />
 
-          {/* Warm candlelight glow at top */}
+          {/* Warm glow at top */}
           <div
             className="absolute top-0 left-1/2 -translate-x-1/2 pointer-events-none"
-            style={{ width: '160px', height: '60px', background: 'radial-gradient(ellipse, rgba(200,100,30,0.12) 0%, transparent 70%)', filter: 'blur(8px)' }}
+            style={{ width: '160px', height: '60px', background: 'radial-gradient(ellipse, color-mix(in srgb, var(--color-accent) 15%, transparent) 0%, transparent 70%)', filter: 'blur(8px)' }}
           />
 
           {/* Icons & Pretitle */}
@@ -87,7 +87,7 @@ export default function IntroSection({
                     animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0.9, 0.4] }}
                     transition={{ duration: 2, delay: i * 0.3, repeat: Infinity, ease: 'easeInOut' }}
                   >
-                    <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" fill="#C9894A"/>
+                    <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" fill="var(--color-accent)"/>
                   </motion.svg>
                 ))}
               </div>
@@ -95,7 +95,7 @@ export default function IntroSection({
             {introPreTitle && (
               <span
                 className="font-serif italic text-sm tracking-widest lowercase"
-                style={{ color: '#C9A07A' }}
+                style={{ color: 'var(--color-text-muted)' }}
               >
                 {introPreTitle}
               </span>
@@ -108,7 +108,7 @@ export default function IntroSection({
               {introHeadline1 && (
                 <span
                   className="block font-serif text-3xl md:text-4xl lg:text-5xl leading-tight"
-                  style={{ color: '#F0DEC8' }}
+                  style={{ color: 'var(--color-text)' }}
                 >
                   {introHeadline1}
                 </span>
@@ -116,7 +116,7 @@ export default function IntroSection({
               {introHeadline2 && (
                 <span
                   className="block font-serif italic text-4xl md:text-5xl lg:text-6xl leading-tight"
-                  style={{ color: '#F472B6' }}
+                  style={{ color: 'var(--color-accent)' }}
                 >
                   {introHeadline2}
                 </span>
@@ -124,7 +124,7 @@ export default function IntroSection({
               {introHeadline3 && (
                 <span
                   className="block font-serif text-3xl md:text-4xl lg:text-5xl leading-tight"
-                  style={{ color: '#F0DEC8' }}
+                  style={{ color: 'var(--color-text)' }}
                 >
                   {introHeadline3}
                 </span>
@@ -134,11 +134,11 @@ export default function IntroSection({
 
           {/* Divider — ornamental */}
           <div className="relative z-10 flex items-center gap-3 mb-8 w-40">
-            <div className="flex-1 h-px" style={{ background: 'rgba(200,140,80,0.25)' }} />
+            <div className="flex-1 h-px" style={{ background: 'color-mix(in srgb, var(--color-accent) 25%, transparent)' }} />
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-              <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" fill="rgba(200,140,80,0.5)"/>
+              <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" fill="color-mix(in srgb, var(--color-accent) 50%, transparent)"/>
             </svg>
-            <div className="flex-1 h-px" style={{ background: 'rgba(200,140,80,0.25)' }} />
+            <div className="flex-1 h-px" style={{ background: 'color-mix(in srgb, var(--color-accent) 25%, transparent)' }} />
           </div>
 
           {/* Paragraphs */}
@@ -147,7 +147,7 @@ export default function IntroSection({
               <p
                 key={idx}
                 className="font-sans text-sm md:text-base text-center leading-[1.95]"
-                style={{ color: '#C4A882', fontWeight: 300, letterSpacing: '0.01em' }}
+                style={{ color: 'var(--color-text)', fontWeight: 300, letterSpacing: '0.01em' }}
               >
                 {p}
               </p>
@@ -158,7 +158,7 @@ export default function IntroSection({
           {introSignOff && (
             <p
               className="relative z-10 font-serif italic text-lg md:text-xl text-center mt-10"
-              style={{ color: '#F472B6' }}
+              style={{ color: 'var(--color-accent)' }}
             >
               {introSignOff}
             </p>

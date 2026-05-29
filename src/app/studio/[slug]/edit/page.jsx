@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, use } from 'react';
 import { useRouter } from 'next/navigation';
 
-const TABS = ['Opening', 'Hero', 'Letter', 'Reasons', 'Seasons', 'Gallery', 'Music', 'Closing'];
+const TABS = ['Theme', 'Opening', 'Hero', 'Letter', 'Reasons', 'Seasons', 'Gallery', 'Music', 'Closing'];
 
 // ── Styles ────────────────────────────────────────────────────────
 const S = {
@@ -49,6 +49,56 @@ const S = {
   row: { display: 'flex', gap: '0.75rem', alignItems: 'flex-start' },
   cardWrap: { background: '#0f0f0f', border: '1px solid #1a1a1a', borderRadius: '10px', padding: '1rem', marginBottom: '0.75rem' },
 };
+
+// ── Theme Tab ───────────────────────────────────────────────────────
+function TabTheme({ data, set }) {
+  const currentTheme = data.theme || 'classic-light';
+  
+  // We redefine the palettes locally for the UI preview
+  const palettes = {
+    'vintage-burgundy': { name: 'Vintage Burgundy', bg: '#2D141E', accent: '#E2859B' },
+    'classic-light': { name: 'Classic Light', bg: '#FAF7F2', accent: '#C9A882' },
+    'midnight-rose': { name: 'Midnight Rose', bg: '#050505', accent: '#E11D48' },
+    'ocean-breeze': { name: 'Ocean Breeze', bg: '#F0F7FA', accent: '#0D9488' },
+    'blush-pink': { name: 'Blush Pink', bg: '#FFF1F2', accent: '#E11D48' },
+  };
+
+  return (<>
+    <div style={S.sectionTitle}>Visual Theme</div>
+    <div style={S.sectionDesc}>Choose the color palette for this gift.</div>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginTop: '1rem' }}>
+      {Object.entries(palettes).map(([id, info]) => {
+        const isActive = currentTheme === id;
+        return (
+          <button
+            key={id}
+            onClick={() => set('theme', id)}
+            style={{
+              background: '#111',
+              border: isActive ? `2px solid ${info.accent}` : '1px solid #262626',
+              borderRadius: '8px',
+              padding: '1rem',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '0.75rem',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}
+          >
+            <div style={{ 
+              width: '40px', height: '40px', borderRadius: '50%', background: info.bg,
+              border: `3px solid ${info.accent}`, boxShadow: '0 4px 12px rgba(0,0,0,0.2)' 
+            }} />
+            <span style={{ color: isActive ? '#fff' : '#888', fontSize: '0.75rem', fontWeight: isActive ? 600 : 400 }}>
+              {info.name}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  </>);
+}
 
 // ── Field Components ──────────────────────────────────────────────
 function Field({ label, value, onChange, multiline, placeholder }) {
@@ -266,7 +316,7 @@ function TabClosing({ data, set, slug }) {
   </>);
 }
 
-const TAB_COMPONENTS = [TabOpening, TabHero, TabLetter, TabReasons, TabSeasons, TabGallery, TabMusic, TabClosing];
+const TAB_COMPONENTS = [TabTheme, TabOpening, TabHero, TabLetter, TabReasons, TabSeasons, TabGallery, TabMusic, TabClosing];
 
 // ── Main Editor ───────────────────────────────────────────────────
 export default function StudioEditor({ params: paramsPromise }) {
