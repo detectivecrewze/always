@@ -1,0 +1,337 @@
+[
+  {
+    "slug": "untuk-nadia",
+    "recipient": "Nadia",
+    "sender": "Aldo",
+    "gateSubtitle": "something made just for you",
+    "heroPreTitle": "a love letter in bloom",
+    "heroLine1": "For You,",
+    "heroLine2": "My Everything",
+    "heroSubtitle": "Every petal holds a whisper of how much you mean to me.",
+    "introIcons": true,
+    "introPreTitle": "from my heart",
+    "introHeadline1": "You are my",
+    "introHeadline2": "wildest dream",
+    "introHeadline3": "come true.",
+    "introText": [
+      "In a world full of ordinary moments, you are the extraordinary one. The way you laugh, the way you care, the way you simply exist — it fills every corner of my world with something I never knew I needed.",
+      "These flowers are not enough. No words ever could be. But they carry every unspoken feeling I hold for you, pressed between their petals like tiny love letters waiting to be found."
+    ],
+    "introSignOff": "– Always yours 🌹",
+    "music": {
+      "title": "Kita Punya Waktu",
+      "artist": "Banda Neira",
+      "file": "/music/track.mp3",
+      "cover": "/photos/cover.jpg"
+    },
+    "reasons": [
+      {
+        "icon": "✦",
+        "title": "Your Laugh",
+        "desc": "The sound that makes every room feel like home."
+      },
+      {
+        "icon": "✦",
+        "title": "Your Patience",
+        "desc": "How you wait for me even when I take too long."
+      },
+      {
+        "icon": "✦",
+        "title": "Your Kindness",
+        "desc": "The way you care without ever being asked."
+      },
+      {
+        "icon": "✦",
+        "title": "Your Courage",
+        "desc": "How you face the world even on the hardest days."
+      },
+      {
+        "icon": "✦",
+        "title": "Your Warmth",
+        "desc": "The feeling of being next to you on a quiet night."
+      },
+      {
+        "icon": "✦",
+        "title": "Your Presence",
+        "desc": "Just being with you is more than enough."
+      }
+    ],
+    "seasons": [
+      {
+        "name": "Spring",
+        "teaser": "where it all began",
+        "message": "Like the first bloom after a long winter, you arrived when I least expected — and everything grew."
+      },
+      {
+        "name": "Summer",
+        "teaser": "when love was loudest",
+        "message": "In the fullness of us, I felt the sun from the inside. No distance, no doubt — just warmth."
+      },
+      {
+        "name": "Autumn",
+        "teaser": "beautiful even as things changed",
+        "message": "Loving you through change taught me that some things don't need to stay the same to stay beautiful."
+      },
+      {
+        "name": "Winter",
+        "teaser": "I stayed, and I'd stay again",
+        "message": "In the quiet and the cold, I chose you still. I will always choose you still."
+      }
+    ],
+    "photos": [
+      {
+        "url": "https://images.unsplash.com/photo-1518133835878-5a93cc3f89e5?q=80&w=600&auto=format&fit=crop",
+        "caption": "you"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=600&auto=format&fit=crop",
+        "caption": "are"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?q=80&w=600&auto=format&fit=crop",
+        "caption": "loved"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?q=80&w=600&auto=format&fit=crop",
+        "caption": "♡"
+      }
+    ],
+    "closingLine": "always yours,",
+    "secretPhoto": "/photos/1.jpg",
+    "secretCaption": "this is just for you — my favourite memory of us.",
+    "createdAt": "2026-05-29",
+    "reasonsTitle1": "The Reasons",
+    "reasonsTitle2": "I Love You",
+    "seasonsTitle1": "A Love For",
+    "seasonsTitle2": "Every Season",
+    "seasonsHint": "tap each season to discover its meaning",
+    "galleryTitle1": "Our Beautiful",
+    "galleryTitle2": "Memories",
+    "closingPreTitle": "always & forever",
+    "closingTitle1": "You Are Loved",
+    "closingTitle2": "Beyond Words",
+    "closingParagraph": "No matter where life takes us, know that somewhere in the universe, there is a garden blooming with every feeling I have ever held for you. You deserve the world. You deserve all the flowers. You deserve everything.",
+    "celebrateBtnText": "celebrate ✨"
+  },
+  {
+    "slug": "untuk-lisa",
+    "recipient": "Lisa",
+    "sender": "Your Name",
+    "gateSubtitle": "A something for you",
+    "heroPreTitle": "To my one and only one",
+    "heroLine1": "For you, Lisa",
+    "heroLine2": "My everything.",
+    "heroSubtitle": "Scroll to unwrap your gift",
+    "introIcons": true,
+    "introPreTitle": "from my heart",
+    "introHeadline1": "You are my",
+    "introHeadline2": "wildest dream",
+    "introHeadline3": "come true.",
+    "introText": [
+      ""
+    ],
+    "introSignOff": "with all my love",
+    "reasons": [
+      {
+        "title": "Your Smile",
+        "desc": "It lights up my entire world."
+      },
+      {
+        "title": "Your Heart",
+        "desc": "So kind and full of love."
+      },
+      {
+        "title": "Your Laugh",
+        "desc": "The most beautiful sound."
+      },
+      {
+        "title": "Your Soul",
+        "desc": "Pure and genuine."
+      },
+      {
+        "title": "Your Kindness",
+        "desc": "It lights up everyone around you."
+      }
+    ],
+    "seasons": [
+      {
+        "name": "Spring",
+        "teaser": "new beginnings",
+        "message": "Every spring reminds me of when we first met."
+      },
+      {
+        "name": "Summer",
+        "teaser": "warm memories",
+        "message": "Long summer days spent by your side."
+      },
+      {
+        "name": "Autumn",
+        "teaser": "golden moments",
+        "message": "Falling in love deeper each day."
+      },
+      {
+        "name": "Winter",
+        "teaser": "cozy warmth",
+        "message": "You are my warmth in the coldest nights."
+      }
+    ],
+    "photos": [
+      {
+        "url": "/uploads/untuk-lisa/1780081787488-__.jpg",
+        "caption": "you"
+      },
+      {
+        "url": "",
+        "caption": "are"
+      },
+      {
+        "url": "",
+        "caption": "loved"
+      },
+      {
+        "url": "",
+        "caption": "♡"
+      },
+      {
+        "url": "/uploads/untuk-lisa/1780081877173-artsy.jpg",
+        "caption": "hehe"
+      }
+    ],
+    "music": {
+      "title": "Sampai jadi debu",
+      "artist": "Banda Neira",
+      "file": "",
+      "cover": "/uploads/untuk-lisa/1780080972412-Letter_QR_1780075811.png"
+    },
+    "closingLine": "always yours,",
+    "secretPhoto": "/uploads/untuk-lisa/1780082078552-dancing_couple_aesthetic.jpg",
+    "secretCaption": "Always be with you.",
+    "createdAt": "2026-05-29",
+    "reasonsTitle1": "The Reasons",
+    "reasonsTitle2": "I Love You",
+    "seasonsTitle1": "A Love For",
+    "seasonsTitle2": "Every Season",
+    "seasonsHint": "tap each season to discover its meaning",
+    "galleryTitle1": "Our Beautiful",
+    "galleryTitle2": "Memories",
+    "closingPreTitle": "Always & Forever",
+    "closingTitle1": "You Are Loved",
+    "closingTitle2": "Beyond Words",
+    "closingParagraph": "No matter where life takes us, know that somewhere in the universe, there is a garden blooming with every feeling I have ever held for you. You deserve the world. You deserve all the flowers. You deserve everything.",
+    "celebrateBtnText": "celebrate ✨"
+  },
+  {
+    "slug": "for-mey",
+    "recipient": "Mey",
+    "sender": "Your Name",
+    "gateSubtitle": "something made just for you",
+    "heroPreTitle": "a love letter in bloom",
+    "heroLine1": "Mey,",
+    "heroLine2": "My Everything",
+    "heroSubtitle": "Every petal holds a whisper of how much you mean to me.",
+    "introIcons": true,
+    "introPreTitle": "from my heart",
+    "introHeadline1": "You are my",
+    "introHeadline2": "wildest dream",
+    "introHeadline3": "come true.",
+    "introText": [
+      "In a world full of ordinary moments, you are the extraordinary one. The way you laugh, the way you care, the way you simply exist — it fills every corner of my world with something I never knew I needed.",
+      "These flowers are not enough. No words ever could be. But they carry every unspoken feeling I hold for you, pressed between their petals like tiny love letters waiting to be found."
+    ],
+    "introSignOff": "– Your biggest fans, Al",
+    "reasons": [
+      {
+        "icon": "✦",
+        "title": "Your Laugh",
+        "desc": "The sound that makes every room feel like home."
+      },
+      {
+        "icon": "✦",
+        "title": "Your Patience",
+        "desc": "How you wait for me even when I take too long."
+      },
+      {
+        "icon": "✦",
+        "title": "Your Kindness",
+        "desc": "The way you care without ever being asked."
+      },
+      {
+        "icon": "✦",
+        "title": "Your Courage",
+        "desc": "How you face the world even on the hardest days."
+      },
+      {
+        "icon": "✦",
+        "title": "Your Warmth",
+        "desc": "The feeling of being next to you on a quiet night."
+      },
+      {
+        "icon": "✦",
+        "title": "Your Presence",
+        "desc": "Just being with you is more than enough."
+      }
+    ],
+    "reasonsTitle1": "The Reasons",
+    "reasonsTitle2": "I Love You",
+    "seasons": [
+      {
+        "name": "Spring",
+        "teaser": "where it all began",
+        "message": "Like the first bloom after a long winter, you arrived when I least expected — and everything grew."
+      },
+      {
+        "name": "Summer",
+        "teaser": "when love was loudest",
+        "message": "In the fullness of us, I felt the sun from the inside. No distance, no doubt — just warmth."
+      },
+      {
+        "name": "Autumn",
+        "teaser": "beautiful even as things changed",
+        "message": "Loving you through change taught me that some things don't need to stay the same to stay beautiful."
+      },
+      {
+        "name": "Winter",
+        "teaser": "I stayed, and I'd stay again",
+        "message": "In the quiet and the cold, I chose you still. I will always choose you still."
+      }
+    ],
+    "seasonsTitle1": "A Love For",
+    "seasonsTitle2": "Every Season",
+    "seasonsHint": "tap each season to discover its meaning",
+    "photos": [
+      {
+        "url": "https://images.unsplash.com/photo-1518133835878-5a93cc3f89e5?q=80&w=600&auto=format&fit=crop",
+        "caption": "you"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=600&auto=format&fit=crop",
+        "caption": "are"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?q=80&w=600&auto=format&fit=crop",
+        "caption": "loved"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?q=80&w=600&auto=format&fit=crop",
+        "caption": "♡"
+      }
+    ],
+    "galleryTitle1": "Our Beautiful",
+    "galleryTitle2": "Memories",
+    "music": {
+      "title": "Kita Punya Waktu",
+      "artist": "Banda Neira",
+      "file": "/music/track.mp3",
+      "cover": "/photos/cover.jpg"
+    },
+    "closingLine": "always yours,",
+    "closingPreTitle": "always & forever",
+    "closingTitle1": "You Are Loved",
+    "closingTitle2": "Beyond Words",
+    "closingParagraph": "No matter where life takes us, know that somewhere in the universe, there is a garden blooming with every feeling I have ever held for you. You deserve the world. You deserve all the flowers. You deserve everything.",
+    "celebrateBtnText": "celebrate ✨",
+    "secretPhoto": "/photos/1.jpg",
+    "secretCaption": "this is just for you — my favourite memory of us.",
+    "createdAt": "2026-05-29"
+  }
+]
