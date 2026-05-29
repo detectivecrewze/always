@@ -25,13 +25,16 @@ function PetalSVG({ color, size = 24 }) {
   );
 }
 
-export default function RevealAnimation({ isRevealing, onComplete }) {
+export default function RevealAnimation({ isRevealing, onComplete, themeColors }) {
   useEffect(() => {
     if (isRevealing) {
       const timer = setTimeout(onComplete, 1800);
       return () => clearTimeout(timer);
     }
   }, [isRevealing, onComplete]);
+
+  const activeColor = themeColors?.[0] || '#E2A9A3';
+  const activeAccent = themeColors?.[1] || '#E2859B';
 
   return (
     <AnimatePresence>
@@ -52,15 +55,15 @@ export default function RevealAnimation({ isRevealing, onComplete }) {
           >
             <defs>
               <linearGradient id="boxGradientPinkRev" x1="20" y1="70" x2="140" y2="150" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#6B2C42" />
-                <stop offset="1" stopColor="#4A1D2D" />
+                <stop stopColor="color-mix(in srgb, var(--color-surface) 60%, transparent)" />
+                <stop offset="1" stopColor="var(--color-surface)" />
               </linearGradient>
               <linearGradient id="ribbonGradientPinkRev" x1="80" y1="40" x2="80" y2="150" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#FDE047" />
-                <stop offset="1" stopColor="#D4AF37" />
+                <stop stopColor={activeAccent} />
+                <stop offset="1" stopColor="color-mix(in srgb, var(--color-accent) 60%, black)" />
               </linearGradient>
             </defs>
-            <rect x="25" y="70" width="110" height="70" rx="6" fill="url(#boxGradientPinkRev)" stroke="#E2859B" strokeWidth="2" />
+            <rect x="25" y="70" width="110" height="70" rx="6" fill="url(#boxGradientPinkRev)" stroke={activeAccent} strokeWidth="2" />
             <rect x="70" y="70" width="20" height="70" fill="url(#ribbonGradientPinkRev)" />
           </svg>
 
@@ -73,13 +76,13 @@ export default function RevealAnimation({ isRevealing, onComplete }) {
             transition={{ duration: 1.2, ease: [0.25, 0.1, 0.25, 1] }}
           >
             <svg width="160" height="160" viewBox="0 0 160 160" fill="none">
-              <rect x="18" y="55" width="124" height="20" rx="4" fill="url(#boxGradientPinkRev)" stroke="#E2859B" strokeWidth="2" />
+              <rect x="18" y="55" width="124" height="20" rx="4" fill="url(#boxGradientPinkRev)" stroke={activeAccent} strokeWidth="2" />
               <rect x="18" y="60" width="124" height="10" fill="url(#ribbonGradientPinkRev)" />
               {/* Bow */}
               <g>
-                <path d="M75 55 C50 30, 20 40, 45 60 Z" fill="url(#ribbonGradientPinkRev)" stroke="#FEF08A" strokeWidth="1" />
-                <path d="M85 55 C110 30, 140 40, 115 60 Z" fill="url(#ribbonGradientPinkRev)" stroke="#FEF08A" strokeWidth="1" />
-                <circle cx="80" cy="56" r="8" fill="#FDE047" stroke="#B45309" strokeWidth="1" />
+                <path d="M75 55 C50 30, 20 40, 45 60 Z" fill="url(#ribbonGradientPinkRev)" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+                <path d="M85 55 C110 30, 140 40, 115 60 Z" fill="url(#ribbonGradientPinkRev)" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+                <circle cx="80" cy="56" r="8" fill={activeAccent} stroke="rgba(255,255,255,0.5)" strokeWidth="1" />
               </g>
             </svg>
           </motion.div>
@@ -105,7 +108,7 @@ export default function RevealAnimation({ isRevealing, onComplete }) {
                 opacity: { times: [0, 0.2, 0.8, 1] },
               }}
             >
-              <PetalSVG color={petal.color} size={24} />
+              <PetalSVG color={activeColor} size={24} />
             </motion.div>
           ))}
         </motion.div>

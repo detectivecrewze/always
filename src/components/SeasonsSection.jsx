@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SEASON_ICONS } from './SeasonIcons';
 
 const container = {
   hidden: {},
@@ -19,35 +20,8 @@ const cardAnim = {
   },
 };
 
-// SVGs
-const SpringSVG = () => (
-  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#B5C9A1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M24 44V20M24 32C18 32 14 26 14 20C18 20 24 24 24 32ZM24 28C30 28 34 20 34 14C30 14 24 20 24 28Z" />
-  </svg>
-);
-
-const SummerSVG = () => (
-  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#E8C88A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="24" cy="24" r="8" fill="#E8C88A" fillOpacity="0.2" />
-    <path d="M24 6V10M24 38V42M6 24H10M38 24H42M11.27 11.27L14.1 14.1M33.9 33.9L36.73 36.73M11.27 36.73L14.1 33.9M33.9 11.27L36.73 14.1" />
-  </svg>
-);
-
-const AutumnSVG = () => (
-  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#C9956A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M24 40C24 40 12 34 12 20C12 12 24 6 24 6C24 6 36 12 36 20C36 34 24 40 24 40Z" fill="#C9956A" fillOpacity="0.2" />
-    <path d="M24 40V16" />
-  </svg>
-);
-
-const WinterSVG = () => (
-  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#A8C4D4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M24 6V42M6 24H42M11.27 11.27L36.73 36.73M11.27 36.73L36.73 11.27" />
-    <circle cx="24" cy="24" r="4" fill="#A8C4D4" fillOpacity="0.2" />
-  </svg>
-);
-
-const svgsList = [SpringSVG, SummerSVG, AutumnSVG, WinterSVG];
+// Default keys for backward compatibility
+const FALLBACK_KEYS = ['spring', 'summer', 'autumn', 'winter'];
 
 export default function SeasonsSection({ seasons, seasonsTitle1, seasonsTitle2, seasonsHint }) {
   const [expandedIndex, setExpandedIndex] = useState(null);
@@ -82,7 +56,7 @@ export default function SeasonsSection({ seasons, seasonsTitle1, seasonsTitle2, 
             transition={{ delay: 0.3 }}
             className="mt-8 font-serif italic text-sm md:text-base text-text-muted flex items-center gap-2"
           >
-            <span className="text-accent">✨</span> {seasonsHint || 'tap each season to discover its meaning'} <span className="text-accent">✨</span>
+            <span className="text-accent">✨</span> {seasonsHint || 'tap each card to discover its meaning'} <span className="text-accent">✨</span>
           </motion.p>
         </div>
 
@@ -97,7 +71,12 @@ export default function SeasonsSection({ seasons, seasonsTitle1, seasonsTitle2, 
           {seasons.map((season, idx) => {
             const isExpanded = expandedIndex === idx;
             const isOtherExpanded = expandedIndex !== null && expandedIndex !== idx;
-            const SVGIcon = svgsList[idx % 4];
+            
+            // Get the icon key (default to the original 4 seasons if not set)
+            const iconKey = season.icon || FALLBACK_KEYS[idx % 4];
+            const iconConfig = SEASON_ICONS[iconKey] || SEASON_ICONS.star;
+            const SVGIcon = iconConfig.component;
+            const strokeColor = iconConfig.defaultColor;
 
             return (
               <motion.div
@@ -120,7 +99,7 @@ export default function SeasonsSection({ seasons, seasonsTitle1, seasonsTitle2, 
                 transition={{ duration: 0.4, ease: 'easeInOut' }}
               >
                 <motion.div layout="position" className="mb-4">
-                  <SVGIcon />
+                  <SVGIcon color={strokeColor} />
                 </motion.div>
                 
                 <motion.h3 layout="position" className="font-serif font-bold text-base text-text mb-1">

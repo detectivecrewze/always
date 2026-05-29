@@ -73,6 +73,7 @@ export default function GiftPage({ data }) {
           <GateScreen
             gateSubtitle={data.gateSubtitle}
             onOpen={handleGateOpen}
+            themeColors={[t.particle, t.accent, t.textMuted]}
           />
         )}
       </AnimatePresence>
@@ -81,6 +82,7 @@ export default function GiftPage({ data }) {
       <RevealAnimation
         isRevealing={isRevealing}
         onComplete={handleRevealComplete}
+        themeColors={[t.particle, t.accent, t.textMuted]}
       />
 
       {/* Main Content */}
@@ -92,7 +94,7 @@ export default function GiftPage({ data }) {
             transition={{ duration: 1, ease: [0.25, 0.1, 0.25, 1] }}
           >
             {/* Ambient Particles */}
-            <AmbientParticles active={gateOpen} />
+            <AmbientParticles active={gateOpen} themeColors={[t.particle, t.accent, t.textMuted]} />
 
             {/* Content Sections */}
             <HeroSection

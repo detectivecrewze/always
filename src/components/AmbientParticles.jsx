@@ -3,14 +3,14 @@
 import { useEffect, useRef, useCallback } from 'react';
 
 const PARTICLE_COUNT = 35;
-const COLORS = ['#E2A9A3', '#8D5B5A', '#D4B8B9'];
+const DEFAULT_COLORS = ['#E2A9A3', '#8D5B5A', '#D4B8B9'];
 
-export default function AmbientParticles({ active }) {
+export default function AmbientParticles({ active, themeColors }) {
   const canvasRef = useRef(null);
   const particlesRef = useRef([]);
   const animationRef = useRef(null);
 
-  const createParticle = useCallback((canvas, forceTop = false) => {
+  const createParticle = useCallback((canvas, forceTop = false, activeColors = DEFAULT_COLORS) => {
     return {
       x: Math.random() * canvas.width,
       y: forceTop ? -20 : Math.random() * canvas.height,
@@ -22,7 +22,7 @@ export default function AmbientParticles({ active }) {
       flipSpeed: 0.02 + Math.random() * 0.04, // 3D flip speed
       flipOffset: Math.random() * Math.PI * 2,
       opacity: 0.3 + Math.random() * 0.5,
-      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      color: activeColors[Math.floor(Math.random() * activeColors.length)],
       rotation: Math.random() * Math.PI * 2,
       rotationSpeed: (Math.random() - 0.5) * 0.03,
     };
@@ -46,8 +46,10 @@ export default function AmbientParticles({ active }) {
     window.addEventListener('resize', resize);
 
     // Initialize particles
+    const activeColors = themeColors?.filter(Boolean) || DEFAULT_COLORS;
+    const colorsToUse = activeColors.length > 0 ? activeColors : DEFAULT_COLORS;
     particlesRef.current = Array.from({ length: PARTICLE_COUNT }, () =>
-      createParticle(canvas, false)
+      createParticle(canvas, false, colorsToUse)
     );
 
     let time = 0;
@@ -65,7 +67,7 @@ export default function AmbientParticles({ active }) {
         const scaleX = Math.cos(time * p.flipSpeed + p.flipOffset);
 
         if (p.y > canvas.height + 20) {
-          Object.assign(p, createParticle(canvas, true));
+          Object.assign(p, createParticle(canvas, true, colorsToUse));
         }
 
         ctx.save();

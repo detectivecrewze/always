@@ -59,10 +59,10 @@ export default function StudioDashboard() {
       reasonsTitle1: 'The Reasons',
       reasonsTitle2: 'I Love You',
       seasons: [
-        { name: 'Spring', teaser: 'where it all began', message: 'Like the first bloom after a long winter, you arrived when I least expected — and everything grew.' },
-        { name: 'Summer', teaser: 'when love was loudest', message: 'In the fullness of us, I felt the sun from the inside. No distance, no doubt — just warmth.' },
-        { name: 'Autumn', teaser: 'beautiful even as things changed', message: 'Loving you through change taught me that some things don\'t need to stay the same to stay beautiful.' },
-        { name: 'Winter', teaser: 'I stayed, and I\'d stay again', message: 'In the quiet and the cold, I chose you still. I will always choose you still.' }
+        { icon: 'spring', name: 'Spring', teaser: 'where it all began', message: 'Like the first bloom after a long winter, you arrived when I least expected — and everything grew.' },
+        { icon: 'summer', name: 'Summer', teaser: 'when love was loudest', message: 'In the fullness of us, I felt the sun from the inside. No distance, no doubt — just warmth.' },
+        { icon: 'autumn', name: 'Autumn', teaser: 'beautiful even as things changed', message: 'Loving you through change taught me that some things don\'t need to stay the same to stay beautiful.' },
+        { icon: 'winter', name: 'Winter', teaser: 'I stayed, and I\'d stay again', message: 'In the quiet and the cold, I chose you still. I will always choose you still.' }
       ],
       seasonsTitle1: 'A Love For',
       seasonsTitle2: 'Every Season',
@@ -76,7 +76,7 @@ export default function StudioDashboard() {
       galleryTitle1: 'Our Beautiful',
       galleryTitle2: 'Memories',
       music: { title: 'Kita Punya Waktu', artist: 'Banda Neira', file: '/music/track.mp3', cover: '/photos/cover.jpg' },
-      theme: 'classic-light',
+      theme: 'vintage-burgundy',
       closingLine: 'always yours,',
       closingPreTitle: 'always & forever',
       closingTitle1: 'You Are Loved',

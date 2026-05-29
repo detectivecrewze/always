@@ -116,17 +116,24 @@ function Field({ label, value, onChange, multiline, placeholder }) {
 
 function FileUpload({ label, slug, currentUrl, onUploaded }) {
   const [uploading, setUploading] = useState(false);
+  const [success, setSuccess] = useState(false);
+
   const handleFile = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
+    setSuccess(false);
     const fd = new FormData();
     fd.append('file', file);
     fd.append('slug', slug);
     try {
       const res = await fetch('/api/upload', { method: 'POST', body: fd });
       const data = await res.json();
-      if (data.url) onUploaded(data.url);
+      if (data.url) {
+        onUploaded(data.url);
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 3000);
+      }
     } catch { /* ignore */ }
     setUploading(false);
   };
@@ -136,8 +143,15 @@ function FileUpload({ label, slug, currentUrl, onUploaded }) {
       <label style={S.label}>{label}</label>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         {currentUrl && <img src={currentUrl} alt="" style={S.uploadThumb} onError={(e) => e.target.style.display='none'} />}
-        <label style={{ ...S.uploadBox, flex: 1, fontSize: '0.75rem', color: '#555', position: 'relative' }}>
-          {uploading ? 'Uploading...' : 'Click to upload'}
+        <label style={{ 
+          ...S.uploadBox, 
+          flex: 1, 
+          fontSize: '0.75rem', 
+          color: success ? '#22c55e' : '#555', 
+          borderColor: success ? '#22c55e' : '#262626',
+          position: 'relative' 
+        }}>
+          {uploading ? 'Uploading...' : success ? '✓ Upload Successful!' : 'Click to upload'}
           <input type="file" style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} onChange={handleFile} accept="image/*,video/*,audio/*" />
         </label>
       </div>
@@ -237,13 +251,38 @@ function TabSeasons({ data, set }) {
     <Field label="Section Title 1" value={data.seasonsTitle1} onChange={(v) => set('seasonsTitle1', v)} placeholder="A Love For" />
     <Field label="Section Title 2" value={data.seasonsTitle2} onChange={(v) => set('seasonsTitle2', v)} placeholder="Every Season" />
     <Field label="Hint Text" value={data.seasonsHint} onChange={(v) => set('seasonsHint', v)} placeholder="tap each season to discover its meaning" />
-    {seasons.map((s, i) => (
-      <div key={i} style={S.cardWrap}>
-        <Field label={`Season ${i + 1} Name`} value={s.name} onChange={(v) => setSeason(i, 'name', v)} placeholder="Spring" />
-        <Field label="Teaser" value={s.teaser} onChange={(v) => setSeason(i, 'teaser', v)} placeholder="short teaser" />
-        <Field label="Full Message" value={s.message} onChange={(v) => setSeason(i, 'message', v)} placeholder="expanded message" multiline />
-      </div>
-    ))}
+    {seasons.map((s, i) => {
+      const fallbackIcons = ['spring', 'summer', 'autumn', 'winter'];
+      const currentIcon = s.icon || fallbackIcons[i % 4];
+      return (
+        <div key={i} style={S.cardWrap}>
+          <div style={{ marginBottom: '12px' }}>
+            <div style={{ fontSize: '0.75rem', color: '#666', marginBottom: '4px', fontWeight: 600 }}>Card Icon</div>
+            <select 
+              style={{ ...S.input, appearance: 'auto', marginBottom: 0 }}
+              value={currentIcon}
+              onChange={(e) => setSeason(i, 'icon', e.target.value)}
+            >
+              <option value="spring">Spring (Leaf)</option>
+              <option value="summer">Summer (Sun)</option>
+              <option value="autumn">Autumn (Tree)</option>
+              <option value="winter">Winter (Snowflake)</option>
+              <option value="sun">Sun</option>
+              <option value="moon">Moon</option>
+              <option value="star">Star</option>
+              <option value="heart">Heart</option>
+              <option value="coffee">Coffee</option>
+              <option value="music">Music</option>
+              <option value="sparkles">Sparkles</option>
+              <option value="clock">Clock (Time)</option>
+            </select>
+          </div>
+          <Field label={`Card ${i + 1} Name`} value={s.name} onChange={(v) => setSeason(i, 'name', v)} placeholder="e.g. Morning / Spring" />
+          <Field label="Teaser" value={s.teaser} onChange={(v) => setSeason(i, 'teaser', v)} placeholder="short teaser" />
+          <Field label="Full Message" value={s.message} onChange={(v) => setSeason(i, 'message', v)} placeholder="expanded message" multiline />
+        </div>
+      );
+    })}
   </>);
 }
 
