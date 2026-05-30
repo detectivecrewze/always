@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, use } from 'react';
 import { useRouter } from 'next/navigation';
 import playlistData from '../../playlist.json';
 
-const TABS = ['Theme', 'Opening', 'Hero', 'Letter', 'Reasons', 'Seasons', 'Gallery', 'Music', 'Closing'];
+const TABS = ['Theme', 'Opening', 'Hero', 'Time', 'Letter', 'Reasons', 'Seasons', 'Gallery', 'Music', 'Closing'];
 
 // ── Styles ────────────────────────────────────────────────────────
 const S = {
@@ -230,6 +230,63 @@ function TabHero({ data, set }) {
     <Field label="Hero Line 1" value={data.heroLine1} onChange={(v) => set('heroLine1', v)} placeholder="Name," />
     <Field label="Hero Line 2" value={data.heroLine2} onChange={(v) => set('heroLine2', v)} placeholder="you are my everything." />
     <Field label="Subtitle" value={data.heroSubtitle} onChange={(v) => set('heroSubtitle', v)} placeholder="scroll to unwrap your gift" />
+  </>);
+}
+
+// ── Time Presets ─────────────────────────────────────────────────
+const TIME_PRESETS = [
+  { id: 'met', name: '🤝 First Met', desc: 'Since the day we met', subtitle: 'time since', title: 'We First Met' },
+  { id: 'dating', name: '💘 Started Dating', desc: 'Since we became us', subtitle: 'days of', title: 'Loving You' },
+  { id: 'wedding', name: '💍 Wedding Day', desc: 'Since we tied the knot', subtitle: 'happily', title: 'Ever After' },
+  { id: 'together', name: '⏳ Time Together', desc: 'General time tracker', subtitle: 'time spent', title: 'Together' },
+];
+
+function TabTime({ data, set }) {
+  const currentPreset = TIME_PRESETS.find(p => p.title === data.timeTitle)?.id || null;
+
+  const applyPreset = (preset) => {
+    set('timeTitle', preset.title);
+    set('timeSubtitle', preset.subtitle);
+    if (!data.timeEnabled) set('timeEnabled', true);
+  };
+
+  return (<>
+    <div style={S.sectionTitle}>Time Counter</div>
+    <div style={S.sectionDesc}>An aesthetic timer showing how long you've been together.</div>
+    
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem', background: '#111', padding: '1rem', borderRadius: '8px', border: '1px solid #333' }}>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: '0.9rem', color: '#fff', marginBottom: '0.25rem' }}>Enable Section</div>
+        <div style={{ fontSize: '0.75rem', color: '#888' }}>Show or hide this section on the live page</div>
+      </div>
+      <button 
+        onClick={() => set('timeEnabled', !data.timeEnabled)}
+        style={{
+          width: '48px', height: '24px', borderRadius: '12px',
+          background: data.timeEnabled ? '#22C55E' : '#333',
+          position: 'relative', transition: 'all 0.2s'
+        }}
+      >
+        <div style={{
+          width: '20px', height: '20px', borderRadius: '50%', background: '#fff',
+          position: 'absolute', top: '2px', left: data.timeEnabled ? '26px' : '2px',
+          transition: 'all 0.2s'
+        }} />
+      </button>
+    </div>
+
+    <div className="w-full h-px bg-[#1a1a1a] mb-4" />
+
+    <div style={{ opacity: data.timeEnabled ? 1 : 0.5, pointerEvents: data.timeEnabled ? 'auto' : 'none' }}>
+      <div style={S.sectionTitle}>Choose a Preset</div>
+      <PresetGrid presets={TIME_PRESETS} currentId={currentPreset} onApply={applyPreset} />
+      
+      <Field label="Start Date" value={data.timeStartDate || ''} onChange={(v) => set('timeStartDate', v)} placeholder="YYYY-MM-DD" />
+      <div style={{ fontSize: '0.7rem', color: '#666', marginTop: '-0.5rem', marginBottom: '1rem' }}>Format: YYYY-MM-DD (e.g. 2022-02-14)</div>
+      
+      <Field label="Pre-title" value={data.timeSubtitle} onChange={(v) => set('timeSubtitle', v)} placeholder="days of" />
+      <Field label="Main Title" value={data.timeTitle} onChange={(v) => set('timeTitle', v)} placeholder="Loving You" />
+    </div>
   </>);
 }
 
@@ -732,7 +789,7 @@ function TabClosing({ data, set, slug }) {
   </>);
 }
 
-const TAB_COMPONENTS = [TabTheme, TabOpening, TabHero, TabLetter, TabReasons, TabSeasons, TabGallery, TabMusic, TabClosing];
+const TAB_COMPONENTS = [TabTheme, TabOpening, TabHero, TabTime, TabLetter, TabReasons, TabSeasons, TabGallery, TabMusic, TabClosing];
 
 // ── Main Editor ───────────────────────────────────────────────────
 export default function StudioEditor({ params: paramsPromise }) {

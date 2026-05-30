@@ -6,6 +6,7 @@ import GateScreen from '@/components/GateScreen';
 
 import AmbientParticles from '@/components/AmbientParticles';
 import HeroSection from '@/components/HeroSection';
+import TimeSection from '@/components/TimeSection';
 import IntroSection from '@/components/IntroSection';
 import ReasonCards from '@/components/ReasonCards';
 import SeasonsSection from '@/components/SeasonsSection';
@@ -90,6 +91,14 @@ export default function GiftPage({ data }) {
               heroLine2={data.heroLine2}
               heroSubtitle={data.heroSubtitle}
             />
+
+            {data.timeEnabled && (
+              <TimeSection
+                timeTitle={data.timeTitle}
+                timeSubtitle={data.timeSubtitle}
+                timeStartDate={data.timeStartDate}
+              />
+            )}
 
             <IntroSection 
               introIcons={data.introIcons}
