@@ -224,6 +224,66 @@ function TabReasons({ data, set }) {
   </>);
 }
 
+// ── Seasons Presets ───────────────────────────────────────────────
+const SEASON_PRESETS = [
+  {
+    id: 'seasons',
+    name: '🍂 Seasons',
+    desc: 'Classic four seasons metaphor',
+    title1: 'A Love For',
+    title2: 'Every Season',
+    hint: 'tap each season to discover its meaning',
+    cards: [
+      { icon: 'spring', name: 'Spring', teaser: 'where it all began', message: 'Like the first bloom after a long winter, you arrived when I least expected — and everything grew.' },
+      { icon: 'summer', name: 'Summer', teaser: 'when love was loudest', message: 'In the fullness of us, I felt the sun from the inside. No distance, no doubt — just warmth.' },
+      { icon: 'autumn', name: 'Autumn', teaser: 'beautiful even as things changed', message: 'Loving you through change taught me that some things don\'t need to stay the same to stay beautiful.' },
+      { icon: 'winter', name: 'Winter', teaser: 'I stayed, and I\'d stay again', message: 'In the quiet and the cold, I chose you still. I will always choose you still.' },
+    ],
+  },
+  {
+    id: 'flowers',
+    name: '🌹 Flowers',
+    desc: 'Each bloom tells a love story',
+    title1: 'A Garden of',
+    title2: 'Love Letters',
+    hint: 'tap each flower to read its message',
+    cards: [
+      { icon: 'rose', name: 'Rose', teaser: 'passion that never fades', message: 'You are the red that burns through gray days — bold, unwavering, a love that refuses to be quiet.' },
+      { icon: 'tulip', name: 'Tulip', teaser: 'a perfect declaration', message: 'If I could only say it once, I\'d say it with you. You are my favorite first and my favorite always.' },
+      { icon: 'lily', name: 'Lily', teaser: 'devotion without condition', message: 'You didn\'t ask me to be more, and somehow that made me want to give you everything.' },
+      { icon: 'sunflower', name: 'Sunflower', teaser: 'always turning toward you', message: 'No matter where I stand, I find myself facing you — you are the light I follow home.' },
+    ],
+  },
+  {
+    id: 'timeofday',
+    name: '🌅 Time of Day',
+    desc: 'From dawn to midnight',
+    title1: 'Every Hour',
+    title2: 'Is Yours',
+    hint: 'tap each moment to unfold its story',
+    cards: [
+      { icon: 'sunrise', name: 'Sunrise', teaser: 'the promise of beginning', message: 'Every morning I wake up choosing you. Not because I have to — because every dawn feels incomplete without the thought of you.' },
+      { icon: 'noon', name: 'Noon', teaser: 'love at its brightest', message: 'In the loudest, busiest parts of my day, you are the stillness I carry. The calm center in all the noise.' },
+      { icon: 'dusk', name: 'Dusk', teaser: 'when the world softens', message: 'There\'s a golden hour that only exists when I\'m near you — when everything slows, and the light paints us just right.' },
+      { icon: 'midnight', name: 'Midnight', teaser: 'secrets only we know', message: 'In the quiet dark, with nothing left but honesty — that\'s where I love you most. Where pretending is impossible.' },
+    ],
+  },
+  {
+    id: 'keepsakes',
+    name: '🕯️ Keepsakes',
+    desc: 'Treasured mementos of love',
+    title1: 'The Things',
+    title2: 'I Keep Close',
+    hint: 'tap each keepsake to reveal its meaning',
+    cards: [
+      { icon: 'candle', name: 'The Flame', teaser: 'a light that never dims', message: 'Even in the darkest corners of doubt, your love is the candle I hold — small but unwavering, enough to find my way.' },
+      { icon: 'letter', name: 'The Letter', teaser: 'words folded with care', message: 'If I wrote you a letter every day, they would all say the same thing in different ways: I am better because of you.' },
+      { icon: 'ring', name: 'The Promise', teaser: 'unbroken and unending', message: 'Not a promise of perfection — but of presence. I will stay, I will try, I will choose you over and over again.' },
+      { icon: 'key', name: 'The Key', teaser: 'you unlocked everything', message: 'Before you, there were rooms in my heart I didn\'t know existed. You didn\'t just open them — you filled them.' },
+    ],
+  },
+];
+
 function TabSeasons({ data, set }) {
   const seasons = data.seasons || [];
   const setSeason = (idx, key, val) => {
@@ -232,12 +292,84 @@ function TabSeasons({ data, set }) {
     set('seasons', next);
   };
 
+  // Detect current preset
+  const detectPreset = () => {
+    for (const preset of SEASON_PRESETS) {
+      if (data.seasonsTitle1 === preset.title1 && data.seasonsTitle2 === preset.title2) return preset.id;
+    }
+    return null;
+  };
+
+  const applyPreset = (preset) => {
+    set('seasonsTitle1', preset.title1);
+    set('seasonsTitle2', preset.title2);
+    set('seasonsHint', preset.hint);
+    set('seasons', preset.cards.map(c => ({ ...c })));
+  };
+
+  const currentPreset = detectPreset();
+
+  // All icon keys for the dropdown
+  const allIcons = [
+    { value: 'spring', label: 'Spring (Leaf)' }, { value: 'summer', label: 'Summer (Sun)' },
+    { value: 'autumn', label: 'Autumn (Tree)' }, { value: 'winter', label: 'Winter (Snowflake)' },
+    { value: 'rose', label: 'Rose' }, { value: 'tulip', label: 'Tulip' },
+    { value: 'lily', label: 'Lily' }, { value: 'sunflower', label: 'Sunflower' },
+    { value: 'sunrise', label: 'Sunrise' }, { value: 'noon', label: 'Noon' },
+    { value: 'dusk', label: 'Dusk' }, { value: 'midnight', label: 'Midnight' },
+    { value: 'ocean', label: 'Ocean' }, { value: 'mountain', label: 'Mountain' },
+    { value: 'forest', label: 'Forest' }, { value: 'desert', label: 'Desert' },
+    { value: 'candle', label: 'Candle' }, { value: 'letter', label: 'Letter' },
+    { value: 'ring', label: 'Ring' }, { value: 'key', label: 'Key' },
+    { value: 'sun', label: 'Sun' }, { value: 'moon', label: 'Moon' },
+    { value: 'star', label: 'Star' }, { value: 'heart', label: 'Heart' },
+    { value: 'coffee', label: 'Coffee' }, { value: 'music', label: 'Music' },
+    { value: 'sparkles', label: 'Sparkles' }, { value: 'clock', label: 'Clock (Time)' },
+  ];
+
   return (<>
-    <div style={S.sectionTitle}>Seasons of Love</div>
-    <div style={S.sectionDesc}>Four interactive season cards.</div>
+    <div style={S.sectionTitle}>Choose a Preset</div>
+    <div style={S.sectionDesc}>Select a metaphor theme, or customize below.</div>
+
+    <div className="grid grid-cols-2 gap-3 mb-6">
+      {SEASON_PRESETS.map((preset) => {
+        const isActive = currentPreset === preset.id;
+        return (
+          <button
+            key={preset.id}
+            onClick={() => applyPreset(preset)}
+            className={`rounded-xl p-4 text-left transition-all border-2 ${
+              isActive
+                ? 'border-[#E11D48] bg-[#E11D48]/10 shadow-[0_0_20px_rgba(225,29,72,0.15)]'
+                : 'border-[#222] bg-[#111] hover:border-[#444]'
+            }`}
+          >
+            <div className="text-base mb-1">{preset.name}</div>
+            <div className={`text-[0.65rem] ${isActive ? 'text-[#F472B6]' : 'text-[#666]'}`}>{preset.desc}</div>
+            <div className="flex gap-2 mt-3">
+              {preset.cards.map((c, ci) => (
+                <div key={ci} className={`w-6 h-6 rounded-full flex items-center justify-center text-[0.5rem] ${isActive ? 'bg-[#E11D48]/20 text-[#F472B6]' : 'bg-[#222] text-[#888]'}`}>
+                  {ci + 1}
+                </div>
+              ))}
+            </div>
+          </button>
+        );
+      })}
+    </div>
+
+    <div className="w-full h-px bg-[#1a1a1a] mb-4" />
+
+    <div style={S.sectionTitle}>Section Titles</div>
+    <div style={S.sectionDesc}>Customize the heading and hint text.</div>
     <Field label="Section Title 1" value={data.seasonsTitle1} onChange={(v) => set('seasonsTitle1', v)} placeholder="A Love For" />
     <Field label="Section Title 2" value={data.seasonsTitle2} onChange={(v) => set('seasonsTitle2', v)} placeholder="Every Season" />
     <Field label="Hint Text" value={data.seasonsHint} onChange={(v) => set('seasonsHint', v)} placeholder="tap each season to discover its meaning" />
+
+    <div className="w-full h-px bg-[#1a1a1a] my-4" />
+
+    <div style={S.sectionTitle}>Cards</div>
+    <div style={S.sectionDesc}>Edit each card individually.</div>
     {seasons.map((s, i) => {
       const fallbackIcons = ['spring', 'summer', 'autumn', 'winter'];
       const currentIcon = s.icon || fallbackIcons[i % 4];
@@ -250,18 +382,9 @@ function TabSeasons({ data, set }) {
               value={currentIcon}
               onChange={(e) => setSeason(i, 'icon', e.target.value)}
             >
-              <option value="spring">Spring (Leaf)</option>
-              <option value="summer">Summer (Sun)</option>
-              <option value="autumn">Autumn (Tree)</option>
-              <option value="winter">Winter (Snowflake)</option>
-              <option value="sun">Sun</option>
-              <option value="moon">Moon</option>
-              <option value="star">Star</option>
-              <option value="heart">Heart</option>
-              <option value="coffee">Coffee</option>
-              <option value="music">Music</option>
-              <option value="sparkles">Sparkles</option>
-              <option value="clock">Clock (Time)</option>
+              {allIcons.map(ic => (
+                <option key={ic.value} value={ic.value}>{ic.label}</option>
+              ))}
             </select>
           </div>
           <Field label={`Card ${i + 1} Name`} value={s.name} onChange={(v) => setSeason(i, 'name', v)} placeholder="e.g. Morning / Spring" />

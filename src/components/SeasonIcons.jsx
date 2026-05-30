@@ -83,6 +83,171 @@ export const ClockSVG = ({ color = "currentColor" }) => (
   </svg>
 );
 
+// ── Flowers Preset Icons ─────────────────────────────────────────
+
+export const RoseSVG = ({ color = "currentColor" }) => (
+  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M24 44V28" />
+    <path d="M18 36C14 34 12 30 16 28" />
+    <path d="M30 36C34 34 36 30 32 28" />
+    <path d="M24 28C24 28 16 26 14 20C12 14 16 8 24 6C32 8 36 14 34 20C32 26 24 28 24 28Z" fill={color} fillOpacity="0.15" />
+    <path d="M24 6C22 12 20 16 20 20" />
+    <path d="M24 6C26 12 28 16 28 20" />
+  </svg>
+);
+
+export const TulipSVG = ({ color = "currentColor" }) => (
+  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M24 44V22" />
+    <path d="M18 38C12 34 14 30 18 28" />
+    <path d="M16 22C14 14 18 6 24 4C30 6 34 14 32 22" fill={color} fillOpacity="0.15" />
+    <path d="M16 22C18 20 22 22 24 22C26 22 30 20 32 22" />
+  </svg>
+);
+
+export const LilySVG = ({ color = "currentColor" }) => (
+  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M24 44V24" />
+    <path d="M20 36C14 32 16 28 20 26" />
+    <path d="M28 36C34 32 32 28 28 26" />
+    <path d="M24 24C20 20 14 16 12 10C16 12 22 14 24 18C26 14 32 12 36 10C34 16 28 20 24 24Z" fill={color} fillOpacity="0.15" />
+    <circle cx="24" cy="16" r="2" fill={color} fillOpacity="0.3" />
+  </svg>
+);
+
+export const SunflowerSVG = ({ color = "currentColor" }) => (
+  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M24 44V28" />
+    <path d="M18 38C12 36 14 30 18 30" />
+    <path d="M30 38C36 36 34 30 30 30" />
+    <circle cx="24" cy="18" r="6" fill={color} fillOpacity="0.3" />
+    <path d="M24 6L25 12M24 30L23 24M14 10L18 14M34 10L30 14M10 18L16 19M38 18L32 19M14 26L18 22M34 26L30 22" />
+  </svg>
+);
+
+// ── Time of Day Preset Icons ─────────────────────────────────────
+
+export const SunriseSVG = ({ color = "currentColor" }) => (
+  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 34H44" />
+    <path d="M24 28C18.48 28 14 23.52 14 18" stroke="none" />
+    <path d="M10 34C10 26.27 16.27 20 24 20C31.73 20 38 26.27 38 34" fill={color} fillOpacity="0.1" />
+    <path d="M24 12V6" />
+    <path d="M10.34 20.34L14.1 24.1" />
+    <path d="M37.66 20.34L33.9 24.1" />
+    <path d="M24 16L20 12L24 8L28 12L24 16Z" fill={color} fillOpacity="0.2" />
+  </svg>
+);
+
+export const NoonSVG = ({ color = "currentColor" }) => (
+  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="24" cy="22" r="10" fill={color} fillOpacity="0.15" />
+    <path d="M24 4V8M24 36V40M4 22H8M40 22H44M10 8L13 11M38 8L35 11M10 36L13 33M38 36L35 33" />
+    <path d="M8 44H40" />
+  </svg>
+);
+
+export const DuskSVG = ({ color = "currentColor" }) => (
+  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 36H44" />
+    <path d="M8 36C8 28.27 15.16 22 24 22C32.84 22 40 28.27 40 36" fill={color} fillOpacity="0.1" />
+    <circle cx="36" cy="14" r="4" fill={color} fillOpacity="0.2" />
+    <path d="M16 14L18 10L20 14" />
+    <path d="M26 16L28 12L30 16" />
+  </svg>
+);
+
+export const MidnightSVG = ({ color = "currentColor" }) => (
+  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M34 20C34 20 30 18 30 14C30 8 36 4 36 4C36 4 28 6 26 12C24.5 16 26 20 30 22" fill={color} fillOpacity="0.15" />
+    <circle cx="14" cy="10" r="1.5" fill={color} />
+    <circle cx="22" cy="6" r="1" fill={color} />
+    <circle cx="42" cy="16" r="1" fill={color} />
+    <circle cx="10" cy="22" r="1.5" fill={color} />
+    <path d="M4 36H44" />
+    <path d="M10 36C10 30 16 26 24 26C32 26 38 30 38 36" fill={color} fillOpacity="0.08" />
+  </svg>
+);
+
+// ── Landscape Preset Icons ───────────────────────────────────────
+
+export const OceanSVG = ({ color = "currentColor" }) => (
+  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 24C8 20 12 20 16 24C20 28 24 28 28 24C32 20 36 20 40 24C44 28 44 28 44 28" fill={color} fillOpacity="0.1" />
+    <path d="M4 32C8 28 12 28 16 32C20 36 24 36 28 32C32 28 36 28 40 32" />
+    <path d="M4 40C8 36 12 36 16 40C20 44 24 44 28 40C32 36 36 36 40 40" />
+    <circle cx="36" cy="12" r="4" fill={color} fillOpacity="0.2" />
+  </svg>
+);
+
+export const MountainSVG = ({ color = "currentColor" }) => (
+  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 40L18 12L28 28L34 20L44 40H4Z" fill={color} fillOpacity="0.1" />
+    <path d="M14 22L18 12L22 22" />
+    <circle cx="38" cy="10" r="3" fill={color} fillOpacity="0.2" />
+  </svg>
+);
+
+export const ForestSVG = ({ color = "currentColor" }) => (
+  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M24 4L16 18H20L14 30H22V42H26V30H34L28 18H32L24 4Z" fill={color} fillOpacity="0.15" />
+    <path d="M10 42L8 34H10L6 24H12V42" fill={color} fillOpacity="0.08" />
+    <path d="M38 42L36 34H38L34 24H40V42" fill={color} fillOpacity="0.08" />
+    <path d="M4 42H44" />
+  </svg>
+);
+
+export const DesertSVG = ({ color = "currentColor" }) => (
+  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 36C10 32 18 30 24 32C30 34 38 32 44 36" fill={color} fillOpacity="0.1" />
+    <path d="M4 40C12 36 20 38 28 36C36 34 44 38 44 40" />
+    <circle cx="36" cy="12" r="5" fill={color} fillOpacity="0.2" />
+    <path d="M18 36V22C18 18 22 16 22 16" />
+    <path d="M18 26C16 24 12 24 12 28" />
+    <path d="M18 22C20 20 24 22 24 26" />
+  </svg>
+);
+
+// ── Keepsakes Preset Icons ───────────────────────────────────────
+
+export const CandleSVG = ({ color = "currentColor" }) => (
+  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="18" y="22" width="12" height="20" rx="2" fill={color} fillOpacity="0.1" />
+    <path d="M24 22V16" />
+    <path d="M24 16C22 12 22 8 24 4C26 8 26 12 24 16Z" fill={color} fillOpacity="0.3" />
+    <path d="M20 30H28" />
+    <path d="M20 34H28" />
+  </svg>
+);
+
+export const LetterSVG = ({ color = "currentColor" }) => (
+  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="6" y="12" width="36" height="26" rx="3" fill={color} fillOpacity="0.1" />
+    <path d="M6 16L24 28L42 16" />
+    <path d="M6 38L18 28" />
+    <path d="M42 38L30 28" />
+  </svg>
+);
+
+export const RingSVG = ({ color = "currentColor" }) => (
+  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <ellipse cx="24" cy="28" rx="14" ry="14" fill={color} fillOpacity="0.05" />
+    <ellipse cx="24" cy="28" rx="10" ry="10" />
+    <path d="M20 18L18 8H30L28 18" />
+    <path d="M24 8L22 4H26L24 8Z" fill={color} fillOpacity="0.3" />
+  </svg>
+);
+
+export const KeySVG = ({ color = "currentColor" }) => (
+  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="16" cy="18" r="10" fill={color} fillOpacity="0.1" />
+    <circle cx="16" cy="18" r="5" />
+    <path d="M22 24L40 42" />
+    <path d="M34 36L38 32" />
+    <path d="M30 32L34 28" />
+  </svg>
+);
+
 // Map definition for easy dynamic rendering
 export const SEASON_ICONS = {
   spring: { component: SpringSVG, name: 'Spring (Leaf)', defaultColor: '#B5C9A1' },
@@ -97,4 +262,25 @@ export const SEASON_ICONS = {
   music: { component: MusicSVG, name: 'Music', defaultColor: '#10B981' },
   sparkles: { component: SparklesSVG, name: 'Sparkles', defaultColor: '#F59E0B' },
   clock: { component: ClockSVG, name: 'Clock (Time)', defaultColor: '#64748B' },
+  // Flowers preset
+  rose: { component: RoseSVG, name: 'Rose', defaultColor: '#E11D48' },
+  tulip: { component: TulipSVG, name: 'Tulip', defaultColor: '#F472B6' },
+  lily: { component: LilySVG, name: 'Lily', defaultColor: '#FBBF24' },
+  sunflower: { component: SunflowerSVG, name: 'Sunflower', defaultColor: '#F59E0B' },
+  // Time of Day preset
+  sunrise: { component: SunriseSVG, name: 'Sunrise', defaultColor: '#FB923C' },
+  noon: { component: NoonSVG, name: 'Noon', defaultColor: '#FACC15' },
+  dusk: { component: DuskSVG, name: 'Dusk', defaultColor: '#C084FC' },
+  midnight: { component: MidnightSVG, name: 'Midnight', defaultColor: '#818CF8' },
+  // Landscape preset
+  ocean: { component: OceanSVG, name: 'Ocean', defaultColor: '#38BDF8' },
+  mountain: { component: MountainSVG, name: 'Mountain', defaultColor: '#6EE7B7' },
+  forest: { component: ForestSVG, name: 'Forest', defaultColor: '#4ADE80' },
+  desert: { component: DesertSVG, name: 'Desert', defaultColor: '#FCD34D' },
+  // Keepsakes preset
+  candle: { component: CandleSVG, name: 'Candle', defaultColor: '#FBBF24' },
+  letter: { component: LetterSVG, name: 'Letter', defaultColor: '#F9A8D4' },
+  ring: { component: RingSVG, name: 'Ring', defaultColor: '#E2E8F0' },
+  key: { component: KeySVG, name: 'Key', defaultColor: '#D4A574' },
 };
+
