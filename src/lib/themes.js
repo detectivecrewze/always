@@ -2,7 +2,7 @@ export const themes = {
   'vintage-burgundy': {
     name: 'Vintage Burgundy',
     bg: '#2D141E',
-    surface: '#401C2B', // Approx for rgba(64, 28, 43)
+    surface: '#401C2B',
     text: '#FDE8E9',
     textMuted: '#D1A7B1',
     accent: '#E2859B',
@@ -10,40 +10,58 @@ export const themes = {
   },
   'classic-light': {
     name: 'Classic Light',
-    bg: '#FAF7F2',
-    surface: '#F0EBE3',
-    text: '#2C2420',
-    textMuted: '#8C7B72',
-    accent: '#C9A882',
-    particle: '#E8C4B8',
+    bg: '#FDFAF5',           // warm ivory — richer than plain white
+    surface: '#F5EEE4',      // soft parchment
+    text: '#1C1410',         // deep warm brown
+    textMuted: '#7A6659',    // muted walnut
+    accent: '#B07D4E',       // warm antique gold
+    particle: '#DEC4A8',     // sand blush
   },
   'midnight-rose': {
     name: 'Midnight Rose',
-    bg: '#050505',
-    surface: '#111111',
-    text: '#f5f5f5',
-    textMuted: '#a1a1aa', // zinc-400
-    accent: '#E11D48',    // rose-600
-    particle: '#713f12',  // dark warm tone for particles
+    bg: '#0A0408',           // near-black with warm undertone
+    surface: '#1A0B12',      // deep burgundy-black
+    text: '#FAF0F2',         // soft warm white
+    textMuted: '#C4949E',    // rose mist
+    accent: '#E84D72',       // vivid rose
+    particle: '#7A1F36',     // deep ruby glow
   },
   'ocean-breeze': {
     name: 'Ocean Breeze',
-    bg: '#F0F7FA',
-    surface: '#E1EEF4',
-    text: '#1E293B',      // slate-800
-    textMuted: '#64748B', // slate-500
-    accent: '#0D9488',    // teal-600
-    particle: '#99F6E4',  // teal-200
+    bg: '#071520',           // deep ocean navy
+    surface: '#0D2235',      // dark sapphire
+    text: '#E8F4FD',         // pale ice
+    textMuted: '#7EB8D4',    // ocean mist
+    accent: '#4FB8D8',       // sky teal
+    particle: '#1A5E80',     // deep tide
   },
   'blush-pink': {
     name: 'Blush Pink',
-    bg: '#FFF1F2',        // rose-50
-    surface: '#FFE4E6',   // rose-100
-    text: '#4C0519',      // rose-950 (deep warm rose instead of blue/violet)
-    textMuted: '#9F1239', // rose-700
-    accent: '#E11D48',    // rose-600
-    particle: '#FECDD3',  // rose-200
-  }
+    bg: '#2A0D18',           // dark velvet berry
+    surface: '#3D1526',      // deep rose
+    text: '#FFF0F3',         // pure blush white
+    textMuted: '#E8A5BB',    // soft rose
+    accent: '#F472B6',       // bright rose-pink
+    particle: '#9D1F45',     // deep fuchsia glow
+  },
+  'midnight-blue': {
+    name: 'Midnight Blue',
+    bg: '#050C1A',           // darkest navy
+    surface: '#0A1628',      // rich indigo-blue
+    text: '#EEF3FF',         // cool white
+    textMuted: '#8CA8D4',    // slate blue
+    accent: '#3B82F6',       // bright blue
+    particle: '#1B3A6B',     // deep cobalt glow
+  },
+  'velvet-purple': {
+    name: 'Velvet Purple',
+    bg: '#120818',           // blackened plum
+    surface: '#1E0E2C',      // deep violet
+    text: '#F5EFFF',         // pale lavender white
+    textMuted: '#B89FD8',    // soft iris
+    accent: '#A855F7',       // bright purple
+    particle: '#4A1282',     // deep amethyst glow
+  },
 };
 
 export const defaultTheme = 'vintage-burgundy';

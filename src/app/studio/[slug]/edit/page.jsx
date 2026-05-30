@@ -44,10 +44,12 @@ function TabTheme({ data, set }) {
   // We redefine the palettes locally for the UI preview
   const palettes = {
     'vintage-burgundy': { name: 'Vintage Burgundy', bg: '#2D141E', accent: '#E2859B' },
-    'classic-light': { name: 'Classic Light', bg: '#FAF7F2', accent: '#C9A882' },
-    'midnight-rose': { name: 'Midnight Rose', bg: '#050505', accent: '#E11D48' },
-    'ocean-breeze': { name: 'Ocean Breeze', bg: '#F0F7FA', accent: '#0D9488' },
-    'blush-pink': { name: 'Blush Pink', bg: '#FFF1F2', accent: '#E11D48' },
+    'classic-light':    { name: 'Classic Light',    bg: '#FDFAF5', accent: '#B07D4E' },
+    'midnight-rose':    { name: 'Midnight Rose',    bg: '#0A0408', accent: '#E84D72' },
+    'ocean-breeze':     { name: 'Ocean Breeze',     bg: '#071520', accent: '#4FB8D8' },
+    'blush-pink':       { name: 'Blush Pink',       bg: '#2A0D18', accent: '#F472B6' },
+    'midnight-blue':    { name: 'Midnight Blue',    bg: '#050C1A', accent: '#C9A84C' },
+    'velvet-purple':    { name: 'Velvet Purple',    bg: '#120818', accent: '#A855F7' },
   };
 
   return (<>
@@ -237,37 +239,37 @@ const LETTER_PRESETS = [
     id: 'classic', name: '💐 Classic Romance', desc: 'Traditional love letter',
     preTitle: 'from my heart', h1: 'You are my', h2: 'wildest dream', h3: 'come true.',
     text: [
-      'In a world full of ordinary moments, you are the extraordinary one. The way you laugh, the way you care, the way you simply exist — it fills every corner of my world with something I never knew I needed.',
+      'In a world full of ordinary moments, you are the extraordinary one. The way you laugh, the way you care, the way you simply exist, it fills every corner of my world with something I never knew I needed.',
       'These flowers are not enough. No words ever could be. But they carry every unspoken feeling I hold for you, pressed between their petals like tiny love letters waiting to be found.'
     ],
-    signOff: '– Always yours 🌹',
+    signOff: '- Always yours 🌹',
   },
   {
     id: 'poetic', name: '🖋️ Poetic Soul', desc: 'Lyrical and dreamy',
     preTitle: 'a poem for your soul', h1: 'In every', h2: 'quiet moment', h3: 'I find you.',
     text: [
-      'If my love were a poem, it would have no ending — just verses that keep unfolding, each line softer than the last, each word a little closer to the truth of what you mean to me.',
-      'You are not a chapter in my story. You are the space between every line — the pause that makes everything else make sense.'
+      'If my love were a poem, it would have no ending, just verses that keep unfolding, each line softer than the last, each word a little closer to the truth of what you mean to me.',
+      'You are not a chapter in my story. You are the space between every line, the pause that makes everything else make sense.'
     ],
-    signOff: '– Written in starlight ✦',
+    signOff: '- Written in starlight ✦',
   },
   {
     id: 'heartfelt', name: '🤍 Heartfelt & Honest', desc: 'Simple and sincere',
     preTitle: 'honestly, from me to you', h1: 'I just', h2: 'love you', h3: 'that\'s all.',
     text: [
-      'I\'m not great with words, and maybe I don\'t always say it right. But you should know — every single day, in ways I can\'t always explain, you make my world better just by being in it.',
+      'I\'m not great with words, and maybe I don\'t always say it right. But you should know, every single day, in ways I can\'t always explain, you make my world better just by being in it.',
       'This is my way of telling you what I sometimes forget to say out loud: you are enough, you are loved, and you are the best thing that ever happened to me.'
     ],
-    signOff: '– With all of me ❤️',
+    signOff: '- With all of me ❤️',
   },
   {
     id: 'nostalgic', name: '📷 Nostalgic Memory', desc: 'Looking back at your love story',
-    preTitle: 'a letter through time', h1: 'Remember when', h2: 'it all began', h3: '— I do.',
+    preTitle: 'a letter through time', h1: 'Remember when', h2: 'it all began', h3: ', I do.',
     text: [
-      'Do you remember the first time our eyes met? I didn\'t know it then, but that was the moment everything changed. The world didn\'t get louder — it got quieter, like it was making room for you.',
-      'Every memory with you feels like a photograph I never want to lose. The laughter, the quiet moments, even the storms — they all led us here, and I wouldn\'t trade a single one.'
+      'Do you remember the first time our eyes met? I didn\'t know it then, but that was the moment everything changed. The world didn\'t get louder, it got quieter, like it was making room for you.',
+      'Every memory with you feels like a photograph I never want to lose. The laughter, the quiet moments, even the storms, they all led us here, and I wouldn\'t trade a single one.'
     ],
-    signOff: '– From the beginning, until forever 🕰️',
+    signOff: '- From the beginning, until forever 🕰️',
   },
 ];
 
@@ -298,7 +300,7 @@ function TabLetter({ data, set }) {
     <PresetGrid presets={LETTER_PRESETS} currentId={currentPreset} onApply={applyPreset} />
     <div className="w-full h-px bg-[#1a1a1a] mb-4" />
     <div style={S.sectionTitle}>Love Letter</div>
-    <div style={S.sectionDesc}>The heartfelt letter section — styled like a candlelight note.</div>
+    <div style={S.sectionDesc}>The heartfelt letter section, styled like a candlelight note.</div>
     <Field label="Pre-title" value={data.introPreTitle} onChange={(v) => set('introPreTitle', v)} placeholder="from my heart" />
     <Field label="Headline 1" value={data.introHeadline1} onChange={(v) => set('introHeadline1', v)} placeholder="You are my" />
     <Field label="Headline 2 (accent)" value={data.introHeadline2} onChange={(v) => set('introHeadline2', v)} placeholder="wildest dream" />
@@ -362,7 +364,7 @@ const REASONS_PRESETS = [
       { title: 'Your Dreams', desc: 'For sharing your future with me in it.' },
       { title: 'Your Effort', desc: 'For never giving up on what we have.' },
       { title: 'Your Love', desc: 'For choosing me when you could choose anyone.' },
-      { title: 'Being You', desc: 'For being exactly who you are — nothing more, nothing less.' },
+      { title: 'Being You', desc: 'For being exactly who you are, nothing more, nothing less.' },
     ],
   },
 ];
@@ -419,8 +421,8 @@ const SEASON_PRESETS = [
     title2: 'Every Season',
     hint: 'tap each season to discover its meaning',
     cards: [
-      { icon: 'spring', name: 'Spring', teaser: 'where it all began', message: 'Like the first bloom after a long winter, you arrived when I least expected — and everything grew.' },
-      { icon: 'summer', name: 'Summer', teaser: 'when love was loudest', message: 'In the fullness of us, I felt the sun from the inside. No distance, no doubt — just warmth.' },
+      { icon: 'spring', name: 'Spring', teaser: 'where it all began', message: 'Like the first bloom after a long winter, you arrived when I least expected, and everything grew.' },
+      { icon: 'summer', name: 'Summer', teaser: 'when love was loudest', message: 'In the fullness of us, I felt the sun from the inside. No distance, no doubt, just warmth.' },
       { icon: 'autumn', name: 'Autumn', teaser: 'beautiful even as things changed', message: 'Loving you through change taught me that some things don\'t need to stay the same to stay beautiful.' },
       { icon: 'winter', name: 'Winter', teaser: 'I stayed, and I\'d stay again', message: 'In the quiet and the cold, I chose you still. I will always choose you still.' },
     ],
@@ -433,10 +435,10 @@ const SEASON_PRESETS = [
     title2: 'Love Letters',
     hint: 'tap each flower to read its message',
     cards: [
-      { icon: 'rose', name: 'Rose', teaser: 'passion that never fades', message: 'You are the red that burns through gray days — bold, unwavering, a love that refuses to be quiet.' },
+      { icon: 'rose', name: 'Rose', teaser: 'passion that never fades', message: 'You are the red that burns through gray days, bold, unwavering, a love that refuses to be quiet.' },
       { icon: 'tulip', name: 'Tulip', teaser: 'a perfect declaration', message: 'If I could only say it once, I\'d say it with you. You are my favorite first and my favorite always.' },
       { icon: 'lily', name: 'Lily', teaser: 'devotion without condition', message: 'You didn\'t ask me to be more, and somehow that made me want to give you everything.' },
-      { icon: 'sunflower', name: 'Sunflower', teaser: 'always turning toward you', message: 'No matter where I stand, I find myself facing you — you are the light I follow home.' },
+      { icon: 'sunflower', name: 'Sunflower', teaser: 'always turning toward you', message: 'No matter where I stand, I find myself facing you. You are the light I follow home.' },
     ],
   },
   {
@@ -447,10 +449,10 @@ const SEASON_PRESETS = [
     title2: 'Is Yours',
     hint: 'tap each moment to unfold its story',
     cards: [
-      { icon: 'sunrise', name: 'Sunrise', teaser: 'the promise of beginning', message: 'Every morning I wake up choosing you. Not because I have to — because every dawn feels incomplete without the thought of you.' },
+      { icon: 'sunrise', name: 'Sunrise', teaser: 'the promise of beginning', message: 'Every morning I wake up choosing you. Not because I have to, because every dawn feels incomplete without the thought of you.' },
       { icon: 'noon', name: 'Noon', teaser: 'love at its brightest', message: 'In the loudest, busiest parts of my day, you are the stillness I carry. The calm center in all the noise.' },
-      { icon: 'dusk', name: 'Dusk', teaser: 'when the world softens', message: 'There\'s a golden hour that only exists when I\'m near you — when everything slows, and the light paints us just right.' },
-      { icon: 'midnight', name: 'Midnight', teaser: 'secrets only we know', message: 'In the quiet dark, with nothing left but honesty — that\'s where I love you most. Where pretending is impossible.' },
+      { icon: 'dusk', name: 'Dusk', teaser: 'when the world softens', message: 'There\'s a golden hour that only exists when I\'m near you, when everything slows, and the light paints us just right.' },
+      { icon: 'midnight', name: 'Midnight', teaser: 'secrets only we know', message: 'In the quiet dark, with nothing left but honesty, that\'s where I love you most. Where pretending is impossible.' },
     ],
   },
   {
@@ -461,10 +463,10 @@ const SEASON_PRESETS = [
     title2: 'I Keep Close',
     hint: 'tap each keepsake to reveal its meaning',
     cards: [
-      { icon: 'candle', name: 'The Flame', teaser: 'a light that never dims', message: 'Even in the darkest corners of doubt, your love is the candle I hold — small but unwavering, enough to find my way.' },
+      { icon: 'candle', name: 'The Flame', teaser: 'a light that never dims', message: 'Even in the darkest corners of doubt, your love is the candle I hold, small but unwavering, enough to find my way.' },
       { icon: 'letter', name: 'The Letter', teaser: 'words folded with care', message: 'If I wrote you a letter every day, they would all say the same thing in different ways: I am better because of you.' },
-      { icon: 'ring', name: 'The Promise', teaser: 'unbroken and unending', message: 'Not a promise of perfection — but of presence. I will stay, I will try, I will choose you over and over again.' },
-      { icon: 'key', name: 'The Key', teaser: 'you unlocked everything', message: 'Before you, there were rooms in my heart I didn\'t know existed. You didn\'t just open them — you filled them.' },
+      { icon: 'ring', name: 'The Promise', teaser: 'unbroken and unending', message: 'Not a promise of perfection, but of presence. I will stay, I will try, I will choose you over and over again.' },
+      { icon: 'key', name: 'The Key', teaser: 'you unlocked everything', message: 'Before you, there were rooms in my heart I didn\'t know existed. You didn\'t just open them, you filled them.' },
     ],
   },
 ];
@@ -688,7 +690,7 @@ const CLOSING_PRESETS = [
   {
     id: 'adventure', name: '🗺️ Adventurous', desc: 'Ready for what\'s next together',
     preTitle: 'the best is yet to come', title1: 'Our Story', title2: 'Continues',
-    paragraph: 'This isn\'t the end — it\'s a beginning. A new chapter written in the ink of our laughter, our tears, our inside jokes, and our silent promises. Wherever the road goes next, I want to walk it with you.',
+    paragraph: 'This isn\'t the end, it\'s a beginning. A new chapter written in the ink of our laughter, our tears, our inside jokes, and our silent promises. Wherever the road goes next, I want to walk it with you.',
     closingLine: 'your partner in everything,', celebrateBtn: 'to the next chapter ✨',
   },
   {
