@@ -147,16 +147,81 @@ function FileUpload({ label, slug, currentUrl, onUploaded }) {
 }
 
 // ── Tab Panels ────────────────────────────────────────────────────
+
+// ── Preset UI Helper ─────────────────────────────────────────────
+function PresetGrid({ presets, currentId, onApply }) {
+  return (
+    <div className="grid grid-cols-2 gap-3 mb-6">
+      {presets.map((preset) => {
+        const isActive = currentId === preset.id;
+        return (
+          <button
+            key={preset.id}
+            onClick={() => onApply(preset)}
+            className={`rounded-xl p-4 text-left transition-all border-2 ${
+              isActive
+                ? 'border-[#E11D48] bg-[#E11D48]/10 shadow-[0_0_20px_rgba(225,29,72,0.15)]'
+                : 'border-[#222] bg-[#111] hover:border-[#444]'
+            }`}
+          >
+            <div className="text-base mb-1">{preset.name}</div>
+            <div className={`text-[0.65rem] ${isActive ? 'text-[#F472B6]' : 'text-[#666]'}`}>{preset.desc}</div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Opening Presets ──────────────────────────────────────────────
+const OPENING_PRESETS = [
+  { id: 'romantic', name: '💌 Romantic', desc: 'A gift for someone special', subtitle: 'something made just for you' },
+  { id: 'birthday', name: '🎂 Birthday', desc: 'Happy birthday surprise', subtitle: 'happy birthday, my love' },
+  { id: 'anniversary', name: '💍 Anniversary', desc: 'Celebrating your love', subtitle: 'for the love of my life' },
+  { id: 'justbecause', name: '✨ Just Because', desc: 'No occasion needed', subtitle: 'because you deserve this' },
+];
+
 function TabOpening({ data, set }) {
+  const currentPreset = OPENING_PRESETS.find(p => p.subtitle === data.gateSubtitle)?.id || null;
+
   return (<>
+    <div style={S.sectionTitle}>Choose a Preset</div>
+    <div style={S.sectionDesc}>Quick-start with a subtitle template.</div>
+    <PresetGrid
+      presets={OPENING_PRESETS}
+      currentId={currentPreset}
+      onApply={(preset) => set('gateSubtitle', preset.subtitle)}
+    />
+    <div className="w-full h-px bg-[#1a1a1a] mb-4" />
     <div style={S.sectionTitle}>Gate Screen</div>
     <div style={S.sectionDesc}>The first thing visitors see before entering.</div>
     <Field label="Gate Subtitle" value={data.gateSubtitle} onChange={(v) => set('gateSubtitle', v)} placeholder="a gift for someone special" />
   </>);
 }
 
+// ── Hero Presets ─────────────────────────────────────────────────
+const HERO_PRESETS = [
+  { id: 'bloom', name: '🌸 In Bloom', desc: 'A love letter in bloom', preTitle: 'a love letter in bloom', line1: 'For You,', line2: 'My Everything', subtitle: 'Every petal holds a whisper of how much you mean to me.' },
+  { id: 'stars', name: '🌙 Starlit', desc: 'Written under the stars', preTitle: 'written under the stars', line1: 'To The One', line2: 'Who Holds My Heart', subtitle: 'Every star in the sky reminds me of a reason I love you.' },
+  { id: 'ocean', name: '🌊 Deep as the Ocean', desc: 'An ocean of feelings', preTitle: 'an ocean of feelings', line1: 'My Love,', line2: 'My Safe Harbor', subtitle: 'In the vastness of everything, you are my calm and my depth.' },
+  { id: 'timeless', name: '⏳ Timeless', desc: 'Beyond time itself', preTitle: 'beyond time itself', line1: 'Forever,', line2: 'Begins With You', subtitle: 'Time stands still whenever I look into your eyes.' },
+];
+
 function TabHero({ data, set }) {
+  const currentPreset = HERO_PRESETS.find(p => p.preTitle === data.heroPreTitle)?.id || null;
+
+  const applyPreset = (preset) => {
+    set('heroPreTitle', preset.preTitle);
+    set('heroLine1', preset.line1);
+    set('heroLine2', preset.line2);
+    set('heroSubtitle', preset.subtitle);
+  };
+
   return (<>
+    <div style={S.sectionTitle}>Choose a Preset</div>
+    <div style={S.sectionDesc}>Pick a hero theme to start.</div>
+    <PresetGrid presets={HERO_PRESETS} currentId={currentPreset} onApply={applyPreset} />
+    <div className="w-full h-px bg-[#1a1a1a] mb-4" />
     <div style={S.sectionTitle}>Hero Section</div>
     <div style={S.sectionDesc}>The big opening moment after the gate.</div>
     <Field label="Pre-title" value={data.heroPreTitle} onChange={(v) => set('heroPreTitle', v)} placeholder="to my dearest" />
@@ -165,6 +230,46 @@ function TabHero({ data, set }) {
     <Field label="Subtitle" value={data.heroSubtitle} onChange={(v) => set('heroSubtitle', v)} placeholder="scroll to unwrap your gift" />
   </>);
 }
+
+// ── Letter Presets ───────────────────────────────────────────────
+const LETTER_PRESETS = [
+  {
+    id: 'classic', name: '💐 Classic Romance', desc: 'Traditional love letter',
+    preTitle: 'from my heart', h1: 'You are my', h2: 'wildest dream', h3: 'come true.',
+    text: [
+      'In a world full of ordinary moments, you are the extraordinary one. The way you laugh, the way you care, the way you simply exist — it fills every corner of my world with something I never knew I needed.',
+      'These flowers are not enough. No words ever could be. But they carry every unspoken feeling I hold for you, pressed between their petals like tiny love letters waiting to be found.'
+    ],
+    signOff: '– Always yours 🌹',
+  },
+  {
+    id: 'poetic', name: '🖋️ Poetic Soul', desc: 'Lyrical and dreamy',
+    preTitle: 'a poem for your soul', h1: 'In every', h2: 'quiet moment', h3: 'I find you.',
+    text: [
+      'If my love were a poem, it would have no ending — just verses that keep unfolding, each line softer than the last, each word a little closer to the truth of what you mean to me.',
+      'You are not a chapter in my story. You are the space between every line — the pause that makes everything else make sense.'
+    ],
+    signOff: '– Written in starlight ✦',
+  },
+  {
+    id: 'heartfelt', name: '🤍 Heartfelt & Honest', desc: 'Simple and sincere',
+    preTitle: 'honestly, from me to you', h1: 'I just', h2: 'love you', h3: 'that\'s all.',
+    text: [
+      'I\'m not great with words, and maybe I don\'t always say it right. But you should know — every single day, in ways I can\'t always explain, you make my world better just by being in it.',
+      'This is my way of telling you what I sometimes forget to say out loud: you are enough, you are loved, and you are the best thing that ever happened to me.'
+    ],
+    signOff: '– With all of me ❤️',
+  },
+  {
+    id: 'nostalgic', name: '📷 Nostalgic Memory', desc: 'Looking back at your love story',
+    preTitle: 'a letter through time', h1: 'Remember when', h2: 'it all began', h3: '— I do.',
+    text: [
+      'Do you remember the first time our eyes met? I didn\'t know it then, but that was the moment everything changed. The world didn\'t get louder — it got quieter, like it was making room for you.',
+      'Every memory with you feels like a photograph I never want to lose. The laughter, the quiet moments, even the storms — they all led us here, and I wouldn\'t trade a single one.'
+    ],
+    signOff: '– From the beginning, until forever 🕰️',
+  },
+];
 
 function TabLetter({ data, set }) {
   const paragraphs = Array.isArray(data.introText) ? data.introText : [data.introText || ''];
@@ -176,7 +281,22 @@ function TabLetter({ data, set }) {
   const addPara = () => set('introText', [...paragraphs, '']);
   const removePara = (idx) => set('introText', paragraphs.filter((_, i) => i !== idx));
 
+  const currentPreset = LETTER_PRESETS.find(p => p.preTitle === data.introPreTitle)?.id || null;
+
+  const applyPreset = (preset) => {
+    set('introPreTitle', preset.preTitle);
+    set('introHeadline1', preset.h1);
+    set('introHeadline2', preset.h2);
+    set('introHeadline3', preset.h3);
+    set('introText', [...preset.text]);
+    set('introSignOff', preset.signOff);
+  };
+
   return (<>
+    <div style={S.sectionTitle}>Choose a Preset</div>
+    <div style={S.sectionDesc}>Pick a writing style for the love letter.</div>
+    <PresetGrid presets={LETTER_PRESETS} currentId={currentPreset} onApply={applyPreset} />
+    <div className="w-full h-px bg-[#1a1a1a] mb-4" />
     <div style={S.sectionTitle}>Love Letter</div>
     <div style={S.sectionDesc}>The heartfelt letter section — styled like a candlelight note.</div>
     <Field label="Pre-title" value={data.introPreTitle} onChange={(v) => set('introPreTitle', v)} placeholder="from my heart" />
@@ -195,6 +315,58 @@ function TabLetter({ data, set }) {
   </>);
 }
 
+// ── Reasons Presets ──────────────────────────────────────────────
+const REASONS_PRESETS = [
+  {
+    id: 'qualities', name: '✦ Beautiful Qualities', desc: 'What makes them special',
+    title1: 'The Reasons', title2: 'I Love You',
+    cards: [
+      { title: 'Your Laugh', desc: 'The sound that makes every room feel like home.' },
+      { title: 'Your Patience', desc: 'How you wait for me even when I take too long.' },
+      { title: 'Your Kindness', desc: 'The way you care without ever being asked.' },
+      { title: 'Your Courage', desc: 'How you face the world even on the hardest days.' },
+      { title: 'Your Warmth', desc: 'The feeling of being next to you on a quiet night.' },
+      { title: 'Your Presence', desc: 'Just being with you is more than enough.' },
+    ],
+  },
+  {
+    id: 'moments', name: '📸 Precious Moments', desc: 'Memories that define your love',
+    title1: 'Moments That', title2: 'Made Me Yours',
+    cards: [
+      { title: 'Our First Talk', desc: 'The conversation that changed everything.' },
+      { title: 'Late Night Calls', desc: 'Hours of silence that somehow said everything.' },
+      { title: 'The First Trip', desc: 'Getting lost together and finding ourselves.' },
+      { title: 'That Rainy Day', desc: 'When we chose to stay instead of running.' },
+      { title: 'Your Birthday', desc: 'Seeing you happy made the world make sense.' },
+      { title: 'Right Now', desc: 'Because every moment with you is a reason.' },
+    ],
+  },
+  {
+    id: 'promises', name: '🤝 Promises', desc: 'Things you vow to always do',
+    title1: 'I Promise', title2: 'To Always',
+    cards: [
+      { title: 'Listen First', desc: 'To hear your heart before I speak my mind.' },
+      { title: 'Choose You', desc: 'Every morning, every argument, every time.' },
+      { title: 'Make You Laugh', desc: 'Even when the world tries to make you cry.' },
+      { title: 'Hold You Close', desc: 'On the good days, the bad days, and the quiet ones.' },
+      { title: 'Be Honest', desc: 'Even when the truth is hard to say out loud.' },
+      { title: 'Never Give Up', desc: 'On us, on you, on everything we\'ve built.' },
+    ],
+  },
+  {
+    id: 'gratitude', name: '🙏 Gratitude', desc: 'Things you\'re thankful for',
+    title1: 'Thank You', title2: 'For Everything',
+    cards: [
+      { title: 'Your Trust', desc: 'For letting me into the parts of you no one sees.' },
+      { title: 'Your Forgiveness', desc: 'For loving me through my worst days.' },
+      { title: 'Your Dreams', desc: 'For sharing your future with me in it.' },
+      { title: 'Your Effort', desc: 'For never giving up on what we have.' },
+      { title: 'Your Love', desc: 'For choosing me when you could choose anyone.' },
+      { title: 'Being You', desc: 'For being exactly who you are — nothing more, nothing less.' },
+    ],
+  },
+];
+
 function TabReasons({ data, set }) {
   const reasons = data.reasons || [];
   const setReason = (idx, key, val) => {
@@ -205,7 +377,19 @@ function TabReasons({ data, set }) {
   const addReason = () => set('reasons', [...reasons, { title: '', desc: '' }]);
   const removeReason = (idx) => set('reasons', reasons.filter((_, i) => i !== idx));
 
+  const currentPreset = REASONS_PRESETS.find(p => p.title1 === data.reasonsTitle1 && p.title2 === data.reasonsTitle2)?.id || null;
+
+  const applyPreset = (preset) => {
+    set('reasonsTitle1', preset.title1);
+    set('reasonsTitle2', preset.title2);
+    set('reasons', preset.cards.map(c => ({ ...c })));
+  };
+
   return (<>
+    <div style={S.sectionTitle}>Choose a Preset</div>
+    <div style={S.sectionDesc}>Pick a theme for the reason cards.</div>
+    <PresetGrid presets={REASONS_PRESETS} currentId={currentPreset} onApply={applyPreset} />
+    <div className="w-full h-px bg-[#1a1a1a] mb-4" />
     <div style={S.sectionTitle}>Reasons I Love You</div>
     <div style={S.sectionDesc}>Tap-to-reveal cards. Each has a title and description.</div>
     <Field label="Section Title 1" value={data.reasonsTitle1} onChange={(v) => set('reasonsTitle1', v)} placeholder="The Reasons" />
@@ -223,6 +407,7 @@ function TabReasons({ data, set }) {
     <button style={S.smallBtn('#22C55E')} onClick={addReason}>+ Add Reason</button>
   </>);
 }
+
 
 // ── Seasons Presets ───────────────────────────────────────────────
 const SEASON_PRESETS = [
@@ -486,8 +671,51 @@ function TabMusic({ data, set, slug }) {
   </>);
 }
 
+// ── Closing Presets ──────────────────────────────────────────────
+const CLOSING_PRESETS = [
+  {
+    id: 'eternal', name: '💫 Eternal Love', desc: 'A love that transcends everything',
+    preTitle: 'always & forever', title1: 'You Are Loved', title2: 'Beyond Words',
+    paragraph: 'No matter where life takes us, know that somewhere in the universe, there is a garden blooming with every feeling I have ever held for you. You deserve the world. You deserve all the flowers. You deserve everything.',
+    closingLine: 'always yours,', celebrateBtn: 'celebrate ✨',
+  },
+  {
+    id: 'grateful', name: '🙏 Gratefully Yours', desc: 'Thankful for every moment',
+    preTitle: 'with gratitude', title1: 'Thank You For', title2: 'Being You',
+    paragraph: 'You walked into my life and made everything softer, brighter, more worth living. I don\'t know what I did to deserve you, but I know I\'d do it all over again. A thousand times over.',
+    closingLine: 'gratefully yours,', celebrateBtn: 'celebrate us ✨',
+  },
+  {
+    id: 'adventure', name: '🗺️ Adventurous', desc: 'Ready for what\'s next together',
+    preTitle: 'the best is yet to come', title1: 'Our Story', title2: 'Continues',
+    paragraph: 'This isn\'t the end — it\'s a beginning. A new chapter written in the ink of our laughter, our tears, our inside jokes, and our silent promises. Wherever the road goes next, I want to walk it with you.',
+    closingLine: 'your partner in everything,', celebrateBtn: 'to the next chapter ✨',
+  },
+  {
+    id: 'simple', name: '🤍 Simple & True', desc: 'No frills, just love',
+    preTitle: 'simply', title1: 'I Love You', title2: 'That\'s It.',
+    paragraph: 'There are no fancy words left to say. Just three simple ones that carry everything I feel, everything I hope, and everything I promise: I love you.',
+    closingLine: 'yours,', celebrateBtn: 'celebrate ✨',
+  },
+];
+
 function TabClosing({ data, set, slug }) {
+  const currentPreset = CLOSING_PRESETS.find(p => p.preTitle === data.closingPreTitle)?.id || null;
+
+  const applyPreset = (preset) => {
+    set('closingPreTitle', preset.preTitle);
+    set('closingTitle1', preset.title1);
+    set('closingTitle2', preset.title2);
+    set('closingParagraph', preset.paragraph);
+    set('closingLine', preset.closingLine);
+    set('celebrateBtnText', preset.celebrateBtn);
+  };
+
   return (<>
+    <div style={S.sectionTitle}>Choose a Preset</div>
+    <div style={S.sectionDesc}>Pick a closing message tone.</div>
+    <PresetGrid presets={CLOSING_PRESETS} currentId={currentPreset} onApply={applyPreset} />
+    <div className="w-full h-px bg-[#1a1a1a] mb-4" />
     <div style={S.sectionTitle}>Closing Section</div>
     <div style={S.sectionDesc}>The final section with the celebrate button and secret reveal.</div>
     <Field label="Pre-title" value={data.closingPreTitle} onChange={(v) => set('closingPreTitle', v)} placeholder="always & forever" />
