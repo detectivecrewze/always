@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, use } from 'react';
 import { useRouter } from 'next/navigation';
+import playlistData from '../../playlist.json';
 
 const TABS = ['Theme', 'Opening', 'Hero', 'Letter', 'Reasons', 'Seasons', 'Gallery', 'Music', 'Closing'];
 
@@ -314,13 +315,50 @@ function TabMusic({ data, set, slug }) {
   const music = data.music || {};
   const setMusic = (key, val) => set('music', { ...music, [key]: val });
 
+  const applyPreset = (song) => {
+    set('music', {
+      ...music,
+      title: song.title,
+      artist: song.artist,
+      file: song.audioUrl,
+      cover: song.coverUrl,
+    });
+  };
+
   return (<>
-    <div style={S.sectionTitle}>Background Music</div>
-    <div style={S.sectionDesc}>Music player shown at the bottom-left of the page.</div>
+    <div style={S.sectionTitle}>Preset Playlist</div>
+    <div style={S.sectionDesc}>Choose from ready-to-use songs or upload your own below.</div>
+    
+    <div className="flex overflow-x-auto gap-3 pb-4 mb-4 border-b border-[#1a1a1a] hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+      {playlistData.map((song, i) => {
+        const isSelected = music.title === song.title && music.artist === song.artist;
+        return (
+          <button 
+            key={i} 
+            onClick={() => applyPreset(song)}
+            className="flex-shrink-0 w-24 flex flex-col items-start gap-1 text-left cursor-pointer group outline-none"
+          >
+            <div className={`w-24 h-24 rounded-md overflow-hidden border-2 transition-all relative ${isSelected ? 'border-[#E11D48] shadow-[0_0_15px_rgba(225,29,72,0.3)] scale-95' : 'border-[#222] group-hover:border-[#F472B6]'}`}>
+               <img src={song.coverUrl} className="w-full h-full object-cover" alt={song.title} onError={(e) => e.target.style.display='none'} />
+               {isSelected && (
+                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                   <div className="w-6 h-6 rounded-full bg-[#E11D48] text-white flex items-center justify-center text-xs">✓</div>
+                 </div>
+               )}
+            </div>
+            <div className={`text-xs font-medium truncate w-full mt-1 ${isSelected ? 'text-[#E11D48]' : 'text-[#ddd]'}`}>{song.title}</div>
+            <div className="text-[0.65rem] text-[#888] truncate w-full">{song.artist}</div>
+          </button>
+        );
+      })}
+    </div>
+
+    <div style={S.sectionTitle}>Custom Music Details</div>
+    <div style={S.sectionDesc}>Edit details or upload a custom song.</div>
     <Field label="Song Title" value={music.title} onChange={(v) => setMusic('title', v)} placeholder="Song Title" />
     <Field label="Artist" value={music.artist} onChange={(v) => setMusic('artist', v)} placeholder="Artist Name" />
     <FileUpload label="Audio File" slug={slug} currentUrl={null} onUploaded={(url) => setMusic('file', url)} />
-    {music.file && <p style={{ fontSize: '0.7rem', color: '#555', marginTop: '0.25rem' }}>Current: {music.file}</p>}
+    {music.file && <p style={{ fontSize: '0.7rem', color: '#555', marginTop: '0.25rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Current: {music.file}</p>}
     <FileUpload label="Cover Image" slug={slug} currentUrl={music.cover} onUploaded={(url) => setMusic('cover', url)} />
   </>);
 }
