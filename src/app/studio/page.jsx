@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import AestheticQRCode from '@/components/AestheticQRCode';
+import { themes } from '@/lib/themes';
 
 export default function StudioDashboard() {
   const [gifts, setGifts] = useState([]);
@@ -11,7 +13,40 @@ export default function StudioDashboard() {
   const [newRecipient, setNewRecipient] = useState('');
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState(null);
+  
+  // QR Generator State
+  const [qrUrl, setQrUrl] = useState('');
+  const [qrTheme, setQrTheme] = useState('vintage-burgundy');
+
   const router = useRouter();
+
+  const handleDownloadQR = () => {
+    const svg = document.getElementById('aesthetic-qr-svg');
+    if (!svg) return;
+    
+    const canvas = document.createElement('canvas');
+    const size = 1000; // High res for printing
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const img = new Image();
+    
+    img.onload = () => {
+      // Draw background
+      ctx.fillStyle = themes[qrTheme].bg;
+      ctx.fillRect(0, 0, size, size);
+      // Draw SVG over it
+      ctx.drawImage(img, 0, 0, size, size);
+      
+      const a = document.createElement('a');
+      a.download = 'loves-qr.png';
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    };
+    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+  };
 
   const fetchGifts = async () => {
     try {
@@ -187,6 +222,56 @@ export default function StudioDashboard() {
             ))}
           </div>
         )}
+
+        {/* QR Code Generator Section */}
+        <div style={{ marginTop: '4rem' }}>
+          <div style={{ ...S.topBar, marginBottom: '1.5rem' }}>
+            <span style={S.title}>Aesthetic QR Generator</span>
+          </div>
+          
+          <div style={{ ...S.card, display: 'flex', gap: '2rem', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+            <div style={{ flex: '1 1 300px' }}>
+              <label style={S.label}>Website URL</label>
+              <input 
+                style={S.input} 
+                value={qrUrl} 
+                onChange={(e) => setQrUrl(e.target.value)} 
+                placeholder="https://yourwebsite.com/untuk-nadia" 
+              />
+              
+              <label style={S.label}>Theme Colors</label>
+              <select 
+                style={{ ...S.input, appearance: 'auto' }}
+                value={qrTheme}
+                onChange={(e) => setQrTheme(e.target.value)}
+              >
+                {Object.entries(themes).map(([key, t]) => (
+                  <option key={key} value={key}>{t.name}</option>
+                ))}
+              </select>
+
+              <button 
+                onClick={handleDownloadQR} 
+                disabled={!qrUrl}
+                style={{ 
+                  ...S.newBtn, 
+                  width: '100%', 
+                  marginTop: '1rem',
+                  opacity: qrUrl ? 1 : 0.5 
+                }}
+              >
+                Download as PNG
+              </button>
+              <p style={{ fontSize: '0.7rem', color: '#666', marginTop: '0.75rem', textAlign: 'center' }}>
+                Use this to print the aesthetic barcode on physical cards or share on social media.
+              </p>
+            </div>
+            
+            <div style={{ flex: '1 1 300px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0a0a', borderRadius: '12px', padding: '2rem', border: '1px solid #1a1a1a' }}>
+              <AestheticQRCode url={qrUrl} themeConfig={themes[qrTheme]} size={240} />
+            </div>
+          </div>
+        </div>
       </main>
 
       {/* New Gift Modal */}
