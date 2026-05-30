@@ -23,6 +23,27 @@ const cardAnim = {
 // Default keys for backward compatibility
 const FALLBACK_KEYS = ['spring', 'summer', 'autumn', 'winter'];
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.3,
+      delayChildren: 0.2,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20, filter: 'blur(8px)' },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: 'blur(0px)',
+    transition: { duration: 1.2, ease: [0.25, 0.1, 0.25, 1] },
+  },
+};
+
 export default function SeasonsSection({ seasons, seasonsTitle1, seasonsTitle2, seasonsHint }) {
   const [expandedIndex, setExpandedIndex] = useState(null);
 
@@ -34,31 +55,29 @@ export default function SeasonsSection({ seasons, seasonsTitle1, seasonsTitle2, 
     <section className="relative z-10 py-16 px-6 overflow-hidden">
       <div className="max-w-[1000px] mx-auto flex flex-col items-center">
         
-        <div className="flex flex-col items-center mb-12 text-center">
-          <motion.h2 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.5 }}
-            className="flex flex-col gap-2 md:gap-3"
-          >
-            <span className="block font-serif text-4xl md:text-5xl lg:text-6xl text-text leading-tight">
+        <motion.div 
+          className="flex flex-col items-center mb-12 text-center"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.5 }}
+        >
+          <h2 className="flex flex-col gap-2 md:gap-3">
+            <motion.span variants={itemVariants} className="block font-serif text-4xl md:text-5xl lg:text-6xl text-text leading-tight">
               {seasonsTitle1 || 'A Love For'}
-            </span>
-            <span className="block font-serif italic text-5xl md:text-6xl lg:text-7xl text-accent leading-tight">
+            </motion.span>
+            <motion.span variants={itemVariants} className="block font-serif italic text-5xl md:text-6xl lg:text-7xl text-accent leading-tight">
               {seasonsTitle2 || 'Every Season'}
-            </span>
-          </motion.h2>
+            </motion.span>
+          </h2>
 
           <motion.p
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.3 }}
+            variants={itemVariants}
             className="mt-8 font-serif italic text-sm md:text-base text-text-muted flex items-center gap-2"
           >
             <span className="text-accent">✨</span> {seasonsHint || 'tap each card to discover its meaning'} <span className="text-accent">✨</span>
           </motion.p>
-        </div>
+        </motion.div>
 
         <motion.div
           className="w-full flex md:grid md:grid-cols-4 gap-4 overflow-x-auto snap-x snap-mandatory pb-8 md:pb-0 hide-scrollbar"

@@ -2,6 +2,27 @@
 
 import { motion } from 'framer-motion';
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.3,
+      delayChildren: 0.2,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20, filter: 'blur(8px)' },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: 'blur(0px)',
+    transition: { duration: 1.2, ease: [0.25, 0.1, 0.25, 1] },
+  },
+};
+
 export default function IntroSection({ 
   introIcons, 
   introPreTitle, 
@@ -18,10 +39,10 @@ export default function IntroSection({
     <section className="relative z-10 flex flex-col items-center px-4 py-16 md:py-24">
       <motion.div
         className="max-w-[560px] w-full"
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="visible"
         viewport={{ once: true, amount: 0.2 }}
-        transition={{ duration: 1, ease: [0.25, 0.1, 0.25, 1] }}
       >
         {/* Dark candlelight letter card */}
         <div
@@ -58,7 +79,7 @@ export default function IntroSection({
           />
 
           {/* Icons & Pretitle */}
-          <div className="mb-6 relative z-10">
+          <motion.div variants={itemVariants} className="mb-6 relative z-10">
             {introIcons && (
               <div className="flex gap-3 justify-center mb-3">
                 {[0, 1, 2].map((i) => (
@@ -81,11 +102,11 @@ export default function IntroSection({
                 {introPreTitle}
               </span>
             )}
-          </div>
+          </motion.div>
 
           {/* 3-line Headline */}
           {(introHeadline1 || introHeadline2 || introHeadline3) && (
-            <h2 className="relative z-10 flex flex-col gap-2 md:gap-3 mb-10">
+            <motion.h2 variants={itemVariants} className="relative z-10 flex flex-col gap-2 md:gap-3 mb-10">
               {introHeadline1 && (
                 <span
                   className="block font-serif text-3xl md:text-4xl lg:text-5xl leading-tight"
@@ -110,20 +131,20 @@ export default function IntroSection({
                   {introHeadline3}
                 </span>
               )}
-            </h2>
+            </motion.h2>
           )}
 
           {/* Divider — ornamental */}
-          <div className="relative z-10 flex items-center gap-3 mb-8 w-40">
+          <motion.div variants={itemVariants} className="relative z-10 flex items-center gap-3 mb-8 w-40">
             <div className="flex-1 h-px" style={{ background: 'color-mix(in srgb, var(--color-accent) 25%, transparent)' }} />
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
               <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" fill="color-mix(in srgb, var(--color-accent) 50%, transparent)"/>
             </svg>
             <div className="flex-1 h-px" style={{ background: 'color-mix(in srgb, var(--color-accent) 25%, transparent)' }} />
-          </div>
+          </motion.div>
 
           {/* Paragraphs */}
-          <div className="relative z-10 flex flex-col gap-5 md:gap-6">
+          <motion.div variants={itemVariants} className="relative z-10 flex flex-col gap-5 md:gap-6">
             {paragraphs.map((p, idx) => (
               <p
                 key={idx}
@@ -133,16 +154,17 @@ export default function IntroSection({
                 {p}
               </p>
             ))}
-          </div>
+          </motion.div>
 
           {/* Sign Off */}
           {introSignOff && (
-            <p
+            <motion.p
+              variants={itemVariants}
               className="relative z-10 font-serif italic text-lg md:text-xl text-center mt-10"
               style={{ color: 'var(--color-accent)' }}
             >
               {introSignOff}
-            </p>
+            </motion.p>
           )}
         </div>
       </motion.div>

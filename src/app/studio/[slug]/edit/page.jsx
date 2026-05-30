@@ -7,32 +7,19 @@ const TABS = ['Theme', 'Opening', 'Hero', 'Letter', 'Reasons', 'Seasons', 'Galle
 
 // ── Styles ────────────────────────────────────────────────────────
 const S = {
-  page: { display: 'flex', height: '100vh', background: '#050505', fontFamily: 'Inter, system-ui, sans-serif', color: '#f5f5f5', overflow: 'hidden' },
-  sidebar: { width: '260px', background: '#0a0a0a', borderRight: '1px solid #1a1a1a', display: 'flex', flexDirection: 'column', flexShrink: 0 },
   sideHeader: { padding: '1.25rem', borderBottom: '1px solid #1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
   brand: { fontFamily: 'Playfair Display, Georgia, serif', fontStyle: 'italic', fontSize: '1rem', fontWeight: 400 },
   dot: { color: '#E11D48' },
   backBtn: { background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '0.75rem', padding: '0.3rem 0.6rem', borderRadius: '4px', border: '1px solid #262626' },
-  tabList: { flex: 1, overflowY: 'auto', padding: '0.75rem 0' },
-  tab: (active) => ({
-    display: 'block', width: '100%', textAlign: 'left', padding: '0.6rem 1.25rem', border: 'none', cursor: 'pointer', fontSize: '0.8rem', fontWeight: active ? 600 : 400, transition: 'all 0.15s',
-    background: active ? 'rgba(225,29,72,0.1)' : 'transparent', color: active ? '#F472B6' : '#888',
-    borderLeft: active ? '2px solid #E11D48' : '2px solid transparent',
-  }),
-  saveArea: { padding: '1rem 1.25rem', borderTop: '1px solid #1a1a1a' },
   saveBtn: (saving) => ({
     width: '100%', padding: '0.6rem', border: 'none', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 500, cursor: saving ? 'not-allowed' : 'pointer', transition: 'all 0.2s',
     background: saving ? '#333' : 'linear-gradient(135deg, #E11D48, #9D174D)', color: '#fff',
   }),
-  content: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' },
   topBar: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1.5rem', borderBottom: '1px solid #1a1a1a', flexShrink: 0 },
   topTitle: { fontSize: '0.9rem', fontWeight: 600 },
   statusPill: (color) => ({
     fontSize: '0.65rem', padding: '0.2rem 0.6rem', borderRadius: '100px', background: `${color}15`, color, border: `1px solid ${color}30`,
   }),
-  splitView: { flex: 1, display: 'flex', overflow: 'hidden' },
-  formPanel: { flex: 1, overflowY: 'auto', padding: '1.5rem 2rem', minWidth: 0 },
-  previewPanel: { width: '45%', borderLeft: '1px solid #1a1a1a', background: '#000', display: 'flex', flexDirection: 'column', flexShrink: 0 },
   previewHeader: { padding: '0.5rem 1rem', borderBottom: '1px solid #1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
   previewLabel: { fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.15em', color: '#555' },
   iframe: { flex: 1, border: 'none', width: '100%' },
@@ -46,7 +33,6 @@ const S = {
   }),
   uploadBox: { border: '2px dashed #262626', borderRadius: '8px', padding: '1.5rem', textAlign: 'center', cursor: 'pointer', transition: 'border-color 0.2s', marginTop: '0.5rem' },
   uploadThumb: { width: '60px', height: '60px', borderRadius: '6px', objectFit: 'cover', border: '1px solid #333' },
-  row: { display: 'flex', gap: '0.75rem', alignItems: 'flex-start' },
   cardWrap: { background: '#0f0f0f', border: '1px solid #1a1a1a', borderRadius: '10px', padding: '1rem', marginBottom: '0.75rem' },
 };
 
@@ -406,29 +392,42 @@ export default function StudioEditor({ params: paramsPromise }) {
   };
 
   if (!data) return (
-    <div style={{ ...S.page, alignItems: 'center', justifyContent: 'center' }}>
-      <p style={{ color: '#555' }}>Loading editor...</p>
+    <div className="flex items-center justify-center h-[100dvh] bg-[#050505]">
+      <p className="text-[#555] font-sans">Loading editor...</p>
     </div>
   );
 
   const ActivePanel = TAB_COMPONENTS[activeTab];
 
   return (
-    <div style={S.page}>
+    <div className="flex flex-col md:flex-row h-[100dvh] bg-[#050505] text-[#f5f5f5] font-sans overflow-hidden">
       {/* Sidebar */}
-      <div style={S.sidebar}>
+      <div className="w-full md:w-[260px] bg-[#0a0a0a] border-b md:border-b-0 md:border-r border-[#1a1a1a] flex flex-col shrink-0 z-20">
         <div style={S.sideHeader}>
           <span style={S.brand}>loves<span style={S.dot}>·</span>studio</span>
           <button style={S.backBtn} onClick={() => router.push('/studio')}>← Back</button>
         </div>
 
-        <div style={S.tabList}>
-          {TABS.map((t, i) => (
-            <button key={t} style={S.tab(activeTab === i)} onClick={() => setActiveTab(i)}>{t}</button>
-          ))}
+        <div className="flex flex-row md:flex-col overflow-x-auto md:overflow-y-auto py-2 md:py-3 px-2 md:px-0 gap-1 hide-scrollbar flex-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          {TABS.map((t, i) => {
+            const active = activeTab === i;
+            return (
+              <button 
+                key={t} 
+                onClick={() => setActiveTab(i)}
+                className={`whitespace-nowrap text-left px-4 py-2.5 text-xs md:text-[0.8rem] transition-all md:border-l-2 ${
+                  active 
+                    ? 'bg-accent/10 text-[#F472B6] border-b-2 md:border-b-0 md:border-l-[#E11D48] font-semibold' 
+                    : 'text-[#888] border-b-2 md:border-b-0 border-transparent hover:bg-white/5'
+                }`}
+              >
+                {t}
+              </button>
+            );
+          })}
         </div>
 
-        <div style={S.saveArea}>
+        <div className="hidden md:block p-4 border-t border-[#1a1a1a]">
           {saveStatus === 'saved' && (
             <div style={{ ...S.statusPill('#22C55E'), textAlign: 'center', marginBottom: '0.5rem' }}>✓ Saved</div>
           )}
@@ -442,7 +441,7 @@ export default function StudioEditor({ params: paramsPromise }) {
       </div>
 
       {/* Content */}
-      <div style={S.content}>
+      <div className="flex-1 flex flex-col overflow-hidden relative">
         {/* Top bar */}
         <div style={S.topBar}>
           <div>
@@ -453,20 +452,31 @@ export default function StudioEditor({ params: paramsPromise }) {
         </div>
 
         {/* Split View */}
-        <div style={S.splitView}>
+        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
           {/* Form */}
-          <div style={S.formPanel}>
+          <div className="flex-1 overflow-y-auto p-5 md:p-8 min-w-0 pb-24 md:pb-8">
             <ActivePanel data={data} set={set} slug={slug} />
           </div>
 
-          {/* Live Preview */}
-          <div style={S.previewPanel}>
+          {/* Live Preview (Hidden on mobile) */}
+          <div className="hidden lg:flex flex-col w-[45%] border-l border-[#1a1a1a] bg-black shrink-0">
             <div style={S.previewHeader}>
               <span style={S.previewLabel}>Live Preview</span>
               <button style={S.smallBtn('#888')} onClick={() => setPreviewKey((k) => k + 1)}>Refresh</button>
             </div>
             <iframe key={previewKey} src={`/${slug}`} style={S.iframe} title="Preview" />
           </div>
+        </div>
+
+        {/* Mobile Save Button */}
+        <div className="md:hidden absolute bottom-0 left-0 right-0 p-3 border-t border-[#1a1a1a] bg-[#0a0a0a] z-20 flex gap-3 items-center shadow-[0_-10px_20px_rgba(0,0,0,0.5)]">
+          <div className="flex-1">
+            <button style={S.saveBtn(saving)} onClick={save} disabled={saving}>
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+          {saveStatus === 'saved' && <span className="text-[#22C55E] text-xs font-medium">✓ Saved</span>}
+          {saveStatus === 'error' && <span className="text-[#EF4444] text-xs font-medium">Failed</span>}
         </div>
       </div>
     </div>

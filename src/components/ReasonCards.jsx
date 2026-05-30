@@ -106,6 +106,27 @@ function RevealedCard({ reason, index }) {
   );
 }
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.3,
+      delayChildren: 0.2,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20, filter: 'blur(8px)' },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: 'blur(0px)',
+    transition: { duration: 1.2, ease: [0.25, 0.1, 0.25, 1] },
+  },
+};
+
 // ── Main Component ────────────────────────────────────────────────
 export default function ReasonCards({ reasons, reasonsTitle1, reasonsTitle2 }) {
   const [revealedCount, setRevealedCount] = useState(0);
@@ -120,32 +141,29 @@ export default function ReasonCards({ reasons, reasonsTitle1, reasonsTitle2 }) {
   return (
     <section className="relative z-10 px-6 py-16 md:py-24 flex flex-col items-center">
 
-      {/* Section Title */}
+      {/* Section Title & Subtitle */}
       <motion.div
-        className="text-center mb-4"
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
+        className="text-center mb-10"
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="visible"
         viewport={{ once: true, amount: 0.5 }}
-        transition={{ duration: 1, ease: [0.25, 0.1, 0.25, 1] }}
       >
-        <h2 className="flex flex-col gap-1 md:gap-2">
-          <span className="block font-serif text-4xl md:text-5xl lg:text-6xl text-text leading-tight">{reasonsTitle1 || 'The Reasons'}</span>
-          <span className="block font-serif italic text-5xl md:text-6xl lg:text-7xl text-accent leading-tight">{reasonsTitle2 || 'I Love You'}</span>
+        <h2 className="flex flex-col gap-1 md:gap-2 mb-6">
+          <motion.span variants={itemVariants} className="block font-serif text-4xl md:text-5xl lg:text-6xl text-text leading-tight">{reasonsTitle1 || 'The Reasons'}</motion.span>
+          <motion.span variants={itemVariants} className="block font-serif italic text-5xl md:text-6xl lg:text-7xl text-accent leading-tight">{reasonsTitle2 || 'I Love You'}</motion.span>
         </h2>
+        
+        {/* Counter hint */}
+        <motion.p
+          variants={itemVariants}
+          className="font-serif italic text-sm text-text-muted/60"
+        >
+          {allRevealed
+            ? '✨ all reasons revealed ✨'
+            : `${revealedCount} of ${reasons.length} revealed — tap a card to unlock`}
+        </motion.p>
       </motion.div>
-
-      {/* Counter hint */}
-      <motion.p
-        className="font-serif italic text-sm text-text-muted/60 mb-10"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ delay: 0.4 }}
-      >
-        {allRevealed
-          ? '✨ all reasons revealed ✨'
-          : `${revealedCount} of ${reasons.length} revealed — tap a card to unlock`}
-      </motion.p>
 
       {/* Grid */}
       <motion.div

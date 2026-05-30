@@ -203,6 +203,27 @@ function CinemaModal({ secretPhoto, secretCaption, onClose }) {
   );
 }
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.3,
+      delayChildren: 0.2,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20, filter: 'blur(8px)' },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: 'blur(0px)',
+    transition: { duration: 1.2, ease: [0.25, 0.1, 0.25, 1] },
+  },
+};
+
 // ── Main Component ────────────────────────────────────────────────
 export default function ClosingSection({ closingLine, sender, secretPhoto, secretCaption, closingPreTitle, closingTitle1, closingTitle2, closingParagraph, celebrateBtnText }) {
   const [celebrating, setCelebrating] = useState(false);
@@ -224,32 +245,32 @@ export default function ClosingSection({ closingLine, sender, secretPhoto, secre
       <section className="relative z-10 flex flex-col items-center justify-center min-h-[90vh] px-6 py-24 text-center overflow-hidden">
         <motion.div
           className="relative flex flex-col items-center gap-6"
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 1.2, ease: [0.25, 0.1, 0.25, 1] }}
         >
-          <FloatingFlowers />
+          <motion.div variants={itemVariants}><FloatingFlowers /></motion.div>
 
-          <span className="font-serif italic text-sm md:text-base tracking-widest text-text-muted lowercase">
+          <motion.span variants={itemVariants} className="font-serif italic text-sm md:text-base tracking-widest text-text-muted lowercase">
             {closingPreTitle || 'always & forever'}
-          </span>
+          </motion.span>
 
-          <h2 className="flex flex-col gap-1 md:gap-2">
+          <motion.h2 variants={itemVariants} className="flex flex-col gap-1 md:gap-2">
             <span className="block font-serif text-4xl md:text-5xl lg:text-6xl text-text leading-tight">{closingTitle1 || 'You Are Loved'}</span>
             <span className="block font-serif italic text-5xl md:text-6xl lg:text-7xl text-accent leading-tight">{closingTitle2 || 'Beyond Words'}</span>
-          </h2>
+          </motion.h2>
 
-          <p className="font-sans font-light text-sm md:text-base text-text-muted max-w-[400px] leading-relaxed mt-2 whitespace-pre-line">
+          <motion.p variants={itemVariants} className="font-sans font-light text-sm md:text-base text-text-muted max-w-[400px] leading-relaxed mt-2 whitespace-pre-line">
             {closingParagraph || 'No matter where life takes us, know that somewhere in the universe, there is a garden blooming with every feeling I have ever held for you. You deserve the world. You deserve all the flowers. You deserve everything.'}
-          </p>
+          </motion.p>
 
-          <p className="font-serif italic text-base md:text-lg text-text-muted mt-2">— {sender}</p>
+          <motion.p variants={itemVariants} className="font-serif italic text-base md:text-lg text-text-muted mt-2">— {sender}</motion.p>
 
-          <GlowHeart />
+          <motion.div variants={itemVariants}><GlowHeart /></motion.div>
 
           {/* Celebrate button */}
-          <div className="relative mt-4">
+          <motion.div variants={itemVariants} className="relative mt-4">
             <Confetti active={celebrating} key={celebrateCount} />
             <motion.button
               onClick={handleCelebrate}
@@ -267,7 +288,7 @@ export default function ClosingSection({ closingLine, sender, secretPhoto, secre
               />
               {celebrating ? 'celebrating...' : (celebrateBtnText || 'celebrate ✨')}
             </motion.button>
-          </div>
+          </motion.div>
 
           {/* Re-open cinema hint after first view */}
           {celebrateCount > 0 && !celebrating && (
