@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import GateScreen from '@/components/GateScreen';
-import RevealAnimation from '@/components/RevealAnimation';
+
 import AmbientParticles from '@/components/AmbientParticles';
 import HeroSection from '@/components/HeroSection';
 import IntroSection from '@/components/IntroSection';
@@ -16,12 +16,11 @@ import { themes, defaultTheme } from '@/lib/themes';
 
 export default function GiftPage({ data }) {
   const [gateOpen, setGateOpen] = useState(false);
-  const [isRevealing, setIsRevealing] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef(null);
 
   const handleGateOpen = useCallback(() => {
-    setIsRevealing(true);
+    setGateOpen(true);
     // Attempt to play music on user interaction (iOS autoplay policy)
     if (audioRef.current) {
       audioRef.current.play().then(() => {
@@ -31,11 +30,6 @@ export default function GiftPage({ data }) {
         console.log('Autoplay blocked, user can play manually');
       });
     }
-  }, []);
-
-  const handleRevealComplete = useCallback(() => {
-    setIsRevealing(false);
-    setGateOpen(true);
   }, []);
 
   const handleTogglePlay = useCallback(() => {
@@ -69,7 +63,7 @@ export default function GiftPage({ data }) {
 
       {/* Gate Screen */}
       <AnimatePresence mode="wait">
-        {!gateOpen && !isRevealing && (
+        {!gateOpen && (
           <GateScreen
             gateSubtitle={data.gateSubtitle}
             onOpen={handleGateOpen}
@@ -77,13 +71,6 @@ export default function GiftPage({ data }) {
           />
         )}
       </AnimatePresence>
-
-      {/* Reveal Animation */}
-      <RevealAnimation
-        isRevealing={isRevealing}
-        onComplete={handleRevealComplete}
-        themeColors={[t.particle, t.accent, t.textMuted]}
-      />
 
       {/* Main Content */}
       <AnimatePresence>

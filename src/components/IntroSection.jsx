@@ -51,29 +51,10 @@ export default function IntroSection({
             style={{ borderBottom: '1px solid color-mix(in srgb, var(--color-accent) 30%, transparent)', borderRight: '1px solid color-mix(in srgb, var(--color-accent) 30%, transparent)' }}
           />
 
-          {/* Ruled lines — very subtle warm amber, like aged letter paper */}
-          {[...Array(16)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute left-10 right-10 pointer-events-none"
-              style={{
-                top: `${90 + i * 38}px`,
-                height: '1px',
-                background: 'color-mix(in srgb, var(--color-accent) 10%, transparent)',
-              }}
-            />
-          ))}
-
-          {/* Left margin line — like a real letter */}
+          {/* Soft central glow for elegance */}
           <div
-            className="absolute top-0 bottom-0 pointer-events-none"
-            style={{ left: '48px', width: '1px', background: 'color-mix(in srgb, var(--color-accent) 15%, transparent)' }}
-          />
-
-          {/* Warm glow at top */}
-          <div
-            className="absolute top-0 left-1/2 -translate-x-1/2 pointer-events-none"
-            style={{ width: '160px', height: '60px', background: 'radial-gradient(ellipse, color-mix(in srgb, var(--color-accent) 15%, transparent) 0%, transparent 70%)', filter: 'blur(8px)' }}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+            style={{ width: '80%', height: '80%', background: 'radial-gradient(ellipse, color-mix(in srgb, var(--color-accent) 4%, transparent) 0%, transparent 60%)', filter: 'blur(20px)' }}
           />
 
           {/* Icons & Pretitle */}

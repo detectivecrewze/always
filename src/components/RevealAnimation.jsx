@@ -3,24 +3,66 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect } from 'react';
 
-// Generate random flower petals for the burst
-const flowerPetals = Array.from({ length: 15 }, (_, i) => {
-  const angle = (i / 15) * Math.PI * 2;
-  const distance = 80 + Math.random() * 80;
+// Generate random flowers for the confetti burst
+const flowerPetals = Array.from({ length: 30 }, (_, i) => {
+  const angle = (i / 30) * Math.PI * 2 + (Math.random() * 0.5 - 0.25);
+  // Spread them wider
+  const distance = 100 + Math.random() * 150;
   return {
     id: i,
     x: Math.cos(angle) * distance,
-    y: Math.sin(angle) * distance,
+    y: Math.sin(angle) * distance - (50 + Math.random() * 50), // slightly biased upwards initially
     rotate: Math.random() * 360,
-    scale: 0.6 + Math.random() * 0.8,
+    scale: 0.5 + Math.random() * 0.7,
     color: '#E2A9A3',
   };
 });
 
-function PetalSVG({ color, size = 24 }) {
+function FlowerSVG({ color, size = 28 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <ellipse cx="12" cy="12" rx="6" ry="10" fill={color} opacity="0.8" />
+      {/* 5-petal flower path */}
+      <path
+        d="M12 2C10 2 8.5 5 12 9C15.5 5 14 2 12 2Z"
+        fill={color}
+        opacity="0.9"
+      />
+      <path
+        d="M12 22C10 22 8.5 19 12 15C15.5 19 14 22 12 22Z"
+        fill={color}
+        opacity="0.9"
+      />
+      <path
+        d="M22 12C22 14 19 15.5 15 12C19 8.5 22 10 22 12Z"
+        fill={color}
+        opacity="0.9"
+      />
+      <path
+        d="M2 12C2 10 5 8.5 9 12C5 15.5 2 14 2 12Z"
+        fill={color}
+        opacity="0.9"
+      />
+      <path
+        d="M19 19C17.5 21 15 19 13.5 16.5C16.5 15 19 17.5 19 19Z"
+        fill={color}
+        opacity="0.9"
+      />
+      <path
+        d="M5 5C6.5 3 9 5 10.5 7.5C7.5 9 5 6.5 5 5Z"
+        fill={color}
+        opacity="0.9"
+      />
+      <path
+        d="M19 5C21 6.5 19 9 16.5 10.5C15 7.5 17.5 5 19 5Z"
+        fill={color}
+        opacity="0.9"
+      />
+      <path
+        d="M5 19C3 17.5 5 15 7.5 13.5C9 16.5 6.5 19 5 19Z"
+        fill={color}
+        opacity="0.9"
+      />
+      <circle cx="12" cy="12" r="2.5" fill="color-mix(in srgb, var(--color-surface) 60%, transparent)" />
     </svg>
   );
 }
@@ -95,20 +137,21 @@ export default function RevealAnimation({ isRevealing, onComplete, themeColors }
               style={{ top: '50%', left: '50%', marginLeft: '-12px', marginTop: '-12px' }}
               initial={{ x: 0, y: 0, scale: 0, opacity: 0, rotate: 0 }}
               animate={{
-                x: petal.x,
-                y: petal.y,
-                scale: petal.scale,
+                x: [0, petal.x, petal.x + (Math.random() * 40 - 20)],
+                y: [0, petal.y, petal.y + 80 + Math.random() * 100], // drift down after burst
+                scale: [0, petal.scale, petal.scale * 0.8],
                 opacity: [0, 1, 1, 0],
-                rotate: petal.rotate + 180,
+                rotate: [0, petal.rotate + 180, petal.rotate + 360],
               }}
               transition={{
-                duration: 1.5,
+                duration: 2.2, // longer duration for drifting
                 delay: 0.1 + Math.random() * 0.2,
-                ease: [0.25, 0.1, 0.25, 1],
-                opacity: { times: [0, 0.2, 0.8, 1] },
+                ease: "easeOut",
+                times: [0, 0.4, 1], // burst quickly, then drift
+                opacity: { times: [0, 0.2, 0.7, 1] },
               }}
             >
-              <PetalSVG color={activeColor} size={24} />
+              <FlowerSVG color={activeColor} size={28} />
             </motion.div>
           ))}
         </motion.div>

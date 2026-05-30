@@ -2,11 +2,23 @@
 
 import { motion, useScroll, useTransform } from 'framer-motion';
 
-const cinematic = {
-  hidden: { opacity: 0, y: 40 },
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.4,
+      delayChildren: 0.3,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 30, filter: 'blur(10px)' },
   visible: {
     opacity: 1,
     y: 0,
+    filter: 'blur(0px)',
     transition: { duration: 1.2, ease: [0.25, 0.1, 0.25, 1] },
   },
 };
@@ -21,42 +33,43 @@ export default function HeroSection({ heroPreTitle, heroLine1, heroLine2, heroSu
     <section className="relative z-10 flex flex-col items-center justify-center min-h-[100dvh] px-6 text-center">
       <motion.div style={{ opacity, y: yScroll }} className="w-full flex justify-center">
         <motion.div
-          variants={cinematic}
+          variants={containerVariants}
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, amount: 0.5 }}
+          viewport={{ once: true, amount: 0.2 }}
           className="flex flex-col items-center gap-6"
         >
         {/* Pretitle */}
         {heroPreTitle && (
-          <span className="font-serif italic text-lg md:text-xl text-text-muted tracking-widest lowercase">
+          <motion.span variants={itemVariants} className="font-serif italic text-lg md:text-xl text-text-muted tracking-widest lowercase">
             {heroPreTitle}
-          </span>
+          </motion.span>
         )}
 
         {/* 2-line Headline */}
         <h1 className="flex flex-col gap-2 md:gap-3">
           {heroLine1 && (
-            <span className="block font-serif text-5xl md:text-6xl lg:text-7xl text-text leading-tight">
+            <motion.span variants={itemVariants} className="block font-serif text-5xl md:text-6xl lg:text-7xl text-text leading-tight">
               {heroLine1}
-            </span>
+            </motion.span>
           )}
           {heroLine2 && (
-            <span className="block font-serif italic text-6xl md:text-7xl lg:text-8xl text-accent leading-tight">
+            <motion.span variants={itemVariants} className="block font-serif italic text-6xl md:text-7xl lg:text-8xl text-accent leading-tight">
               {heroLine2}
-            </span>
+            </motion.span>
           )}
         </h1>
 
         {/* Subtitle */}
         {heroSubtitle && (
-          <p className="font-sans font-light text-sm md:text-base text-text-muted mt-4">
+          <motion.p variants={itemVariants} className="font-sans font-light text-sm md:text-base text-text-muted mt-4">
             {heroSubtitle}
-          </p>
+          </motion.p>
         )}
 
         {/* Beautiful Symmetrical Neon Heart */}
         <motion.div
+          variants={itemVariants}
           className="mt-16 relative"
           animate={{ scale: [1, 1.1, 1] }}
           transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
