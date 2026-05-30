@@ -51,6 +51,7 @@ export default function Gallery({ photos, galleryTitle1, galleryTitle2 }) {
         {photos.map((photo, i) => {
           const url = typeof photo === 'string' ? photo : photo.url;
           const caption = typeof photo === 'string' ? '' : photo.caption;
+          const isVideo = url && /\.(mp4|webm|mov)$/i.test(url);
 
           return (
             <motion.div
@@ -62,16 +63,33 @@ export default function Gallery({ photos, galleryTitle1, galleryTitle2 }) {
                 boxShadow: '0 8px 40px rgba(0,0,0,0.4)',
               }}
             >
-              {/* Photo */}
-              <img
-                src={url}
-                alt={caption || `Memory ${i + 1}`}
-                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.parentElement.style.background = 'rgba(255,255,255,0.05)';
-                }}
-              />
+              {/* Photo or Video */}
+              {isVideo ? (
+                <video
+                  src={url}
+                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  webkit-playsinline=""
+                  preload="metadata"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.parentElement.style.background = 'rgba(255,255,255,0.05)';
+                  }}
+                />
+              ) : (
+                <img
+                  src={url}
+                  alt={caption || `Memory ${i + 1}`}
+                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.parentElement.style.background = 'rgba(255,255,255,0.05)';
+                  }}
+                />
+              )}
 
               {/* Bottom gradient for caption */}
               <div

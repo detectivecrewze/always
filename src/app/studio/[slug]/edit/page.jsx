@@ -131,7 +131,11 @@ function FileUpload({ label, slug, currentUrl, onUploaded }) {
     <div>
       <label style={S.label}>{label}</label>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-        {currentUrl && <img src={currentUrl} alt="" style={S.uploadThumb} onError={(e) => e.target.style.display='none'} />}
+        {currentUrl && /\.(mp4|webm|mov)$/i.test(currentUrl) ? (
+          <video src={currentUrl} style={{ ...S.uploadThumb, objectFit: 'cover' }} muted playsInline preload="metadata" />
+        ) : currentUrl ? (
+          <img src={currentUrl} alt="" style={S.uploadThumb} onError={(e) => e.target.style.display='none'} />
+        ) : null}
         <label style={{ 
           ...S.uploadBox, 
           flex: 1, 
