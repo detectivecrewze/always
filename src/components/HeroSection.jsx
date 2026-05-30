@@ -86,9 +86,9 @@ export default function HeroSection({ heroPreTitle, heroLine1, heroLine2, heroSu
                 </feMerge>
               </filter>
               <linearGradient id="neonGradient" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#F472B6" />
-                <stop offset="0.5" stopColor="#E11D48" />
-                <stop offset="1" stopColor="#9D174D" />
+                <stop stopColor="var(--color-particle)" />
+                <stop offset="0.5" stopColor="var(--color-accent)" />
+                <stop offset="1" stopColor="var(--color-text-muted)" />
               </linearGradient>
             </defs>
             <g filter="url(#neonGlow)">
@@ -120,10 +120,11 @@ export default function HeroSection({ heroPreTitle, heroLine1, heroLine2, heroSu
               {/* Inner Pulsing Heart (Perfectly Straight & Symmetrical) */}
               <motion.path 
                 d="M60 85 C60 85, 25 55, 25 35 C25 20, 45 15, 60 30 C75 15, 95 20, 95 35 C95 55, 60 85, 60 85 Z" 
-                stroke="#F9A8D4" 
+                stroke="var(--color-particle)" 
                 strokeWidth="1.5"
                 strokeLinecap="round"
-                fill="rgba(225, 29, 72, 0.15)"
+                fill="var(--color-accent)"
+                fillOpacity="0.15"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: [0, 0.9, 0] }}
                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 1 }}
@@ -131,7 +132,7 @@ export default function HeroSection({ heroPreTitle, heroLine1, heroLine2, heroSu
               
               {/* Center Sparkle */}
               <motion.circle
-                cx="60" cy="40" r="2.5" fill="#FFF"
+                cx="60" cy="40" r="2.5" fill="var(--color-text)"
                 animate={{ scale: [1, 3, 1], opacity: [0, 1, 0] }}
                 transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
               />
