@@ -61,12 +61,12 @@ function GlowHeart() {
             <feMerge><feMergeNode in="blur2"/><feMergeNode in="blur1"/><feMergeNode in="SourceGraphic"/></feMerge>
           </filter>
           <linearGradient id="closingGrad" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#F472B6"/><stop offset="0.5" stopColor="#E11D48"/><stop offset="1" stopColor="#9D174D"/>
+            <stop stopColor="var(--color-particle)"/><stop offset="0.5" stopColor="var(--color-accent)"/><stop offset="1" stopColor="var(--color-text-muted)"/>
           </linearGradient>
         </defs>
         <g filter="url(#closingGlow)">
           <path d="M60 85 C60 85, 25 55, 25 35 C25 20, 45 15, 60 30 C75 15, 95 20, 95 35 C95 55, 60 85, 60 85 Z"
-            stroke="url(#closingGrad)" strokeWidth="2.5" fill="rgba(225,29,72,0.15)" strokeLinecap="round"/>
+            stroke="var(--color-particle)" strokeWidth="2.5" fill="var(--color-accent)" fillOpacity="0.15" strokeLinecap="round"/>
         </g>
       </svg>
     </motion.div>
@@ -74,7 +74,7 @@ function GlowHeart() {
 }
 
 // ── Floating Flowers ──────────────────────────────────────────────
-const flowerColors = ['#F472B6', '#E11D48', '#FB7185', '#F9A8D4', '#FDE68A'];
+const flowerColors = ['var(--color-accent)', 'var(--color-particle)', 'var(--color-text-muted)', 'var(--color-accent)', 'var(--color-particle)'];
 function FloatingFlowers() {
   return (
     <div className="flex gap-3 justify-center mb-4">
