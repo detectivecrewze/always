@@ -7,7 +7,7 @@ export async function generateMetadata({ params }) {
   const gift = await getGiftBySlug(slug);
   if (!gift) return { title: 'Not Found' };
   return {
-    title: `For ${gift.recipient} — Love's Edition`,
+    title: `For ${gift.recipient} — A Special Gift`,
     description: gift.gateSubtitle,
   };
 }

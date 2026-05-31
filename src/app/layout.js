@@ -14,7 +14,7 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "Love's Edition",
+  title: "A Special Gift",
   description: 'A digital love letter, made just for you.',
 };
 
