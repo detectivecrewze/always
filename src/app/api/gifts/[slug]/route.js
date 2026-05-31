@@ -40,23 +40,27 @@ export async function GET(request, { params }) {
 // PUT /api/gifts/[slug]
 export async function PUT(request, { params }) {
   if (!await verifySession(request)) return unauthorized();
-  const { slug } = await params;
+  const oldSlug = (await params).slug;
   const data = await request.json();
+  const newSlug = data.slug || oldSlug;
 
   if (isKVConfigured()) {
-    await putGift(slug, { ...data, slug });
+    if (newSlug !== oldSlug) {
+      await deleteGift(oldSlug);
+    }
+    await putGift(newSlug, { ...data, slug: newSlug });
   } else {
     const gifts = readLocalGifts();
-    const idx = gifts.findIndex((g) => g.slug === slug);
+    const idx = gifts.findIndex((g) => g.slug === oldSlug);
     if (idx >= 0) {
-      gifts[idx] = { ...data, slug };
+      gifts[idx] = { ...data, slug: newSlug };
     } else {
-      gifts.push({ ...data, slug });
+      gifts.push({ ...data, slug: newSlug });
     }
     writeLocalGifts(gifts);
   }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, newSlug });
 }
 
 // DELETE /api/gifts/[slug]

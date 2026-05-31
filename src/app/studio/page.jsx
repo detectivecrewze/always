@@ -13,6 +13,10 @@ export default function StudioDashboard() {
   const [newRecipient, setNewRecipient] = useState('');
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState(null);
+
+  const [showRename, setShowRename] = useState(false);
+  const [renameData, setRenameData] = useState(null);
+  const [renaming, setRenaming] = useState(false);
   
   // QR Generator State
   const [qrUrl, setQrUrl] = useState('');
@@ -134,6 +138,36 @@ export default function StudioDashboard() {
     router.push(`/studio/${slug}/edit`);
   };
 
+  const openRenameModal = (g) => {
+    setRenameData({ oldSlug: g.slug, newSlug: g.slug, newRecipient: g.recipient || '' });
+    setShowRename(true);
+  };
+
+  const handleRename = async (e) => {
+    e.preventDefault();
+    setRenaming(true);
+    const finalSlug = renameData.newSlug.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-');
+    
+    try {
+      const resGet = await fetch(`/api/gifts/${renameData.oldSlug}`);
+      if (resGet.ok) {
+        const giftData = await resGet.json();
+        giftData.slug = finalSlug;
+        giftData.recipient = renameData.newRecipient;
+
+        await fetch(`/api/gifts/${renameData.oldSlug}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(giftData),
+        });
+      }
+    } catch { /* ignore */ }
+
+    setRenaming(false);
+    setShowRename(false);
+    await fetchGifts();
+  };
+
   const handleDelete = async (slug) => {
     if (!confirm(`Delete gift "${slug}"? This cannot be undone.`)) return;
     setDeleting(slug);
@@ -214,6 +248,7 @@ export default function StudioDashboard() {
                   <button style={S.actionBtn('#E11D48')} onClick={() => router.push(`/studio/${g.slug}/edit`)}>Edit</button>
                   <button style={S.actionBtn('#8B5CF6')} onClick={() => window.open(`/${g.slug}`, '_blank')}>Preview</button>
                   <button style={S.actionBtn('#22C55E')} onClick={() => handleExport(g.slug)}>Export</button>
+                  <button style={S.actionBtn('#3B82F6')} onClick={() => openRenameModal(g)}>Settings</button>
                   <button style={S.actionBtn('#EF4444')} onClick={() => handleDelete(g.slug)} disabled={deleting === g.slug}>
                     {deleting === g.slug ? '...' : 'Delete'}
                   </button>
@@ -287,6 +322,44 @@ export default function StudioDashboard() {
               <button type="button" onClick={() => setShowNew(false)} style={{ ...S.logoutBtn, flex: 1 }}>Cancel</button>
               <button type="submit" disabled={creating} style={{ ...S.newBtn, flex: 1, opacity: creating ? 0.6 : 1 }}>
                 {creating ? 'Creating...' : 'Create'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Rename Gift Modal */}
+      {showRename && renameData && (
+        <div style={S.modal} onClick={() => setShowRename(false)}>
+          <form style={S.modalCard} onClick={(e) => e.stopPropagation()} onSubmit={handleRename}>
+            <h2 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.5rem' }}>Gift Settings</h2>
+            <p style={{ fontSize: '0.75rem', color: '#888', marginBottom: '1.5rem' }}>Update the recipient name or the URL link for this gift.</p>
+            
+            <label style={S.label}>Recipient Name</label>
+            <input 
+              style={S.input} 
+              value={renameData.newRecipient} 
+              onChange={(e) => setRenameData({...renameData, newRecipient: e.target.value})} 
+              placeholder="e.g. Nadia" 
+              required 
+            />
+            
+            <label style={S.label}>URL Slug (Domain Link)</label>
+            <input 
+              style={S.input} 
+              value={renameData.newSlug} 
+              onChange={(e) => setRenameData({...renameData, newSlug: e.target.value})} 
+              placeholder="e.g. untuk-nadia" 
+              required 
+            />
+            <p style={{ fontSize: '0.7rem', color: '#F59E0B', marginBottom: '1rem', marginTop: '-0.5rem' }}>
+              ⚠️ Changing this will change the live link. If using a custom Vercel domain, you must update it in Vercel too.
+            </p>
+
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+              <button type="button" onClick={() => setShowRename(false)} style={{ ...S.logoutBtn, flex: 1 }}>Cancel</button>
+              <button type="submit" disabled={renaming} style={{ ...S.newBtn, flex: 1, opacity: renaming ? 0.6 : 1, background: 'linear-gradient(135deg, #3B82F6, #2563EB)' }}>
+                {renaming ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </form>
