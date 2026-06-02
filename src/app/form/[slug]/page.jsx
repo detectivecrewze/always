@@ -144,9 +144,8 @@ export default function OrderForm() {
         setOrderId(result.orderId);
         setStep(5); // Success screen
         
-        // We no longer clear the draft here, so if the customer refreshes or visits again,
-        // their data remains intact and they don't have to start from scratch.
-        // We will just hide submitted drafts from the "Live Drafts" section in the Studio.
+        // Delete the online draft so it disappears from Studio Live Drafts
+        fetch(`/api/drafts/${slug}`, { method: 'DELETE' }).catch(() => {});
       } else {
         alert(result.error || 'Terjadi kesalahan pada sistem.');
       }
