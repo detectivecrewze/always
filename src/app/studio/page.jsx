@@ -2,17 +2,22 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import playlist from './playlist.json';
 import AestheticQRCode from '@/components/AestheticQRCode';
 import { themes } from '@/lib/themes';
 
 export default function StudioDashboard() {
   const [gifts, setGifts] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [drafts, setDrafts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);
   const [newSlug, setNewSlug] = useState('');
   const [newRecipient, setNewRecipient] = useState('');
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState(null);
+  const [processingOrder, setProcessingOrder] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   const [showRename, setShowRename] = useState(false);
   const [renameData, setRenameData] = useState(null);
@@ -54,10 +59,21 @@ export default function StudioDashboard() {
 
   const fetchGifts = async () => {
     try {
-      const res = await fetch('/api/gifts');
-      if (res.status === 401) { router.push('/studio/login'); return; }
-      const data = await res.json();
-      setGifts(data);
+      const resGifts = await fetch('/api/gifts');
+      if (resGifts.status === 401) { router.push('/studio/login'); return; }
+      const dataGifts = await resGifts.json();
+      setGifts(dataGifts);
+
+      const resOrders = await fetch('/api/orders');
+      if (resOrders.ok) {
+        const dataOrders = await resOrders.json();
+        setOrders(dataOrders.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)));
+      }
+      
+      const resDrafts = await fetch('/api/drafts');
+      if (resDrafts.ok) {
+        setDrafts(await resDrafts.json());
+      }
     } catch { /* ignore */ }
     setLoading(false);
   };
@@ -176,8 +192,104 @@ export default function StudioDashboard() {
     setDeleting(null);
   };
 
+  const handleApplyOrder = async (order) => {
+    if (!confirm(`Terapkan data pesanan ini ke kado /${order.slug}? Data lama akan ditimpa.`)) return;
+    setProcessingOrder(order.orderId);
+    
+    try {
+      const res = await fetch(`/api/gifts/${order.slug}`);
+      if (!res.ok) {
+        alert(`Kado dengan link /${order.slug} belum dibuat. Harap buat kado barunya dulu di atas!`);
+        setProcessingOrder(null);
+        return;
+      }
+      
+      const existingGift = await res.json();
+
+      let newMusic = existingGift.music;
+      if (order.musicChoice === 'request' && order.music) {
+        newMusic = { title: order.music, artist: 'Custom (Request)', file: '', cover: '' };
+      } else if (order.musicChoice === 'playlist' && order.music) {
+        const foundSong = playlist.find(s => `${s.title} - ${s.artist}` === order.music);
+        if (foundSong) {
+          newMusic = { 
+            title: foundSong.title, 
+            artist: foundSong.artist, 
+            file: foundSong.audioUrl, 
+            cover: foundSong.coverUrl 
+          };
+        }
+      }
+
+      const updatedGift = {
+        ...existingGift,
+        theme: order.theme,
+        music: newMusic,
+        photos: order.photos && order.photos.length > 0 ? order.photos.map(p => ({ url: p, caption: '' })) : existingGift.photos,
+        secretPhoto: order.secretPhoto || existingGift.secretPhoto,
+        introText: order.message ? [order.message] : existingGift.introText,
+        ...(order.specialDate && {
+          timeEnabled: true,
+          timeStartDate: order.specialDate,
+        }),
+      };
+
+      await fetch(`/api/gifts/${order.slug}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedGift),
+      });
+
+      await fetch(`/api/orders/${order.orderId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'done' }),
+      });
+
+      await fetchGifts();
+      router.push(`/studio/${order.slug}/edit`);
+    } catch (e) {
+      alert('Failed to process order');
+    }
+    setProcessingOrder(null);
+  };
+
+  const copyFormLink = (slug) => {
+    const url = `${window.location.origin}/form/${slug}`;
+    navigator.clipboard.writeText(url);
+    alert(`Link form tersalin: ${url}`);
+  };
+
   const handleExport = (slug) => {
     window.open(`/api/export/${slug}`, '_blank');
+  };
+
+  const handleDeleteOrder = async (orderId) => {
+    if (!confirm('Hapus pesanan ini secara permanen? Data tidak dapat dikembalikan.')) return;
+    try {
+      const res = await fetch(`/api/orders/${orderId}`, { method: 'DELETE' });
+      if (res.ok) {
+        fetchGifts();
+      } else {
+        alert('Gagal menghapus pesanan.');
+      }
+    } catch (e) {
+      alert('Terjadi kesalahan jaringan saat menghapus pesanan.');
+    }
+  };
+
+  const handleDeleteDraft = async (slug) => {
+    if (!confirm('Hapus live draft ini secara permanen?')) return;
+    try {
+      const res = await fetch(`/api/drafts/${slug}`, { method: 'DELETE' });
+      if (res.ok) {
+        fetchGifts();
+      } else {
+        alert('Gagal menghapus draft.');
+      }
+    } catch (e) {
+      alert('Terjadi kesalahan jaringan saat menghapus draft.');
+    }
   };
 
   const handleLogout = async () => {
@@ -248,6 +360,7 @@ export default function StudioDashboard() {
                   <button style={S.actionBtn('#E11D48')} onClick={() => router.push(`/studio/${g.slug}/edit`)}>Edit</button>
                   <button style={S.actionBtn('#8B5CF6')} onClick={() => window.open(`/${g.slug}`, '_blank')}>Preview</button>
                   <button style={S.actionBtn('#22C55E')} onClick={() => handleExport(g.slug)}>Export</button>
+                  <button style={S.actionBtn('#10B981')} onClick={() => copyFormLink(g.slug)}>Copy Form Link</button>
                   <button style={S.actionBtn('#3B82F6')} onClick={() => openRenameModal(g)}>Settings</button>
                   <button style={S.actionBtn('#EF4444')} onClick={() => handleDelete(g.slug)} disabled={deleting === g.slug}>
                     {deleting === g.slug ? '...' : 'Delete'}
@@ -255,6 +368,223 @@ export default function StudioDashboard() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* View Order/Draft Modal */}
+        {selectedOrder && (
+          <div style={S.modal} onClick={() => setSelectedOrder(null)}>
+            <div style={{ ...S.modalCard, maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+                {selectedOrder.isDraft ? 'Live Draft Details (Not Submitted)' : 'Order Details'}
+              </h2>
+              <div style={{ fontSize: '0.8rem', color: selectedOrder.isDraft ? '#EAB308' : '#888', fontFamily: 'monospace', marginBottom: '1.5rem' }}>
+                {selectedOrder.isDraft ? 'DRAFT IN PROGRESS' : selectedOrder.orderId}
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                <div>
+                  <div style={S.label}>From</div>
+                  <div style={{ fontSize: '1rem', color: '#f5f5f5' }}>{selectedOrder.sender}</div>
+                </div>
+                <div>
+                  <div style={S.label}>To</div>
+                  <div style={{ fontSize: '1rem', color: '#f5f5f5' }}>{selectedOrder.recipient}</div>
+                </div>
+                <div>
+                  <div style={S.label}>Moment</div>
+                  <div style={{ fontSize: '0.9rem', color: '#f5f5f5' }}>{selectedOrder.moment} {selectedOrder.specialDate && `(${selectedOrder.specialDate})`}</div>
+                </div>
+                <div>
+                  <div style={S.label}>Theme</div>
+                  <div style={{ fontSize: '0.9rem', color: '#f5f5f5' }}>{selectedOrder.theme}</div>
+                </div>
+                <div>
+                  <div style={S.label}>Metaphor</div>
+                  <div style={{ fontSize: '0.9rem', color: '#f5f5f5' }}>{selectedOrder.metaphorChoice}</div>
+                </div>
+                <div>
+                  <div style={S.label}>Writing Tone</div>
+                  <div style={{ fontSize: '0.9rem', color: '#f5f5f5' }}>
+                    {Array.isArray(selectedOrder.tone) ? selectedOrder.tone.join(', ') : selectedOrder.tone}
+                  </div>
+                </div>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <div style={S.label}>Music Choice</div>
+                  <div style={{ fontSize: '0.9rem', color: '#f5f5f5' }}>
+                    {selectedOrder.musicChoice === 'random' ? 'Let Team Decide (Random)' : 
+                     selectedOrder.musicChoice === 'playlist' ? `Playlist: ${selectedOrder.music || 'None'}` :
+                     `Request: ${selectedOrder.music || 'None'}`}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <div style={S.label}>Message</div>
+                <div style={{ background: '#0a0a0a', border: '1px solid #262626', borderRadius: '8px', padding: '1rem', fontSize: '0.9rem', color: '#ddd', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>
+                  {selectedOrder.message || 'No message provided.'}
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <div style={S.label}>Photos / Videos ({selectedOrder.photos?.length || 0})</div>
+                {selectedOrder.photos && selectedOrder.photos.length > 0 ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
+                    {selectedOrder.photos.map((p, i) => (
+                      <a key={i} href={p} target="_blank" rel="noreferrer" style={{ display: 'block', aspectRatio: '1', borderRadius: '6px', overflow: 'hidden', background: '#222' }}>
+                        {p.endsWith('.mp4') ? (
+                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.6rem' }}>VIDEO</div>
+                        ) : (
+                           // eslint-disable-next-line @next/next/no-img-element
+                           <img src={p} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        )}
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ fontSize: '0.8rem', color: '#666' }}>No media uploaded.</div>
+                )}
+              </div>
+
+              <div style={{ marginBottom: '2rem' }}>
+                <div style={S.label}>Secret Ending Media</div>
+                {selectedOrder.secretPhoto ? (
+                  <a href={selectedOrder.secretPhoto} target="_blank" rel="noreferrer" style={{ display: 'inline-block', padding: '0.5rem 1rem', background: '#222', borderRadius: '6px', fontSize: '0.8rem', color: '#f5f5f5', textDecoration: 'none' }}>
+                    View Secret File 🔗
+                  </a>
+                ) : (
+                  <div style={{ fontSize: '0.8rem', color: '#666' }}>No secret media.</div>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                <button 
+                  onClick={() => setSelectedOrder(null)} 
+                  style={{ padding: '0.6rem 1.5rem', background: '#333', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem' }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Incoming Orders Section */}
+        {orders.filter(o => o.status === 'pending').length > 0 && (
+          <div style={{ marginTop: '4rem' }}>
+            <div style={{ ...S.topBar, marginBottom: '1.5rem' }}>
+              <span style={S.title}>Incoming Orders ({orders.filter(o => o.status === 'pending').length})</span>
+            </div>
+            <div style={{ ...S.grid, gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
+              {orders.filter(o => o.status === 'pending').map((o) => (
+                <div key={o.orderId} style={{ ...S.card, border: '1px solid #3B82F640' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                    <div style={{ ...S.cardSlug, color: '#3B82F6' }}>{o.orderId}</div>
+                    <div style={S.cardDate}>{o.createdAt}</div>
+                  </div>
+                  <div style={S.cardName}>From: {o.sender}</div>
+                  <div style={{ fontSize: '0.85rem', color: '#aaa', marginBottom: '0.2rem' }}>To: {o.recipient} (/{o.slug})</div>
+                  <div style={{ fontSize: '0.8rem', color: '#888', marginBottom: '1rem' }}>Theme: {o.theme} | Moment: {o.moment}</div>
+                  
+                  <div style={S.actions}>
+                    <button style={S.actionBtn('#8B5CF6')} onClick={() => setSelectedOrder(o)}>View Details</button>
+                    <button 
+                      style={{ ...S.actionBtn('#22C55E'), background: '#22C55E20' }} 
+                      onClick={() => handleApplyOrder(o)}
+                      disabled={processingOrder === o.orderId}
+                    >
+                      {processingOrder === o.orderId ? 'Processing...' : 'Apply to Gift'}
+                    </button>
+                    <button 
+                      style={S.actionBtn('#EF4444')} 
+                      onClick={async () => {
+                        if(confirm('Mark as done?')) {
+                          await fetch(`/api/orders/${o.orderId}`, { method: 'PUT', body: JSON.stringify({ status: 'done' }) });
+                          fetchGifts();
+                        }
+                      }}
+                    >
+                      Mark Done
+                    </button>
+                    <button 
+                      style={{ ...S.actionBtn('#EF4444'), background: 'transparent', padding: '0.4rem', flex: '0 0 auto' }} 
+                      onClick={() => handleDeleteOrder(o.orderId)}
+                      title="Hapus Pesanan"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Live Drafts Section */}
+        {drafts.filter(d => !orders.some(o => o.slug === d.slug)).length > 0 && (
+          <div style={{ marginTop: '4rem' }}>
+            <div style={{ ...S.topBar, marginBottom: '1.5rem' }}>
+              <span style={S.title} title="Real-time drafts being filled by customers">Live Drafts / Abandoned ({drafts.filter(d => !orders.some(o => o.slug === d.slug)).length})</span>
+            </div>
+            <div style={{ ...S.grid, gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
+              {drafts.filter(d => !orders.some(o => o.slug === d.slug)).map((d) => {
+                const updatedTime = new Date(d.updatedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                return (
+                  <div key={d.slug} style={{ ...S.card, border: '1px solid #EAB30840' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                      <div style={{ ...S.cardSlug, color: '#EAB308' }}>Live Draft</div>
+                      <div style={S.cardDate}>Last edit: {updatedTime}</div>
+                    </div>
+                    <div style={S.cardName}>From: {d.sender || '...'}</div>
+                    <div style={{ fontSize: '0.85rem', color: '#aaa', marginBottom: '0.2rem' }}>To: {d.recipient || '...'} (/{d.slug})</div>
+                    <div style={{ fontSize: '0.8rem', color: '#888', marginBottom: '1rem' }}>Theme: {d.theme}</div>
+                    
+                    <div style={S.actions}>
+                      <button style={S.actionBtn('#8B5CF6')} onClick={() => setSelectedOrder({ ...d, isDraft: true })}>View Progress</button>
+                      <button 
+                        style={{ ...S.actionBtn('#EF4444'), background: 'transparent', padding: '0.4rem', flex: '0 0 auto', border: '1px solid #EF444440' }} 
+                        onClick={() => handleDeleteDraft(d.slug)}
+                        title="Hapus Draft"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Order History Section */}
+        {orders.filter(o => o.status === 'done').length > 0 && (
+          <div style={{ marginTop: '4rem', opacity: 0.8 }}>
+            <div style={{ ...S.topBar, marginBottom: '1.5rem' }}>
+              <span style={S.title}>Order History</span>
+            </div>
+            <div style={{ ...S.grid, gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
+              {orders.filter(o => o.status === 'done').map((o) => (
+                <div key={o.orderId} style={{ ...S.card, border: '1px solid #1a1a1a', opacity: 0.7 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                    <div style={{ ...S.cardSlug, color: '#888' }}>{o.orderId}</div>
+                    <div style={S.cardDate}>{o.createdAt}</div>
+                  </div>
+                  <div style={S.cardName}>From: {o.sender}</div>
+                  <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '0.2rem' }}>To: {o.recipient} (/{o.slug})</div>
+                  
+                  <div style={{ ...S.actions, marginTop: '1rem' }}>
+                    <button style={S.actionBtn('#8B5CF6')} onClick={() => setSelectedOrder(o)}>View Details</button>
+                    <button 
+                      style={{ ...S.actionBtn('#EF4444'), background: 'transparent', padding: '0.4rem', flex: '0 0 auto', border: '1px solid #EF444440' }} 
+                      onClick={() => handleDeleteOrder(o.orderId)}
+                      title="Hapus Riwayat"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

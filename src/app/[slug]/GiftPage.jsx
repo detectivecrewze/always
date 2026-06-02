@@ -59,8 +59,8 @@ export default function GiftPage({ data }) {
 
   return (
     <main className="relative min-h-screen bg-bg text-text selection:bg-accent/30 font-sans overflow-hidden" style={themeStyles}>
-      {/* Audio element — always mounted */}
-      <audio ref={audioRef} src={data.music.file} loop preload="auto" />
+      {/* Audio element — always mounted if music exists */}
+      {data.music?.file && <audio ref={audioRef} src={data.music.file} loop preload="auto" />}
 
       {/* Gate Screen */}
       <AnimatePresence mode="wait">
@@ -144,12 +144,14 @@ export default function GiftPage({ data }) {
             />
 
             {/* Music Player */}
-            <MusicPlayer
-              music={data.music}
-              isPlaying={isPlaying}
-              onToggle={handleTogglePlay}
-              audioRef={audioRef}
-            />
+            {data.music?.file && (
+              <MusicPlayer
+                music={data.music}
+                isPlaying={isPlaying}
+                onToggle={handleTogglePlay}
+                audioRef={audioRef}
+              />
+            )}
           </motion.div>
         )}
       </AnimatePresence>

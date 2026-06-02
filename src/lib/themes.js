@@ -37,12 +37,12 @@ export const themes = {
   },
   'blush-pink': {
     name: 'Blush Pink',
-    bg: '#2A0D18',           // dark velvet berry
-    surface: '#3D1526',      // deep rose
-    text: '#FFF0F3',         // pure blush white
-    textMuted: '#E8A5BB',    // soft rose
-    accent: '#F472B6',       // bright rose-pink
-    particle: '#9D1F45',     // deep fuchsia glow
+    bg: '#FFE4E8',           // distinctly pink background
+    surface: '#FFD1DA',      // darker pink surface
+    text: '#6B1C2F',         // deep maroon/rose text
+    textMuted: '#AD536A',    // muted rose text
+    accent: '#E1496D',       // vivid pink accent
+    particle: '#FFA6B9',     // bright pink glow
   },
   'midnight-blue': {
     name: 'Midnight Blue',

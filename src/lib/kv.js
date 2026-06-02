@@ -73,3 +73,51 @@ export async function deleteGift(slug) {
   const index = await listGifts();
   await kvPut('gift:_index', index.filter((s) => s !== slug));
 }
+
+export async function listOrders() {
+  const index = await kvGet('order:_index');
+  return Array.isArray(index) ? index : [];
+}
+
+export async function getOrder(orderId) {
+  return kvGet(`order:${orderId}`);
+}
+
+export async function putOrder(orderId, data) {
+  await kvPut(`order:${orderId}`, data);
+  const index = await listOrders();
+  if (!index.includes(orderId)) {
+    await kvPut('order:_index', [...index, orderId]);
+  }
+}
+
+export async function deleteOrder(orderId) {
+  await kvDelete(`order:${orderId}`);
+  const index = await listOrders();
+  await kvPut('order:_index', index.filter((s) => s !== orderId));
+}
+
+// ── Drafts ────────────────────────────────────────────────────────
+
+export async function listDrafts() {
+  const index = await kvGet('draft:_index');
+  return Array.isArray(index) ? index : [];
+}
+
+export async function getDraft(slug) {
+  return kvGet(`draft:${slug}`);
+}
+
+export async function putDraft(slug, data) {
+  await kvPut(`draft:${slug}`, data);
+  const index = await listDrafts();
+  if (!index.includes(slug)) {
+    await kvPut('draft:_index', [...index, slug]);
+  }
+}
+
+export async function deleteDraft(slug) {
+  await kvDelete(`draft:${slug}`);
+  const index = await listDrafts();
+  await kvPut('draft:_index', index.filter((s) => s !== slug));
+}
