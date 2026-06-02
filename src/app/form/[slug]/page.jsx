@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { themes } from '@/lib/themes';
 import playlist from '@/app/studio/playlist.json';
+import { Flower2, Leaf, Clock, Heart, Music, Image as ImageIcon, Lock, CheckCircle2, Sparkles, Video } from 'lucide-react';
 
 export default function OrderForm() {
   const params = useParams();
@@ -14,6 +15,7 @@ export default function OrderForm() {
   const [submitting, setSubmitting] = useState(false);
   const [orderId, setOrderId] = useState(null);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
+  const [tempSelectedMusic, setTempSelectedMusic] = useState('');
 
   const [data, setData] = useState({
     sender: '',
@@ -158,10 +160,10 @@ export default function OrderForm() {
   };
 
   const STORY_CONCEPTS = [
-    { id: 'Flowers (Bunga)', icon: '🌸', title: 'Bunga (Flowers)', desc: 'Cocok untuk cerita cinta yang dirawat dan terus bertumbuh mekar.' },
-    { id: 'Seasons (4 Musim)', icon: '🍂', title: 'Musim (Seasons)', desc: 'Menyoroti bagaimana kalian melewati masa senang dan sulit bersama.' },
-    { id: 'Time (Waktu)', icon: '⏳', title: 'Waktu (Time)', desc: 'Fokus pada detik, hari, dan tahun perjalanan yang telah dihabiskan.' },
-    { id: 'Keepsakes (Kenangan)', icon: '💌', title: 'Kenangan (Keepsakes)', desc: 'Mengabadikan hal-hal kecil bermakna yang menjadi saksi cerita kalian.' }
+    { id: 'Flowers (Bunga)', icon: <Flower2 size={24} strokeWidth={1.5} />, title: 'Bunga (Flowers)', desc: 'Cocok untuk cerita cinta yang dirawat dan terus bertumbuh mekar.' },
+    { id: 'Seasons (4 Musim)', icon: <Leaf size={24} strokeWidth={1.5} />, title: 'Musim (Seasons)', desc: 'Menyoroti bagaimana kalian melewati masa senang dan sulit bersama.' },
+    { id: 'Time (Waktu)', icon: <Clock size={24} strokeWidth={1.5} />, title: 'Waktu (Time)', desc: 'Fokus pada detik, hari, dan tahun perjalanan yang telah dihabiskan.' },
+    { id: 'Keepsakes (Kenangan)', icon: <Heart size={24} strokeWidth={1.5} />, title: 'Kenangan (Keepsakes)', desc: 'Mengabadikan hal-hal kecil bermakna yang menjadi saksi cerita kalian.' }
   ];
   const TONES = ['Santai', 'Puitis', 'Indoglish', 'Full English'];
   const MOMENTS = ['Ultah', 'Anniversary', 'LDR', 'Wisuda', 'Friendship', 'Just Because'];
@@ -424,18 +426,21 @@ export default function OrderForm() {
                 <div style={{ marginTop: '0.5rem' }}>
                   {data.music ? (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.05)', padding: '0.75rem 1rem', borderRadius: '12px', border: `1px solid ${currentTheme.text}30` }}>
-                      <div style={{ fontSize: '0.9rem' }}>🎵 <strong>{data.music.split(' - ')[0]}</strong> <span style={{ opacity: 0.7 }}>- {data.music.split(' - ')[1]}</span></div>
-                      <button onClick={() => setShowPlaylistModal(true)} style={{ background: 'transparent', border: 'none', color: currentTheme.text, fontSize: '0.8rem', textDecoration: 'underline', cursor: 'pointer' }}>Ganti</button>
+                      <div style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Music size={16} strokeWidth={2} opacity={0.8} />
+                        <div><strong>{data.music.split(' - ')[0]}</strong> <span style={{ opacity: 0.7 }}>- {data.music.split(' - ')[1]}</span></div>
+                      </div>
+                      <button onClick={() => { setTempSelectedMusic(data.music); setShowPlaylistModal(true); }} style={{ background: 'transparent', border: 'none', color: currentTheme.text, fontSize: '0.8rem', textDecoration: 'underline', cursor: 'pointer' }}>Ganti</button>
                     </div>
                   ) : (
                     <button 
-                      onClick={() => setShowPlaylistModal(true)}
+                      onClick={() => { setTempSelectedMusic(''); setShowPlaylistModal(true); }}
                       style={{ 
                         width: '100%', padding: '1rem', background: 'rgba(0,0,0,0.05)', border: `1px dashed ${currentTheme.text}60`, 
                         borderRadius: '12px', color: currentTheme.text, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem'
                       }}
                     >
-                      🎵 Buka Daftar Playlist Kami
+                      <Music size={18} strokeWidth={2} /> Buka Daftar Playlist Kami
                     </button>
                   )}
                 </div>
@@ -478,7 +483,9 @@ export default function OrderForm() {
                   onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.1)'}
                   onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.05)'}
                 >
-                  <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📸</div>
+                  <div style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'center' }}>
+                    <ImageIcon size={48} strokeWidth={1} opacity={0.7} />
+                  </div>
                   <div style={{ fontSize: '0.9rem' }}>Klik untuk memilih file</div>
                   <div style={{ fontSize: '0.75rem', opacity: 0.6, mt: 1 }}>Maksimal 10 file. (Video Max 10MB)</div>
                 </div>
@@ -522,7 +529,9 @@ export default function OrderForm() {
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={URL.createObjectURL(secretFile)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.9rem', fontWeight: 500 }}>🎥 VIDEO TERPILIH</div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.9rem', fontWeight: 500, gap: '8px' }}>
+                          <Video size={20} strokeWidth={2} opacity={0.8} /> VIDEO TERPILIH
+                        </div>
                       )}
                       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.2s' }} onMouseEnter={e => e.currentTarget.style.opacity = 1} onMouseLeave={e => e.currentTarget.style.opacity = 0}>
                         <span style={{ color: '#fff', fontSize: '0.85rem', fontWeight: 500 }}>Klik untuk mengganti</span>
@@ -530,7 +539,9 @@ export default function OrderForm() {
                     </div>
                   ) : (
                     <>
-                      <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>🔒</div>
+                      <div style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'center' }}>
+                        <Lock size={48} strokeWidth={1} opacity={0.7} />
+                      </div>
                       <div style={{ fontSize: '0.85rem' }}>Pilih foto / video spesial untuk kejutan di akhir</div>
                     </>
                   )}
@@ -586,7 +597,9 @@ export default function OrderForm() {
         {/* --- STEP 5: SUCCESS --- */}
         {step === 5 && (
           <div style={{ textAlign: 'center', padding: '2rem 0', animation: 'fadeIn 0.8s ease-out' }}>
-            <div style={{ fontSize: '4rem', marginBottom: '1.5rem' }}>✨</div>
+            <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
+              <Sparkles size={64} strokeWidth={1} opacity={0.8} />
+            </div>
             <h2 style={{ fontSize: '1.75rem', marginBottom: '1rem', fontFamily: 'var(--font-serif)', fontStyle: 'italic' }}>
               Sempurna!
             </h2>
@@ -655,51 +668,88 @@ export default function OrderForm() {
 
         {/* --- PLAYLIST MODAL --- */}
         {showPlaylistModal && (
-          <div 
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
             onClick={() => setShowPlaylistModal(false)}
             style={{ 
-              position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+              position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
             }}
           >
-            <div 
+            <motion.div 
+              initial={{ scale: 0.95, y: 20, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.95, y: 20, opacity: 0 }} transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={e => e.stopPropagation()}
               style={{ 
-                background: currentTheme.bg, color: currentTheme.text, width: '100%', maxWidth: '400px', 
-                borderRadius: '20px', padding: '1.5rem', maxHeight: '80vh', display: 'flex', flexDirection: 'column' 
+                background: currentTheme.bg, color: currentTheme.text, width: '100%', maxWidth: '420px', 
+                borderRadius: '24px', maxHeight: '85vh', display: 'flex', flexDirection: 'column',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.2)', overflow: 'hidden', border: `1px solid ${currentTheme.text}20`
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 600 }}>Pilih Lagu Latar</h3>
-                <button onClick={() => setShowPlaylistModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', lineHeight: 1, color: 'inherit', cursor: 'pointer' }}>&times;</button>
+              {/* Header */}
+              <div style={{ padding: '1.5rem 1.5rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${currentTheme.text}10` }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 600, margin: 0 }}>Pilih Lagu Latar</h3>
+                <button onClick={() => setShowPlaylistModal(false)} style={{ background: 'rgba(0,0,0,0.05)', border: 'none', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', color: 'inherit', cursor: 'pointer', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.1)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,0,0,0.05)'}>&times;</button>
               </div>
-              <div style={{ overflowY: 'auto', flex: 1, paddingRight: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+
+              {/* List */}
+              <div style={{ overflowY: 'auto', flex: 1, padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 {playlist.map((song, i) => {
                   const songStr = `${song.title} - ${song.artist}`;
-                  const isSelected = data.music === songStr;
+                  const isSelected = tempSelectedMusic === songStr;
                   return (
                     <div 
                       key={i} 
-                      onClick={() => { update('music', songStr); setShowPlaylistModal(false); }}
+                      onClick={() => setTempSelectedMusic(songStr)}
                       style={{ 
                         display: 'flex', alignItems: 'center', gap: '12px', padding: '0.75rem', 
-                        borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s',
-                        background: isSelected ? `${currentTheme.text}15` : 'rgba(0,0,0,0.05)',
-                        border: `1px solid ${isSelected ? currentTheme.text : 'transparent'}`
+                        borderRadius: '16px', cursor: 'pointer', transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                        background: isSelected ? currentTheme.text : 'transparent',
+                        color: isSelected ? currentTheme.bg : currentTheme.text,
+                        border: `1px solid ${isSelected ? currentTheme.text : currentTheme.text + '20'}`
                       }}
+                      onMouseEnter={e => { if(!isSelected) e.currentTarget.style.background = 'rgba(0,0,0,0.03)' }}
+                      onMouseLeave={e => { if(!isSelected) e.currentTarget.style.background = 'transparent' }}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={song.coverUrl} alt="" style={{ width: '48px', height: '48px', borderRadius: '8px', objectFit: 'cover', border: `1px solid ${currentTheme.text}20` }} />
-                      <div>
-                        <div style={{ fontSize: '0.95rem', fontWeight: 500, color: currentTheme.text }}>{song.title}</div>
-                        <div style={{ fontSize: '0.8rem', opacity: 0.7, color: currentTheme.text }}>{song.artist}</div>
+                      <img src={song.coverUrl} alt="" style={{ width: '52px', height: '52px', borderRadius: '10px', objectFit: 'cover', border: `1px solid ${currentTheme.text}20`, boxShadow: isSelected ? '0 4px 12px rgba(0,0,0,0.3)' : 'none' }} />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '1rem', fontWeight: 600, color: 'inherit' }}>{song.title}</div>
+                        <div style={{ fontSize: '0.8rem', opacity: isSelected ? 0.9 : 0.7, color: 'inherit' }}>{song.artist}</div>
                       </div>
+                      {isSelected && (
+                        <div style={{ marginRight: '0.5rem', display: 'flex', alignItems: 'center' }}>
+                          <CheckCircle2 size={20} strokeWidth={2} />
+                        </div>
+                      )}
                     </div>
                   );
                 })}
               </div>
-            </div>
-          </div>
+
+              {/* Footer / Actions */}
+              <div style={{ padding: '1rem 1.5rem 1.5rem', borderTop: `1px solid ${currentTheme.text}10`, background: `linear-gradient(to bottom, transparent, ${currentTheme.bg} 20%)` }}>
+                <button 
+                  onClick={() => {
+                    if(tempSelectedMusic) {
+                      update('music', tempSelectedMusic);
+                      setShowPlaylistModal(false);
+                    }
+                  }}
+                  disabled={!tempSelectedMusic}
+                  style={{
+                    width: '100%', background: currentTheme.text, color: currentTheme.bg, border: 'none', 
+                    padding: '1rem', borderRadius: '16px', fontSize: '1rem', fontWeight: 600, 
+                    cursor: tempSelectedMusic ? 'pointer' : 'not-allowed', opacity: tempSelectedMusic ? 1 : 0.5,
+                    transition: 'all 0.2s', boxShadow: tempSelectedMusic ? '0 8px 20px rgba(0,0,0,0.15)' : 'none'
+                  }}
+                  onMouseDown={e => { if(tempSelectedMusic) e.currentTarget.style.transform = 'scale(0.98)' }}
+                  onMouseUp={e => { if(tempSelectedMusic) e.currentTarget.style.transform = 'scale(1)' }}
+                >
+                  {tempSelectedMusic ? 'Pilih Lagu Ini' : 'Pilih lagu terlebih dahulu'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
