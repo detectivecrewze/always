@@ -13,6 +13,7 @@ export default function OrderForm() {
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [orderId, setOrderId] = useState(null);
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false);
 
   const [data, setData] = useState({
     sender: '',
@@ -156,7 +157,12 @@ export default function OrderForm() {
     setSubmitting(false);
   };
 
-  const METAPHORS = ['Seasons (4 Musim)', 'Flowers (Bunga)', 'Time (Waktu)', 'Keepsakes (Kenangan)'];
+  const STORY_CONCEPTS = [
+    { id: 'Flowers (Bunga)', icon: '🌸', title: 'Bunga (Flowers)', desc: 'Cocok untuk cerita cinta yang dirawat dan terus bertumbuh mekar.' },
+    { id: 'Seasons (4 Musim)', icon: '🍂', title: 'Musim (Seasons)', desc: 'Menyoroti bagaimana kalian melewati masa senang dan sulit bersama.' },
+    { id: 'Time (Waktu)', icon: '⏳', title: 'Waktu (Time)', desc: 'Fokus pada detik, hari, dan tahun perjalanan yang telah dihabiskan.' },
+    { id: 'Keepsakes (Kenangan)', icon: '💌', title: 'Kenangan (Keepsakes)', desc: 'Mengabadikan hal-hal kecil bermakna yang menjadi saksi cerita kalian.' }
+  ];
   const TONES = ['Santai', 'Puitis', 'Indoglish', 'Full English'];
   const MOMENTS = ['Ultah', 'Anniversary', 'LDR', 'Wisuda', 'Friendship', 'Just Because'];
 
@@ -301,22 +307,45 @@ export default function OrderForm() {
                 </div>
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '1rem' }}>Metafora Cerita</label>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {METAPHORS.map(m => (
-                    <button 
-                      key={m} onClick={() => update('metaphorChoice', m)}
-                      style={{ 
-                        padding: '0.6rem 1rem', borderRadius: '8px', fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.3s',
-                        background: data.metaphorChoice === m ? currentTheme.text : 'transparent',
-                        color: data.metaphorChoice === m ? currentTheme.bg : currentTheme.text,
-                        border: `1px solid ${data.metaphorChoice === m ? currentTheme.text : currentTheme.text + '40'}`
-                      }}
-                    >
-                      {m}
-                    </button>
-                  ))}
+              <div style={{ marginBottom: '2rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.2rem' }}>Tema Bagian Tambahan</label>
+                <p style={{ fontSize: '0.75rem', opacity: 0.7, marginBottom: '1.25rem', lineHeight: 1.4 }}>Pilih satu tema khusus yang akan kami gunakan untuk salah satu bagian (section) di dalam surat cinta Anda.</p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+                  {STORY_CONCEPTS.map(concept => {
+                    const isSelected = data.metaphorChoice === concept.id;
+                    return (
+                      <button 
+                        key={concept.id} 
+                        onClick={() => update('metaphorChoice', concept.id)}
+                        type="button"
+                        style={{ 
+                          padding: '1.25rem 1rem', 
+                          borderRadius: '12px', 
+                          cursor: 'pointer', 
+                          transition: 'all 0.3s ease',
+                          background: isSelected ? currentTheme.text : 'rgba(255, 255, 255, 0.03)',
+                          color: isSelected ? currentTheme.bg : currentTheme.text,
+                          border: `1px solid ${isSelected ? currentTheme.text : currentTheme.text + '30'}`,
+                          textAlign: 'left',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '0.5rem'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ fontSize: '1.25rem' }}>{concept.icon}</span>
+                          <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{concept.title}</span>
+                        </div>
+                        <span style={{ 
+                          fontSize: '0.75rem', 
+                          lineHeight: 1.4, 
+                          opacity: isSelected ? 0.9 : 0.6 
+                        }}>
+                          {concept.desc}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -392,30 +421,23 @@ export default function OrderForm() {
               </div>
               
               {data.musicChoice === 'playlist' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '250px', overflowY: 'auto', paddingRight: '0.5rem' }}>
-                  {playlist.map((song, i) => {
-                    const songStr = `${song.title} - ${song.artist}`;
-                    const isSelected = data.music === songStr;
-                    return (
-                      <div 
-                        key={i} 
-                        onClick={() => update('music', songStr)}
-                        style={{ 
-                          display: 'flex', alignItems: 'center', gap: '12px', padding: '0.75rem', 
-                          borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s',
-                          background: isSelected ? `${currentTheme.text}15` : 'rgba(0,0,0,0.05)',
-                          border: `1px solid ${isSelected ? currentTheme.text : 'transparent'}`
-                        }}
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={song.coverUrl} alt="" style={{ width: '48px', height: '48px', borderRadius: '8px', objectFit: 'cover', border: `1px solid ${currentTheme.text}20` }} />
-                        <div>
-                          <div style={{ fontSize: '0.95rem', fontWeight: 500, color: currentTheme.text }}>{song.title}</div>
-                          <div style={{ fontSize: '0.8rem', opacity: 0.7, color: currentTheme.text }}>{song.artist}</div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div style={{ marginTop: '0.5rem' }}>
+                  {data.music ? (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.05)', padding: '0.75rem 1rem', borderRadius: '12px', border: `1px solid ${currentTheme.text}30` }}>
+                      <div style={{ fontSize: '0.9rem' }}>🎵 <strong>{data.music.split(' - ')[0]}</strong> <span style={{ opacity: 0.7 }}>- {data.music.split(' - ')[1]}</span></div>
+                      <button onClick={() => setShowPlaylistModal(true)} style={{ background: 'transparent', border: 'none', color: currentTheme.text, fontSize: '0.8rem', textDecoration: 'underline', cursor: 'pointer' }}>Ganti</button>
+                    </div>
+                  ) : (
+                    <button 
+                      onClick={() => setShowPlaylistModal(true)}
+                      style={{ 
+                        width: '100%', padding: '1rem', background: 'rgba(0,0,0,0.05)', border: `1px dashed ${currentTheme.text}60`, 
+                        borderRadius: '12px', color: currentTheme.text, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem'
+                      }}
+                    >
+                      🎵 Buka Daftar Playlist Kami
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -495,7 +517,17 @@ export default function OrderForm() {
                   }}
                 >
                   {secretFile ? (
-                    <div style={{ fontSize: '0.9rem', fontWeight: 500 }}>✅ 1 File Terpilih</div>
+                    <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: '8px', overflow: 'hidden', background: 'rgba(0,0,0,0.2)' }}>
+                      {secretFile.type.startsWith('image/') ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={URL.createObjectURL(secretFile)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.9rem', fontWeight: 500 }}>🎥 VIDEO TERPILIH</div>
+                      )}
+                      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.2s' }} onMouseEnter={e => e.currentTarget.style.opacity = 1} onMouseLeave={e => e.currentTarget.style.opacity = 0}>
+                        <span style={{ color: '#fff', fontSize: '0.85rem', fontWeight: 500 }}>Klik untuk mengganti</span>
+                      </div>
+                    </div>
                   ) : (
                     <>
                       <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>🔒</div>
@@ -619,6 +651,55 @@ export default function OrderForm() {
               Memproses media dan cerita Anda dengan cinta
             </p>
           </motion.div>
+        )}
+
+        {/* --- PLAYLIST MODAL --- */}
+        {showPlaylistModal && (
+          <div 
+            onClick={() => setShowPlaylistModal(false)}
+            style={{ 
+              position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
+            }}
+          >
+            <div 
+              onClick={e => e.stopPropagation()}
+              style={{ 
+                background: currentTheme.bg, color: currentTheme.text, width: '100%', maxWidth: '400px', 
+                borderRadius: '20px', padding: '1.5rem', maxHeight: '80vh', display: 'flex', flexDirection: 'column' 
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 600 }}>Pilih Lagu Latar</h3>
+                <button onClick={() => setShowPlaylistModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', lineHeight: 1, color: 'inherit', cursor: 'pointer' }}>&times;</button>
+              </div>
+              <div style={{ overflowY: 'auto', flex: 1, paddingRight: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {playlist.map((song, i) => {
+                  const songStr = `${song.title} - ${song.artist}`;
+                  const isSelected = data.music === songStr;
+                  return (
+                    <div 
+                      key={i} 
+                      onClick={() => { update('music', songStr); setShowPlaylistModal(false); }}
+                      style={{ 
+                        display: 'flex', alignItems: 'center', gap: '12px', padding: '0.75rem', 
+                        borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s',
+                        background: isSelected ? `${currentTheme.text}15` : 'rgba(0,0,0,0.05)',
+                        border: `1px solid ${isSelected ? currentTheme.text : 'transparent'}`
+                      }}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={song.coverUrl} alt="" style={{ width: '48px', height: '48px', borderRadius: '8px', objectFit: 'cover', border: `1px solid ${currentTheme.text}20` }} />
+                      <div>
+                        <div style={{ fontSize: '0.95rem', fontWeight: 500, color: currentTheme.text }}>{song.title}</div>
+                        <div style={{ fontSize: '0.8rem', opacity: 0.7, color: currentTheme.text }}>{song.artist}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         )}
       </AnimatePresence>
     </div>
