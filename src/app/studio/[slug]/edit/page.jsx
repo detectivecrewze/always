@@ -661,6 +661,17 @@ function TabGallery({ data, set, slug }) {
     set('photos', photos.filter((_, i) => i !== idx));
   };
 
+  const movePhoto = (idx, direction) => {
+    const next = [...photos];
+    if (direction === 'up' && idx > 0) {
+      [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
+      set('photos', next);
+    } else if (direction === 'down' && idx < next.length - 1) {
+      [next[idx + 1], next[idx]] = [next[idx], next[idx + 1]];
+      set('photos', next);
+    }
+  };
+
   return (<>
     <div style={S.sectionTitle}>Photo Gallery</div>
     <div style={S.sectionDesc}>Upload photos with captions. You can add up to 10 photos.</div>
@@ -669,7 +680,13 @@ function TabGallery({ data, set, slug }) {
     {photos.map((p, i) => (
       <div key={i} style={S.cardWrap}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-          <span style={{ fontSize: '0.7rem', color: '#555' }}>Photo {i + 1}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ fontSize: '0.7rem', color: '#555', fontWeight: 'bold' }}>Photo {i + 1}</span>
+            <div style={{ display: 'flex', gap: '4px' }}>
+              {i > 0 && <button style={{...S.smallBtn('#4B5563'), padding: '2px 8px'}} onClick={() => movePhoto(i, 'up')} title="Move Up">↑</button>}
+              {i < photos.length - 1 && <button style={{...S.smallBtn('#4B5563'), padding: '2px 8px'}} onClick={() => movePhoto(i, 'down')} title="Move Down">↓</button>}
+            </div>
+          </div>
           <button style={S.smallBtn('#EF4444')} onClick={() => removePhoto(i)}>Remove</button>
         </div>
         <FileUpload label="Image" slug={slug} currentUrl={typeof p === 'string' ? p : p.url} onUploaded={(url) => setPhoto(i, 'url', url)} />
