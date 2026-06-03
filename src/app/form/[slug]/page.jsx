@@ -169,10 +169,10 @@ export default function OrderForm() {
   ];
 
   const REASON_THEMES = [
-    { id: 'qualities', icon: <Star size={24} strokeWidth={1.5} />, title: 'Sifat Spesial', desc: 'Hal-hal yang membuat dia begitu istimewa di mata kamu.' },
-    { id: 'moments', icon: <Camera size={24} strokeWidth={1.5} />, title: 'Momen Berharga', desc: 'Kenangan-kenangan yang membentuk kisah cinta kalian.' },
-    { id: 'promises', icon: <HeartHandshake size={24} strokeWidth={1.5} />, title: 'Janji Setia', desc: 'Hal-hal yang selalu kamu janjikan untuk dia.' },
-    { id: 'gratitude', icon: <Sparkles size={24} strokeWidth={1.5} />, title: 'Rasa Syukur', desc: 'Segala hal yang kamu syukuri atas kehadiran dia.' },
+    { id: 'qualities', icon: <Star size={24} strokeWidth={1.5} />, title: 'Sifat Spesial (Qualities)', desc: 'Hal-hal yang membuat dia begitu istimewa di mata kamu.' },
+    { id: 'moments', icon: <Camera size={24} strokeWidth={1.5} />, title: 'Momen Berharga (Moments)', desc: 'Kenangan-kenangan yang membentuk kisah cinta kalian.' },
+    { id: 'promises', icon: <HeartHandshake size={24} strokeWidth={1.5} />, title: 'Janji Setia (Promises)', desc: 'Hal-hal yang selalu kamu janjikan untuk dia.' },
+    { id: 'gratitude', icon: <Sparkles size={24} strokeWidth={1.5} />, title: 'Rasa Syukur (Gratitude)', desc: 'Segala hal yang kamu syukuri atas kehadiran dia.' },
   ];
 
   const TONES = ['Santai', 'Puitis', 'Indoglish', 'Full English'];
