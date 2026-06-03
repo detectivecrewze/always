@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { themes } from '@/lib/themes';
 import playlist from '@/app/studio/playlist.json';
-import { Flower2, Leaf, Clock, Heart, Music, Image as ImageIcon, Lock, CheckCircle2, Sparkles, Video } from 'lucide-react';
+import { Flower2, Leaf, Clock, Heart, Music, Image as ImageIcon, Lock, CheckCircle2, Sparkles, Video, Star, Camera, Handshake, HeartHandshake } from 'lucide-react';
 
 export default function OrderForm() {
   const params = useParams();
@@ -27,6 +27,8 @@ export default function OrderForm() {
     music: '',
     specialDate: '',
     metaphorChoice: 'Seasons (4 Musim)',
+    reasonChoice: 'qualities',
+    customMoment: '',
     message: '',
   });
 
@@ -165,8 +167,16 @@ export default function OrderForm() {
     { id: 'Time (Waktu)', icon: <Clock size={24} strokeWidth={1.5} />, title: 'Waktu (Time)', desc: 'Fokus pada detik, hari, dan tahun perjalanan yang telah dihabiskan.' },
     { id: 'Keepsakes (Kenangan)', icon: <Heart size={24} strokeWidth={1.5} />, title: 'Kenangan (Keepsakes)', desc: 'Mengabadikan hal-hal kecil bermakna yang menjadi saksi cerita kalian.' }
   ];
+
+  const REASON_THEMES = [
+    { id: 'qualities', icon: <Star size={24} strokeWidth={1.5} />, title: 'Sifat Spesial', desc: 'Hal-hal yang membuat dia begitu istimewa di mata kamu.' },
+    { id: 'moments', icon: <Camera size={24} strokeWidth={1.5} />, title: 'Momen Berharga', desc: 'Kenangan-kenangan yang membentuk kisah cinta kalian.' },
+    { id: 'promises', icon: <HeartHandshake size={24} strokeWidth={1.5} />, title: 'Janji Setia', desc: 'Hal-hal yang selalu kamu janjikan untuk dia.' },
+    { id: 'gratitude', icon: <Sparkles size={24} strokeWidth={1.5} />, title: 'Rasa Syukur', desc: 'Segala hal yang kamu syukuri atas kehadiran dia.' },
+  ];
+
   const TONES = ['Santai', 'Puitis', 'Indoglish', 'Full English'];
-  const MOMENTS = ['Ultah', 'Anniversary', 'LDR', 'Wisuda', 'Friendship', 'Just Because'];
+  const MOMENTS = ['Ultah', 'Anniversary', 'LDR', 'Wisuda', 'Friendship', 'Just Because', 'Lainnya'];
 
   return (
     <div style={{
@@ -265,6 +275,29 @@ export default function OrderForm() {
                     </button>
                   ))}
                 </div>
+
+                {data.moment === 'Lainnya' && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    transition={{ duration: 0.3 }}
+                    style={{ marginTop: '1rem', overflow: 'hidden' }}
+                  >
+                    <input
+                      value={data.customMoment || ''}
+                      onChange={e => update('customMoment', e.target.value)}
+                      placeholder="Tulis momen spesialmu di sini... (cth: Hari pertama kenalan)"
+                      style={{
+                        width: '100%', background: 'transparent', border: 'none',
+                        borderBottom: `1px solid ${currentTheme.text}40`, color: 'inherit',
+                        padding: '0.5rem 0', fontSize: '0.95rem', outline: 'none',
+                        transition: 'border-color 0.3s'
+                      }}
+                      onFocus={e => e.target.style.borderColor = currentTheme.text}
+                      onBlur={e => e.target.style.borderColor = `${currentTheme.text}40`}
+                    />
+                  </motion.div>
+                )}
               </div>
 
               <div>
@@ -310,9 +343,9 @@ export default function OrderForm() {
               </div>
 
               <div style={{ marginBottom: '2rem' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.2rem' }}>Tema Bagian Tambahan</label>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.2rem' }}>Tema Bagian Metafora</label>
                 <p style={{ fontSize: '0.75rem', opacity: 0.7, marginBottom: '1.25rem', lineHeight: 1.4 }}>Pilih satu tema khusus yang akan kami gunakan untuk salah satu bagian (section) di dalam surat cinta Anda.</p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
                   {STORY_CONCEPTS.map(concept => {
                     const isSelected = data.metaphorChoice === concept.id;
                     return (
@@ -335,15 +368,49 @@ export default function OrderForm() {
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span style={{ fontSize: '1.25rem' }}>{concept.icon}</span>
+                          <span>{concept.icon}</span>
                           <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{concept.title}</span>
                         </div>
-                        <span style={{ 
-                          fontSize: '0.75rem', 
-                          lineHeight: 1.4, 
-                          opacity: isSelected ? 0.9 : 0.6 
-                        }}>
+                        <span style={{ fontSize: '0.75rem', lineHeight: 1.4, opacity: isSelected ? 0.9 : 0.6 }}>
                           {concept.desc}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '2rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.2rem' }}>Tema Bagian Alasan Cinta</label>
+                <p style={{ fontSize: '0.75rem', opacity: 0.7, marginBottom: '1.25rem', lineHeight: 1.4 }}>Pilih tema untuk kartu-kartu alasan kenapa kamu mencintai dia.</p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
+                  {REASON_THEMES.map(theme => {
+                    const isSelected = data.reasonChoice === theme.id;
+                    return (
+                      <button 
+                        key={theme.id} 
+                        onClick={() => update('reasonChoice', theme.id)}
+                        type="button"
+                        style={{ 
+                          padding: '1.25rem 1rem', 
+                          borderRadius: '12px', 
+                          cursor: 'pointer', 
+                          transition: 'all 0.3s ease',
+                          background: isSelected ? currentTheme.text : 'rgba(255, 255, 255, 0.03)',
+                          color: isSelected ? currentTheme.bg : currentTheme.text,
+                          border: `1px solid ${isSelected ? currentTheme.text : currentTheme.text + '30'}`,
+                          textAlign: 'left',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '0.5rem'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span>{theme.icon}</span>
+                          <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{theme.title}</span>
+                        </div>
+                        <span style={{ fontSize: '0.75rem', lineHeight: 1.4, opacity: isSelected ? 0.9 : 0.6 }}>
+                          {theme.desc}
                         </span>
                       </button>
                     );
