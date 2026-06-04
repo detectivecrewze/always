@@ -103,7 +103,7 @@ function Field({ label, value, onChange, multiline, placeholder }) {
   );
 }
 
-function FileUpload({ label, slug, currentUrl, onUploaded }) {
+function FileUpload({ label, slug, currentUrl, onUploaded, onRemove }) {
   const [uploading, setUploading] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -132,12 +132,33 @@ function FileUpload({ label, slug, currentUrl, onUploaded }) {
     <div>
       <label style={S.label}>{label}</label>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-        {currentUrl && /\.(mp4|webm|mov)$/i.test(currentUrl) ? (
-          <video src={currentUrl} style={{ ...S.uploadThumb, objectFit: 'cover' }} muted playsInline preload="metadata" />
-        ) : currentUrl && /\.(mp3|wav|ogg|m4a)$/i.test(currentUrl) ? (
-          <div style={{ ...S.uploadThumb, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#262626', fontSize: '1.2rem' }}>🎵</div>
-        ) : currentUrl ? (
-          <img src={currentUrl} alt="" style={S.uploadThumb} onError={(e) => e.target.style.display='none'} />
+        {currentUrl ? (
+          <div style={{ position: 'relative' }}>
+            {/\.(mp4|webm|mov)$/i.test(currentUrl) ? (
+              <video src={currentUrl} style={{ ...S.uploadThumb, objectFit: 'cover' }} muted playsInline preload="metadata" />
+            ) : /\.(mp3|wav|ogg|m4a)$/i.test(currentUrl) ? (
+              <div style={{ ...S.uploadThumb, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#262626', fontSize: '1.2rem' }}>🎵</div>
+            ) : (
+              <img src={currentUrl} alt="" style={S.uploadThumb} onError={(e) => e.target.style.display='none'} />
+            )}
+            {onRemove && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onRemove();
+                }}
+                style={{
+                  position: 'absolute', top: '-6px', right: '-6px', width: '20px', height: '20px',
+                  borderRadius: '50%', background: '#EF4444', color: 'white', display: 'flex',
+                  alignItems: 'center', justifyContent: 'center', fontSize: '12px', border: 'none',
+                  cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.3)', zIndex: 10
+                }}
+              >
+                ✕
+              </button>
+            )}
+          </div>
         ) : null}
         <label style={{ 
           ...S.uploadBox, 
@@ -692,7 +713,7 @@ function TabGallery({ data, set, slug }) {
           </div>
           <button style={S.smallBtn('#EF4444')} onClick={() => removePhoto(i)}>Remove</button>
         </div>
-        <FileUpload label="Image" slug={slug} currentUrl={typeof p === 'string' ? p : p.url} onUploaded={(url) => setPhoto(i, 'url', url)} />
+        <FileUpload label="Image" slug={slug} currentUrl={typeof p === 'string' ? p : p.url} onUploaded={(url) => setPhoto(i, 'url', url)} onRemove={() => setPhoto(i, 'url', '')} />
         <Field label="Caption" value={typeof p === 'string' ? '' : p.caption} onChange={(v) => setPhoto(i, 'caption', v)} placeholder="caption text" />
       </div>
     ))}
@@ -748,8 +769,8 @@ function TabMusic({ data, set, slug }) {
     <div style={S.sectionDesc}>Edit details or upload a custom song.</div>
     <Field label="Song Title" value={music.title} onChange={(v) => setMusic('title', v)} placeholder="Song Title" />
     <Field label="Artist" value={music.artist} onChange={(v) => setMusic('artist', v)} placeholder="Artist Name" />
-    <FileUpload label="Audio File" slug={slug} currentUrl={music.file} onUploaded={(url) => setMusic('file', url)} />
-    <FileUpload label="Cover Image" slug={slug} currentUrl={music.cover} onUploaded={(url) => setMusic('cover', url)} />
+    <FileUpload label="Audio File" slug={slug} currentUrl={music.file} onUploaded={(url) => setMusic('file', url)} onRemove={() => setMusic('file', '')} />
+    <FileUpload label="Cover Image" slug={slug} currentUrl={music.cover} onUploaded={(url) => setMusic('cover', url)} onRemove={() => setMusic('cover', '')} />
   </>);
 }
 
@@ -807,7 +828,7 @@ function TabClosing({ data, set, slug }) {
     <Field label="Closing Line" value={data.closingLine} onChange={(v) => set('closingLine', v)} placeholder="always yours," />
     <Field label="Sender Name" value={data.sender} onChange={(v) => set('sender', v)} placeholder="Your Name" />
     <Field label="Celebrate Button Text" value={data.celebrateBtnText} onChange={(v) => set('celebrateBtnText', v)} placeholder="celebrate ✨" />
-    <FileUpload label="Secret Photo/Video" slug={slug} currentUrl={data.secretPhoto} onUploaded={(url) => set('secretPhoto', url)} />
+    <FileUpload label="Secret Photo/Video" slug={slug} currentUrl={data.secretPhoto} onUploaded={(url) => set('secretPhoto', url)} onRemove={() => set('secretPhoto', '')} />
     <Field label="Secret Caption" value={data.secretCaption} onChange={(v) => set('secretCaption', v)} placeholder="a special note" />
   </>);
 }
