@@ -127,17 +127,37 @@ export default function TimeSection({ timeTitle, timeSubtitle, timeStartDate }) 
     const start = new Date(timeStartDate).getTime();
 
     const tick = () => {
-      const diff = Date.now() - start;
+      const now = new Date();
+      const startDate = new Date(timeStartDate);
+      const diff = now.getTime() - startDate.getTime();
+      
       if (diff < 0) return;
 
       const seconds = Math.floor((diff / 1000) % 60);
       const minutes = Math.floor((diff / 60000) % 60);
       const hours   = Math.floor((diff / 3600000) % 24);
-      const totalDays = Math.floor(diff / 86400000);
-      const years = Math.floor(totalDays / 365.25);
-      const rem   = Math.floor(totalDays % 365.25);
-      const months = Math.floor(rem / 30.44);
-      const days   = Math.floor(rem % 30.44);
+
+      let years = now.getFullYear() - startDate.getFullYear();
+      let months = now.getMonth() - startDate.getMonth();
+      let days = now.getDate() - startDate.getDate();
+
+      const startMs = startDate.getHours() * 3600000 + startDate.getMinutes() * 60000 + startDate.getSeconds() * 1000 + startDate.getMilliseconds();
+      const nowMs = now.getHours() * 3600000 + now.getMinutes() * 60000 + now.getSeconds() * 1000 + now.getMilliseconds();
+
+      if (nowMs < startMs) {
+        days -= 1;
+      }
+
+      if (days < 0) {
+        months -= 1;
+        const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+        days += prevMonth.getDate();
+      }
+
+      if (months < 0) {
+        years -= 1;
+        months += 12;
+      }
 
       setElapsed({ years, months, days, hours, minutes, seconds });
     };
