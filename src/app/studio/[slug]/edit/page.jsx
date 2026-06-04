@@ -109,6 +109,7 @@ function FileUpload({ label, slug, currentUrl, onUploaded }) {
 
   const handleFile = async (e) => {
     const file = e.target.files?.[0];
+    e.target.value = ''; // Reset input to allow re-selecting the same file if needed
     if (!file) return;
     setUploading(true);
     setSuccess(false);
@@ -133,6 +134,8 @@ function FileUpload({ label, slug, currentUrl, onUploaded }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         {currentUrl && /\.(mp4|webm|mov)$/i.test(currentUrl) ? (
           <video src={currentUrl} style={{ ...S.uploadThumb, objectFit: 'cover' }} muted playsInline preload="metadata" />
+        ) : currentUrl && /\.(mp3|wav|ogg|m4a)$/i.test(currentUrl) ? (
+          <div style={{ ...S.uploadThumb, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#262626', fontSize: '1.2rem' }}>🎵</div>
         ) : currentUrl ? (
           <img src={currentUrl} alt="" style={S.uploadThumb} onError={(e) => e.target.style.display='none'} />
         ) : null}
@@ -745,8 +748,7 @@ function TabMusic({ data, set, slug }) {
     <div style={S.sectionDesc}>Edit details or upload a custom song.</div>
     <Field label="Song Title" value={music.title} onChange={(v) => setMusic('title', v)} placeholder="Song Title" />
     <Field label="Artist" value={music.artist} onChange={(v) => setMusic('artist', v)} placeholder="Artist Name" />
-    <FileUpload label="Audio File" slug={slug} currentUrl={null} onUploaded={(url) => setMusic('file', url)} />
-    {music.file && <p style={{ fontSize: '0.7rem', color: '#555', marginTop: '0.25rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Current: {music.file}</p>}
+    <FileUpload label="Audio File" slug={slug} currentUrl={music.file} onUploaded={(url) => setMusic('file', url)} />
     <FileUpload label="Cover Image" slug={slug} currentUrl={music.cover} onUploaded={(url) => setMusic('cover', url)} />
   </>);
 }
