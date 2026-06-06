@@ -233,12 +233,14 @@ export default function ClosingSection({ closingLine, sender, secretPhoto, secre
   const handleCelebrate = useCallback(() => {
     setCelebrating(true);
     setCelebrateCount((n) => n + 1);
-    // After confetti, open cinema
+    // After confetti, stop celebrating and open cinema IF photo exists
     setTimeout(() => {
       setCelebrating(false);
-      setShowCinema(true);
+      if (secretPhoto) {
+        setShowCinema(true);
+      }
     }, 1800);
-  }, []);
+  }, [secretPhoto]);
 
   return (
     <>
@@ -291,7 +293,7 @@ export default function ClosingSection({ closingLine, sender, secretPhoto, secre
           </motion.div>
 
           {/* Re-open cinema hint after first view */}
-          {celebrateCount > 0 && !celebrating && (
+          {secretPhoto && celebrateCount > 0 && !celebrating && (
             <motion.button
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
