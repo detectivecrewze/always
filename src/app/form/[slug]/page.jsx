@@ -26,6 +26,7 @@ export default function OrderForm() {
     musicChoice: 'playlist', // 'playlist', 'request' or 'random'
     music: '',
     specialDate: '',
+    specialDateOccasion: '',
     metaphorChoice: 'Seasons (4 Musim)',
     reasonChoice: 'qualities',
     customMoment: '',
@@ -305,9 +306,28 @@ export default function OrderForm() {
                 <input 
                   type="date"
                   value={data.specialDate} onChange={e => update('specialDate', e.target.value)} 
-                  style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: `1px solid ${currentTheme.text}40`, color: 'inherit', padding: '0.5rem 0', fontSize: '1rem', outline: 'none' }}
+                  style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: `1px solid ${currentTheme.text}40`, color: 'inherit', padding: '0.5rem 0', fontSize: '1rem', outline: 'none', marginBottom: '1rem' }}
                 />
               </div>
+
+              {data.specialDate && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>Nama Momen / Acara (Opsional)</label>
+                  <input 
+                    type="text"
+                    value={data.specialDateOccasion || ''} 
+                    onChange={e => update('specialDateOccasion', e.target.value)} 
+                    placeholder="Cth: Anniversary, Ulang Tahun, Jadian..."
+                    style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: `1px solid ${currentTheme.text}40`, color: 'inherit', padding: '0.5rem 0', fontSize: '0.95rem', outline: 'none' }}
+                    onFocus={e => e.target.style.borderColor = currentTheme.text}
+                    onBlur={e => e.target.style.borderColor = `${currentTheme.text}40`}
+                  />
+                </motion.div>
+              )}
             </div>
           </div>
         )}
