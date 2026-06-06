@@ -315,6 +315,7 @@ export default function OrderForm() {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   transition={{ duration: 0.3 }}
+                  style={{ marginTop: '1rem' }}
                 >
                   <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>Nama Momen / Acara (Opsional)</label>
                   <input 
