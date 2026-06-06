@@ -15,6 +15,14 @@ export async function GET(request, { params: paramsPromise }) {
 export async function PUT(request, { params: paramsPromise }) {
   try {
     const params = await paramsPromise;
+    
+    // VALIDATION: Only allow saving drafts for slugs that already exist as Gifts (created by Admin)
+    const { getGiftBySlug } = await import('@/lib/getData');
+    const giftExists = await getGiftBySlug(params.slug);
+    if (!giftExists) {
+      return NextResponse.json({ error: 'Cannot create draft for unregistered slug' }, { status: 403 });
+    }
+
     const body = await request.json();
     body.updatedAt = new Date().toISOString(); // Inject timestamp
     await putDraft(params.slug, body);

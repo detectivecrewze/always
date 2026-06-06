@@ -24,6 +24,13 @@ export async function POST(request) {
       return NextResponse.json({ error: 'sender, recipient, and slug are required' }, { status: 400 });
     }
 
+    // VALIDATION: Only allow placing an order for a slug that exists
+    const { getGiftBySlug } = await import('@/lib/getData');
+    const giftExists = await getGiftBySlug(data.slug);
+    if (!giftExists) {
+      return NextResponse.json({ error: 'Cannot place order for unregistered slug' }, { status: 403 });
+    }
+
     const orderId = `ORD-${Date.now().toString(36).toUpperCase()}`;
     const order = {
       ...data,
