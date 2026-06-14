@@ -688,20 +688,67 @@ export default function OrderForm() {
             <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
               <Sparkles size={64} strokeWidth={1} opacity={0.8} />
             </div>
-            <h2 style={{ fontSize: '1.75rem', marginBottom: '1rem', fontFamily: 'var(--font-serif)', fontStyle: 'italic' }}>
+            <h2 style={{ fontSize: '1.75rem', marginBottom: '0.75rem', fontFamily: 'var(--font-serif)', fontStyle: 'italic' }}>
               Sempurna!
             </h2>
-            <p style={{ fontSize: '0.9rem', opacity: 0.8, marginBottom: '2rem', lineHeight: 1.6 }}>
-              Data Anda telah kami terima.<br/>
-              Kado untuk <strong>{data.recipient}</strong> akan segera kami proses.
+            <p style={{ fontSize: '0.9rem', opacity: 0.8, marginBottom: '1.5rem', lineHeight: 1.6 }}>
+              Data kamu sudah kami terima dengan sepenuh hati.<br/>
+              Satu langkah lagi — beritahu kami lewat WhatsApp agar<br/>
+              kado untuk <strong>{data.recipient}</strong> segera kami proses. 🌸
             </p>
-            
-            <div style={{ background: 'rgba(0,0,0,0.1)', padding: '1.5rem', borderRadius: '16px', display: 'inline-block', minWidth: '200px' }}>
-              <div style={{ fontSize: '0.75rem', opacity: 0.6, marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>ID Pesanan Anda</div>
-              <div style={{ fontSize: '1.5rem', fontFamily: 'monospace', fontWeight: 'bold' }}>{orderId}</div>
+
+            <div style={{ background: 'rgba(0,0,0,0.1)', padding: '1.25rem 1.5rem', borderRadius: '16px', display: 'inline-block', minWidth: '200px', marginBottom: '1.75rem' }}>
+              <div style={{ fontSize: '0.7rem', opacity: 0.6, marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>ID Pesanan Anda</div>
+              <div style={{ fontSize: '1.4rem', fontFamily: 'monospace', fontWeight: 'bold', letterSpacing: '0.05em' }}>{orderId}</div>
             </div>
+
+            {/* WhatsApp CTA Button */}
+            <div style={{ marginBottom: '1rem' }}>
+              <a
+                href={`https://wa.me/6281936109076?text=${encodeURIComponent(
+                  `Halo Digital Atelier! 🎁\n\nSaya sudah selesai mengisi form Memoria.\n\n` +
+                  `📋 *Detail Pesanan:*\n` +
+                  `• Order ID: ${orderId}\n` +
+                  `• Dari: ${data.sender}\n` +
+                  `• Untuk: ${data.recipient}\n` +
+                  `• Momen: ${data.moment}\n\n` +
+                  `Mohon segera diproses ya. Terima kasih! 🌸`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '14px 28px',
+                  background: '#25D366',
+                  color: '#fff',
+                  borderRadius: '50px',
+                  textDecoration: 'none',
+                  fontSize: '0.95rem',
+                  fontWeight: 600,
+                  boxShadow: '0 8px 24px rgba(37,211,102,0.35)',
+                  transition: 'all 0.25s ease',
+                  letterSpacing: '0.01em',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 28px rgba(37,211,102,0.45)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(37,211,102,0.35)'; }}
+              >
+                {/* WhatsApp Icon */}
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                  <path d="M12 2C6.477 2 2 6.477 2 12c0 1.821.486 3.53 1.337 5.006L2.001 22l5.13-1.322A9.956 9.956 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm0 18a7.96 7.96 0 01-4.065-1.112l-.292-.174-3.046.784.813-2.934-.19-.302A7.965 7.965 0 014 12c0-4.418 3.582-8 8-8s8 3.582 8 8-3.582 8-8 8z"/>
+                </svg>
+                Beritahu Kami Lewat WhatsApp
+              </a>
+            </div>
+
+            <p style={{ fontSize: '0.78rem', opacity: 0.55, lineHeight: 1.5, marginTop: '0.5rem' }}>
+              Tekan tombol di atas agar kami segera memproses<br/>kado digital kamu. ✨
+            </p>
           </div>
         )}
+
 
       </div>
       
