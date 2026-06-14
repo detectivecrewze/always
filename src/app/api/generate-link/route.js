@@ -126,7 +126,7 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Failed to create gift slot' }, { status: 500 });
   }
 
-  const formUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://love.for-you-always.my.id'}/form/${slug}`;
+  const formUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://anniv.for-you-always.my.id'}/form/${slug}`;
 
   return NextResponse.json({ ok: true, slug, url: formUrl });
 }
