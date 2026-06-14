@@ -38,7 +38,7 @@ export async function POST(request) {
         return NextResponse.json({
           ok: true,
           slug,
-          url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://love.for-you-always.my.id'}/form/${slug}`,
+          url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://anniv.for-you-always.my.id'}/form/${slug}`,
         });
       }
     }
