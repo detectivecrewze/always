@@ -124,11 +124,16 @@ export default function TimeSection({ timeTitle, timeSubtitle, timeStartDate }) 
 
   useEffect(() => {
     if (!timeStartDate) return;
-    const start = new Date(timeStartDate).getTime();
+    
+    // Normalize to prevent UTC shift. 'YYYY-MM-DD' becomes local midnight
+    let normalizedStartDate = timeStartDate;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(normalizedStartDate)) {
+      normalizedStartDate += 'T00:00:00';
+    }
 
     const tick = () => {
       const now = new Date();
-      const startDate = new Date(timeStartDate);
+      const startDate = new Date(normalizedStartDate);
       const diff = now.getTime() - startDate.getTime();
       
       if (diff < 0) return;
