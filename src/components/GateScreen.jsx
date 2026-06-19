@@ -160,7 +160,7 @@ function buildParticles(count) {
 const PARTICLES = buildParticles(300);
 
 // ─── Main component ──────────────────────────────────────────────────────────
-export default function GateScreen({ gateSubtitle, onOpen, themeColors }) {
+export default function GateScreen({ gateSubtitle, onInteraction, onOpen, themeColors }) {
   const [phase, setPhase] = useState('idle'); // idle | fountain | done
   const [exitPhase, setExitPhase] = useState('none'); // none | left | right
   const timerRef = useRef(null);
@@ -185,6 +185,7 @@ export default function GateScreen({ gateSubtitle, onOpen, themeColors }) {
   const handleClick = useCallback(() => {
     if (phase !== 'idle') return;
     setPhase('fountain');
+    if (onInteraction) onInteraction();
     
     // Sequential swipe out animations — start after flowers have settled
     setTimeout(() => setExitPhase('left'), 4200);

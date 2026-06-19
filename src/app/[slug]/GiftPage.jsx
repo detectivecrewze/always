@@ -20,17 +20,19 @@ export default function GiftPage({ data }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef(null);
 
-  const handleGateOpen = useCallback(() => {
-    setGateOpen(true);
-    // Attempt to play music on user interaction (iOS autoplay policy)
-    if (audioRef.current) {
+  const handleInteraction = useCallback(() => {
+    // Attempt to play music synchronously on user interaction (iOS/Chrome autoplay policy)
+    if (audioRef.current && !isPlaying) {
       audioRef.current.play().then(() => {
         setIsPlaying(true);
       }).catch(() => {
-        // Audio play failed, user can manually play later
         console.log('Autoplay blocked, user can play manually');
       });
     }
+  }, [isPlaying]);
+
+  const handleGateFinish = useCallback(() => {
+    setGateOpen(true);
   }, []);
 
   const handleTogglePlay = useCallback(() => {
@@ -67,7 +69,8 @@ export default function GiftPage({ data }) {
         {!gateOpen && (
           <GateScreen
             gateSubtitle={data.gateSubtitle}
-            onOpen={handleGateOpen}
+            onInteraction={handleInteraction}
+            onOpen={handleGateFinish}
             themeColors={[t.particle, t.accent, t.textMuted]}
           />
         )}
