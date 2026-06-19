@@ -21,7 +21,14 @@ export default function GiftPage({ data }) {
   const audioRef = useRef(null);
 
   const handleInteraction = useCallback(() => {
-    // Attempt to play music synchronously on user interaction (iOS/Chrome autoplay policy)
+    // Optional: unlock audio context on iOS
+    if (audioRef.current) {
+      audioRef.current.load();
+    }
+  }, []);
+
+  const handleGateFinish = useCallback(() => {
+    setGateOpen(true);
     if (audioRef.current && !isPlaying) {
       audioRef.current.play().then(() => {
         setIsPlaying(true);
@@ -30,10 +37,6 @@ export default function GiftPage({ data }) {
       });
     }
   }, [isPlaying]);
-
-  const handleGateFinish = useCallback(() => {
-    setGateOpen(true);
-  }, []);
 
   const handleTogglePlay = useCallback(() => {
     if (!audioRef.current) return;
