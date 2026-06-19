@@ -141,6 +141,14 @@ export default function GiftPage({ data }) {
               closingTitle2={data.closingTitle2}
               closingParagraph={data.closingParagraph}
               celebrateBtnText={data.celebrateBtnText}
+              onCinemaToggle={(isOpen) => {
+                if (!audioRef.current) return;
+                if (isOpen) {
+                  audioRef.current.pause();
+                } else if (isPlaying) {
+                  audioRef.current.play().catch(()=>{});
+                }
+              }}
             />
 
             {/* Music Player */}

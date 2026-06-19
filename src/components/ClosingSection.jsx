@@ -155,7 +155,7 @@ function CinemaModal({ secretPhoto, secretCaption, onClose }) {
                     className="w-full aspect-[3/4] object-cover"
                     autoPlay
                     loop
-                    muted
+                    controls
                     playsInline
                   />
                 ) : (
@@ -225,7 +225,7 @@ const itemVariants = {
 };
 
 // ── Main Component ────────────────────────────────────────────────
-export default function ClosingSection({ closingLine, sender, secretPhoto, secretCaption, closingPreTitle, closingTitle1, closingTitle2, closingParagraph, celebrateBtnText }) {
+export default function ClosingSection({ closingLine, sender, secretPhoto, secretCaption, closingPreTitle, closingTitle1, closingTitle2, closingParagraph, celebrateBtnText, onCinemaToggle }) {
   const [celebrating, setCelebrating] = useState(false);
   const [celebrateCount, setCelebrateCount] = useState(0);
   const [showCinema, setShowCinema] = useState(false);
@@ -238,6 +238,7 @@ export default function ClosingSection({ closingLine, sender, secretPhoto, secre
       setCelebrating(false);
       if (secretPhoto) {
         setShowCinema(true);
+        if (onCinemaToggle) onCinemaToggle(true);
       }
     }, 1800);
   }, [secretPhoto]);
@@ -297,7 +298,10 @@ export default function ClosingSection({ closingLine, sender, secretPhoto, secre
             <motion.button
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              onClick={() => setShowCinema(true)}
+              onClick={() => {
+                setShowCinema(true);
+                if (onCinemaToggle) onCinemaToggle(true);
+              }}
               className="font-sans text-xs text-text-muted/40 hover:text-text-muted/70 transition-colors underline underline-offset-4"
             >
               view secret memory again
@@ -312,7 +316,10 @@ export default function ClosingSection({ closingLine, sender, secretPhoto, secre
         <CinemaModal
           secretPhoto={secretPhoto}
           secretCaption={secretCaption}
-          onClose={() => setShowCinema(false)}
+          onClose={() => {
+            setShowCinema(false);
+            if (onCinemaToggle) onCinemaToggle(false);
+          }}
         />
       )}
     </>
