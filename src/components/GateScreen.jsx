@@ -47,7 +47,12 @@ function SparkleParticle({ x, y, size, delay, dur, color }) {
 }
 
 // ─── FountainFlower: single flower following parabolic arc ───────────────────
-function FountainFlower({ src, size, xEnd, yPeak, yFinal, rotateDirection, rotateSpeed, delay, duration, zIndex, finalScale }) {
+function FountainFlower({ src, size, xEnd, yPeak, yFinal, rotateDirection, rotateSpeed, delay, duration, zIndex, finalScale, exitPhase }) {
+  const isLeft = xEnd < 0;
+  const shouldSwipeLeft = isLeft && (exitPhase === 'left' || exitPhase === 'right');
+  const shouldSwipeRight = !isLeft && exitPhase === 'right';
+  const isSwiping = shouldSwipeLeft || shouldSwipeRight;
+
   return (
     <motion.img
       src={src}
@@ -63,27 +68,44 @@ function FountainFlower({ src, size, xEnd, yPeak, yFinal, rotateDirection, rotat
         zIndex,
       }}
       initial={{ x: 0, y: 0, scale: 0.12, opacity: 0, rotate: 0 }}
-      animate={{
-        x: [0, xEnd * 0.4, xEnd],
-        y: [0, yPeak, yFinal],
-        scale: [0.12, 0.85, finalScale],
-        opacity: [0, 1, 1],
-        rotate: [0, 360 * rotateDirection],
-      }}
-      transition={{
-        default: {
-          duration,
-          delay,
-          times: [0, 0.38, 1],
-          ease: 'easeOut',
-        },
-        rotate: {
-          duration: rotateSpeed,
-          delay,
-          repeat: Infinity,
-          ease: 'linear',
-        }
-      }}
+      animate={
+        isSwiping
+          ? {
+              x: isLeft ? xEnd - 1500 : xEnd + 1500,
+              y: yFinal,
+              scale: finalScale,
+              opacity: 0,
+              rotate: 360 * rotateDirection,
+            }
+          : {
+              x: [0, xEnd * 0.4, xEnd],
+              y: [0, yPeak, yFinal],
+              scale: [0.12, 0.85, finalScale],
+              opacity: [0, 1, 1],
+              rotate: [0, 360 * rotateDirection],
+            }
+      }
+      transition={
+        isSwiping
+          ? {
+              duration: 0.8,
+              ease: 'easeIn',
+            }
+          : {
+              default: {
+                duration,
+                delay,
+                times: [0, 0.38, 1],
+                ease: 'easeOut',
+              },
+              rotate: {
+                duration: rotateSpeed,
+                delay,
+                repeat: Infinity,
+                ease: 'linear',
+              }
+            }
+      }
     />
   );
 }
@@ -139,8 +161,8 @@ const PARTICLES = buildParticles(300);
 
 // ─── Main component ──────────────────────────────────────────────────────────
 export default function GateScreen({ gateSubtitle, onOpen, themeColors }) {
-  // phase: 'idle' → 'fountain' → 'done'
-  const [phase, setPhase] = useState('idle');
+  const [phase, setPhase] = useState('idle'); // idle | fountain | done
+  const [exitPhase, setExitPhase] = useState('none'); // none | left | right
   const timerRef = useRef(null);
 
   const activeColor  = themeColors?.[0] || '#E2A9A3';
@@ -154,11 +176,16 @@ export default function GateScreen({ gateSubtitle, onOpen, themeColors }) {
   const handleClick = useCallback(() => {
     if (phase !== 'idle') return;
     setPhase('fountain');
-    // After flowers settle, call onOpen
+    
+    // Sequential swipe out animations
+    setTimeout(() => setExitPhase('left'), 3200);
+    setTimeout(() => setExitPhase('right'), 3600);
+
+    // After flowers settle and swipe out, call onOpen
     timerRef.current = setTimeout(() => {
       setPhase('done');
-      setTimeout(() => { if (onOpen) onOpen(); }, 600);
-    }, 4200);
+      setTimeout(() => { if (onOpen) onOpen(); }, 400);
+    }, 4400);
   }, [phase, onOpen]);
 
   useEffect(() => () => clearTimeout(timerRef.current), []);
@@ -202,10 +229,10 @@ export default function GateScreen({ gateSubtitle, onOpen, themeColors }) {
         )}
       </AnimatePresence>
 
-      {/* ── FOUNTAIN: all 90 flowers erupt from box center ─────────────── */}
+      {/* ── FOUNTAIN: all flowers erupt from box center ─────────────── */}
       <AnimatePresence>
         {isFountain && PARTICLES.map((p) => (
-          <FountainFlower key={p.id} {...p} />
+          <FountainFlower key={p.id} {...p} exitPhase={exitPhase} />
         ))}
       </AnimatePresence>
 
