@@ -57,6 +57,7 @@ function FountainFlower({ src, size, xEnd, yPeak, yFinal, rotateDirection, rotat
     <motion.img
       src={src}
       draggable={false}
+      decoding="async"
       className="absolute pointer-events-none select-none"
       style={{
         width: size,
@@ -66,6 +67,7 @@ function FountainFlower({ src, size, xEnd, yPeak, yFinal, rotateDirection, rotat
         marginLeft: -size / 2,
         marginTop: -size / 2,
         zIndex,
+        willChange: 'transform, opacity',
       }}
       initial={{ x: 0, y: 0, scale: 0.12, opacity: 0, rotate: 0 }}
       animate={

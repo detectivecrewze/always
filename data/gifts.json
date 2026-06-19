@@ -1,23 +1,23 @@
 [
   {
     "slug": "untuk-nadia",
-    "recipient": "Nadia",
+    "recipient": "Zee",
     "sender": "Aldo",
-    "gateSubtitle": "something made just for you",
-    "heroPreTitle": "a love letter in bloom",
-    "heroLine1": "For You,",
-    "heroLine2": "My Everything",
-    "heroSubtitle": "Every petal holds a whisper of how much you mean to me.",
+    "gateSubtitle": "a little birthday surprise",
+    "heroPreTitle": "happy birthday, zee",
+    "heroLine1": "To the birthday girl,",
+    "heroLine2": "Zee",
+    "heroSubtitle": "I hope today brings you as much joy as you give to everyone around you.",
     "introIcons": true,
-    "introPreTitle": "from my heart",
-    "introHeadline1": "You are my",
-    "introHeadline2": "wildest dream",
-    "introHeadline3": "come true.",
+    "introPreTitle": "a special day",
+    "introHeadline1": "Wishing you",
+    "introHeadline2": "the happiest",
+    "introHeadline3": "of birthdays.",
     "introText": [
-      "In a world full of ordinary moments, you are the extraordinary one. The way you laugh, the way you care, the way you simply exist — it fills every corner of my world with something I never knew I needed.",
-      "These flowers are not enough. No words ever could be. But they carry every unspoken feeling I hold for you, pressed between their petals like tiny love letters waiting to be found."
+      "Another year older, and somehow you keep getting better. I wanted to make something a little different for your birthday this year.",
+      "Consider this a small reminder of how much you mean to me, and to everyone lucky enough to have you in their lives."
     ],
-    "introSignOff": "– Always yours 🌹",
+    "introSignOff": "– Your favorite person 😉",
     "music": {
       "title": "Kita Punya Waktu",
       "artist": "Banda Neira",
@@ -27,55 +27,55 @@
     "reasons": [
       {
         "icon": "✦",
-        "title": "Your Laugh",
-        "desc": "The sound that makes every room feel like home."
+        "title": "Your Energy",
+        "desc": "The way you instantly light up any room you walk into."
       },
       {
         "icon": "✦",
-        "title": "Your Patience",
-        "desc": "How you wait for me even when I take too long."
+        "title": "Your Humor",
+        "desc": "You always know how to make me laugh, even on my worst days."
       },
       {
         "icon": "✦",
-        "title": "Your Kindness",
-        "desc": "The way you care without ever being asked."
+        "title": "Your Drive",
+        "desc": "Seeing you work hard for your goals is genuinely inspiring."
       },
       {
         "icon": "✦",
-        "title": "Your Courage",
-        "desc": "How you face the world even on the hardest days."
+        "title": "Your Heart",
+        "desc": "You care deeply about your friends, and it shows."
       },
       {
         "icon": "✦",
-        "title": "Your Warmth",
-        "desc": "The feeling of being next to you on a quiet night."
+        "title": "Your Style",
+        "desc": "Effortlessly cool, no matter what you wear."
       },
       {
         "icon": "✦",
-        "title": "Your Presence",
-        "desc": "Just being with you is more than enough."
+        "title": "Your Friendship",
+        "desc": "Just knowing I can count on you means everything."
       }
     ],
     "seasons": [
       {
         "name": "Spring",
-        "teaser": "where it all began",
-        "message": "Like the first bloom after a long winter, you arrived when I least expected — and everything grew."
+        "teaser": "fresh starts",
+        "message": "A new chapter begins today. I hope this year brings you closer to what you want."
       },
       {
         "name": "Summer",
-        "teaser": "when love was loudest",
-        "message": "In the fullness of us, I felt the sun from the inside. No distance, no doubt — just warmth."
+        "teaser": "bright days",
+        "message": "Here is to more sunny days, random trips, and memories we will not forget."
       },
       {
         "name": "Autumn",
-        "teaser": "beautiful even as things changed",
-        "message": "Loving you through change taught me that some things don't need to stay the same to stay beautiful."
+        "teaser": "growing up",
+        "message": "Even as things change, I love seeing the person you are becoming."
       },
       {
         "name": "Winter",
-        "teaser": "I stayed, and I'd stay again",
-        "message": "In the quiet and the cold, I chose you still. I will always choose you still."
+        "teaser": "warmth",
+        "message": "Through the quiet moments, I hope you always feel surrounded by people who care about you."
       }
     ],
     "photos": [
@@ -98,20 +98,20 @@
     ],
     "closingLine": "always yours,",
     "secretPhoto": "/photos/1.jpg",
-    "secretCaption": "this is just for you — my favourite memory of us.",
+    "secretCaption": "here is to many more birthdays together.",
     "createdAt": "2026-05-29",
-    "reasonsTitle1": "The Reasons",
-    "reasonsTitle2": "I Love You",
-    "seasonsTitle1": "A Love For",
-    "seasonsTitle2": "Every Season",
+    "reasonsTitle1": "Things I Love",
+    "reasonsTitle2": "About You",
+    "seasonsTitle1": "A Year Of",
+    "seasonsTitle2": "Great Moments",
     "seasonsHint": "tap each season to discover its meaning",
-    "galleryTitle1": "Our Beautiful",
-    "galleryTitle2": "Memories",
-    "closingPreTitle": "always & forever",
-    "closingTitle1": "You Are Loved",
-    "closingTitle2": "Beyond Words",
-    "closingParagraph": "No matter where life takes us, know that somewhere in the universe, there is a garden blooming with every feeling I have ever held for you. You deserve the world. You deserve all the flowers. You deserve everything.",
-    "celebrateBtnText": "celebrate ✨",
+    "galleryTitle1": "Some Of Our",
+    "galleryTitle2": "Best Times",
+    "closingPreTitle": "once again",
+    "closingTitle1": "Have The",
+    "closingTitle2": "Best Day Ever",
+    "closingParagraph": "Take a second today to just breathe and enjoy it. Eat too much cake, make a wish, and have a great time celebrating. You deserve a perfect birthday.",
+    "celebrateBtnText": "make a wish ✨",
     "theme": "classic-light"
   },
   {
