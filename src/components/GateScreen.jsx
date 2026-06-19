@@ -88,7 +88,7 @@ function FountainFlower({ src, size, xEnd, yPeak, yFinal, rotateDirection, rotat
       transition={
         isSwiping
           ? {
-              duration: 0.8,
+              duration: 1.2,
               ease: 'easeIn',
             }
           : {
@@ -142,9 +142,9 @@ function buildParticles(count) {
     const rotateDirection = rng() > 0.5 ? 1 : -1;
     const rotateSpeed = 6 + rng() * 10; // Slow, graceful continuous spin (6 to 16 seconds per 360 deg)
 
-    // Rapid burst: all flowers erupt in the first 0.45 seconds before the box falls!
-    const delay = frac * 0.4 + rng() * 0.05; 
-    const duration = 1.5 + rng() * 1.2;
+    // DRAMATIC POPCORN: stagger over 1.6s so each flower pops one by one
+    const delay = frac * 1.6 + rng() * 0.15;
+    const duration = 2.0 + rng() * 1.6; // Longer flight = more dramatic arc
     const zIndex = Math.floor(i / 5) + 1;    // later particles on top
 
     particles.push({
@@ -165,6 +165,15 @@ export default function GateScreen({ gateSubtitle, onOpen, themeColors }) {
   const [exitPhase, setExitPhase] = useState('none'); // none | left | right
   const timerRef = useRef(null);
 
+  // Optimize particle count for mobile
+  const [particleCount, setParticleCount] = useState(300);
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setParticleCount(280);
+    }
+  }, []);
+  const activeParticles = useMemo(() => buildParticles(particleCount), [particleCount]);
+
   const activeColor  = themeColors?.[0] || '#E2A9A3';
   const activeAccent = themeColors?.[1] || '#E2859B';
   const highlightColor = useMemo(
@@ -177,15 +186,15 @@ export default function GateScreen({ gateSubtitle, onOpen, themeColors }) {
     if (phase !== 'idle') return;
     setPhase('fountain');
     
-    // Sequential swipe out animations
-    setTimeout(() => setExitPhase('left'), 3200);
-    setTimeout(() => setExitPhase('right'), 3600);
+    // Sequential swipe out animations — start after flowers have settled
+    setTimeout(() => setExitPhase('left'), 4200);
+    setTimeout(() => setExitPhase('right'), 4700);
 
-    // After flowers settle and swipe out, call onOpen
+    // After swipe out, transition to gift page
     timerRef.current = setTimeout(() => {
       setPhase('done');
       setTimeout(() => { if (onOpen) onOpen(); }, 400);
-    }, 4400);
+    }, 5500);
   }, [phase, onOpen]);
 
   useEffect(() => () => clearTimeout(timerRef.current), []);
@@ -231,7 +240,7 @@ export default function GateScreen({ gateSubtitle, onOpen, themeColors }) {
 
       {/* ── FOUNTAIN: all flowers erupt from box center ─────────────── */}
       <AnimatePresence>
-        {isFountain && PARTICLES.map((p) => (
+        {isFountain && activeParticles.map((p) => (
           <FountainFlower key={p.id} {...p} exitPhase={exitPhase} />
         ))}
       </AnimatePresence>
@@ -244,12 +253,12 @@ export default function GateScreen({ gateSubtitle, onOpen, themeColors }) {
         animate={
           phase === 'idle'
             ? { y: [0, -14, 0], rotate: [-1.5, 1.5, -1.5], scale: [1, 1.03, 1] }
-            : { y: 600, rotate: -22, scale: 0.6, opacity: 0 }
+            : { scale: 0, opacity: 0 }
         }
         transition={
           phase === 'idle'
             ? { duration: 4.5, repeat: Infinity, ease: 'easeInOut' }
-            : { duration: 1.1, delay: 0.55, ease: 'easeIn' }
+            : { duration: 0.4, delay: 0.25, ease: 'backIn' }
         }
       >
         {/* Idle sparkles */}
