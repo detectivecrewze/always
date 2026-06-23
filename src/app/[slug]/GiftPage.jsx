@@ -149,6 +149,9 @@ export default function GiftPage({ data }) {
               celebrateBtnText={data.celebrateBtnText}
               onCinemaToggle={(isOpen) => {
                 if (!audioRef.current) return;
+                const isVideo = data.secretPhoto && /\.(mp4|webm|mov)$/i.test(data.secretPhoto);
+                if (!isVideo) return; // Keep music playing if it's just a photo
+                
                 if (isOpen) {
                   audioRef.current.pause();
                 } else if (isPlaying) {
