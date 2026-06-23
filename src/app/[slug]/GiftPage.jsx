@@ -21,11 +21,14 @@ export default function GiftPage({ data }) {
   const audioRef = useRef(null);
 
   const handleInteraction = useCallback(() => {
-    // Optional: unlock audio context on iOS
-    if (audioRef.current) {
-      audioRef.current.load();
+    if (audioRef.current && !isPlaying) {
+      audioRef.current.play().then(() => {
+        setIsPlaying(true);
+      }).catch(() => {
+        console.log('Autoplay blocked, user can play manually');
+      });
     }
-  }, []);
+  }, [isPlaying]);
 
   const handleGateFinish = useCallback(() => {
     setGateOpen(true);
