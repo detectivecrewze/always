@@ -71,7 +71,7 @@ export default function OrderForm() {
     return () => clearTimeout(timer);
   }, [data, slug]);
 
-  const [files, setFiles] = useState([]); // Max 10
+  const [files, setFiles] = useState([]); // Max 15
   const [secretFile, setSecretFile] = useState(null); // Max 1
 
   const fileInputRef = useRef(null);
@@ -102,7 +102,7 @@ export default function OrderForm() {
     if (isSecret) {
       if (validFiles[0]) setSecretFile(validFiles[0]);
     } else {
-      setFiles(prev => [...prev, ...validFiles].slice(0, 10)); // Max 10
+      setFiles(prev => [...prev, ...validFiles].slice(0, 15)); // Max 15
     }
   };
 
@@ -559,7 +559,7 @@ export default function OrderForm() {
               <div>
                 <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1rem' }}>
                   <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>Galeri Foto/Video</span>
-                  <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>{files.length} / 10 Terpilih</span>
+                  <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>{files.length} / 15 Terpilih</span>
                 </label>
                 
                 <div 
@@ -575,7 +575,7 @@ export default function OrderForm() {
                     <ImageIcon size={48} strokeWidth={1} opacity={0.7} />
                   </div>
                   <div style={{ fontSize: '0.9rem' }}>Klik untuk memilih file</div>
-                  <div style={{ fontSize: '0.75rem', opacity: 0.6, mt: 1 }}>Maksimal 10 file. (Video Max 10MB)</div>
+                  <div style={{ fontSize: '0.75rem', opacity: 0.6, mt: 1 }}>Maksimal 15 file. (Video Max 10MB)</div>
                 </div>
                 <input type="file" multiple accept="image/*,video/mp4" ref={fileInputRef} style={{ display: 'none' }} onChange={(e) => handleFileChange(e, false)} />
                 

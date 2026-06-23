@@ -677,7 +677,7 @@ function TabGallery({ data, set, slug }) {
   };
   
   const addPhoto = () => {
-    if (photos.length >= 10) return;
+    if (photos.length >= 15) return;
     set('photos', [...photos, { url: '', caption: '' }]);
   };
   
@@ -698,7 +698,7 @@ function TabGallery({ data, set, slug }) {
 
   return (<>
     <div style={S.sectionTitle}>Photo Gallery</div>
-    <div style={S.sectionDesc}>Upload photos with captions. You can add up to 10 photos.</div>
+    <div style={S.sectionDesc}>Upload photos with captions. You can add up to 15 photos.</div>
     <Field label="Section Title 1" value={data.galleryTitle1} onChange={(v) => set('galleryTitle1', v)} placeholder="Our Beautiful" />
     <Field label="Section Title 2" value={data.galleryTitle2} onChange={(v) => set('galleryTitle2', v)} placeholder="Memories" />
     {photos.map((p, i) => (
@@ -717,8 +717,8 @@ function TabGallery({ data, set, slug }) {
         <Field label="Caption" value={typeof p === 'string' ? '' : p.caption} onChange={(v) => setPhoto(i, 'caption', v)} placeholder="caption text" />
       </div>
     ))}
-    {photos.length < 10 && (
-      <button style={S.smallBtn('#22C55E')} onClick={addPhoto}>+ Add Photo ({photos.length}/10)</button>
+    {photos.length < 15 && (
+      <button style={S.smallBtn('#22C55E')} onClick={addPhoto}>+ Add Photo ({photos.length}/15)</button>
     )}
   </>);
 }
