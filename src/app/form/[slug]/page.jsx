@@ -94,10 +94,30 @@ export default function OrderForm() {
 
   const handlePrev = () => setStep(s => Math.max(1, s - 1));
 
+  const compressImage = (file) => {
+    return new Promise((resolve) => {
+      if (!file.type.startsWith('image/')) return resolve(file);
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let { width, height } = img;
+        const MAX = 1200;
+        if (width > height && width > MAX) { height *= MAX / width; width = MAX; }
+        else if (height > MAX) { width *= MAX / height; height = MAX; }
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        canvas.toBlob((b) => b ? resolve(new File([b], file.name, { type: 'image/jpeg' })) : resolve(file), 'image/jpeg', 0.8);
+      };
+      img.onerror = () => resolve(file);
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   const handleFileChange = (e, isSecret) => {
     const selected = Array.from(e.target.files);
-    const validFiles = selected.filter(f => f.size <= 10 * 1024 * 1024); // 10MB limit
-    if (validFiles.length < selected.length) alert('Beberapa file diabaikan karena ukurannya lebih dari 10MB.');
+    // Videos must be <= 4.5MB for server limits. Images will be compressed.
+    const validFiles = selected.filter(f => f.type.startsWith('image/') || f.size <= 4.5 * 1024 * 1024);
+    if (validFiles.length < selected.length) alert('Beberapa video diabaikan karena ukurannya lebih dari 4.5MB.');
     
     if (isSecret) {
       if (validFiles[0]) setSecretFile(validFiles[0]);
@@ -107,25 +127,24 @@ export default function OrderForm() {
   };
 
   const uploadFiles = async () => {
-    const uploadedUrls = [];
-    let secretUrl = null;
-
     const upload = async (file) => {
+      const compressed = await compressImage(file);
       const fd = new FormData();
-      fd.append('file', file);
+      fd.append('file', compressed);
       fd.append('slug', slug);
       const res = await fetch('/api/upload-public', { method: 'POST', body: fd });
       if (!res.ok) throw new Error('Upload failed');
       return (await res.json()).url;
     };
 
-    for (const f of files) {
-      uploadedUrls.push(await upload(f));
-    }
+    // Upload files concurrently for speed
+    const urls = await Promise.all(files.map(upload));
+    
+    let secretUrl = null;
     if (secretFile) {
       secretUrl = await upload(secretFile);
     }
-    return { photos: uploadedUrls, secretPhoto: secretUrl };
+    return { photos: urls, secretPhoto: secretUrl };
   };
 
   const handleSubmit = async () => {
@@ -575,7 +594,7 @@ export default function OrderForm() {
                     <ImageIcon size={48} strokeWidth={1} opacity={0.7} />
                   </div>
                   <div style={{ fontSize: '0.9rem' }}>Klik untuk memilih file</div>
-                  <div style={{ fontSize: '0.75rem', opacity: 0.6, mt: 1 }}>Maksimal 15 file. (Video Max 10MB)</div>
+                  <div style={{ fontSize: '0.75rem', opacity: 0.6, mt: 1 }}>Maksimal 15 file. (Video Max 4.5MB)</div>
                 </div>
                 <input type="file" multiple accept="image/*,video/mp4" ref={fileInputRef} style={{ display: 'none' }} onChange={(e) => handleFileChange(e, false)} />
                 
