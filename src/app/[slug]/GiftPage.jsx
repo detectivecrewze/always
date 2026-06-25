@@ -74,6 +74,7 @@ export default function GiftPage({ data }) {
       <AnimatePresence mode="wait">
         {!gateOpen && (
           <GateScreen
+            themeName={data.theme}
             gateSubtitle={data.gateSubtitle}
             onInteraction={handleInteraction}
             onOpen={handleGateFinish}

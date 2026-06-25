@@ -4,11 +4,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 
 // ─── Flower image assets (PNG with transparent bg) ───────────────────────────
-const FLOWER_SRCS = [
+const LIGHT_FLOWER_SRCS = [
   '/assets/flowser-sunflower.png',
   '/assets/flower_daisy.png',
   '/assets/flower-rose.png',
   '/assets/flower_hydrangea.png',
+];
+
+const DARK_FLOWER_SRCS = [
+  '/assets/flower_hydrangea.png',
+  '/assets/indigo_anemone-removebg-preview.png',
+  '/assets/dark_blue_rose-removebg-preview.png',
 ];
 
 // ─── Sparkle data (idle only) ─────────────────────────────────────────────────
@@ -113,10 +119,13 @@ function FountainFlower({ src, size, xEnd, yPeak, yFinal, rotateDirection, rotat
 }
 
 // ─── Generate fountain particles (deterministic seeded positions) ─────────────
-function buildParticles(count) {
+function buildParticles(count, themeName) {
   // Simple seeded-ish randomizer to keep it stable across renders
   let seed = 42;
   const rng = () => { seed = (seed * 16807 + 0) % 2147483647; return (seed - 1) / 2147483646; };
+
+  const isDark = ['midnight-blue', 'midnight-rose', 'ocean-breeze', 'vintage-burgundy'].includes(themeName);
+  const FLOWER_SRCS = isDark ? DARK_FLOWER_SRCS : LIGHT_FLOWER_SRCS;
 
   const particles = [];
   for (let i = 0; i < count; i++) {
@@ -159,10 +168,8 @@ function buildParticles(count) {
   return particles;
 }
 
-const PARTICLES = buildParticles(300);
-
 // ─── Main component ──────────────────────────────────────────────────────────
-export default function GateScreen({ gateSubtitle, onInteraction, onOpen, themeColors }) {
+export default function GateScreen({ gateSubtitle, onInteraction, onOpen, themeColors, themeName }) {
   const [phase, setPhase] = useState('idle'); // idle | fountain | done
   const [exitPhase, setExitPhase] = useState('none'); // none | left | right
   const timerRef = useRef(null);
@@ -174,7 +181,7 @@ export default function GateScreen({ gateSubtitle, onInteraction, onOpen, themeC
       setParticleCount(280);
     }
   }, []);
-  const activeParticles = useMemo(() => buildParticles(particleCount), [particleCount]);
+  const activeParticles = useMemo(() => buildParticles(particleCount, themeName), [particleCount, themeName]);
 
   const activeColor  = themeColors?.[0] || '#E2A9A3';
   const activeAccent = themeColors?.[1] || '#E2859B';
