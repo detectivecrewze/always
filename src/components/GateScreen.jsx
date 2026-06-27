@@ -124,7 +124,7 @@ function buildParticles(count, themeName) {
   let seed = 42;
   const rng = () => { seed = (seed * 16807 + 0) % 2147483647; return (seed - 1) / 2147483646; };
 
-  const isDark = ['midnight-blue', 'midnight-rose', 'ocean-breeze', 'vintage-burgundy'].includes(themeName);
+  const isDark = ['midnight-blue', 'midnight-rose', 'ocean-breeze'].includes(themeName);
   const FLOWER_SRCS = isDark ? DARK_FLOWER_SRCS : LIGHT_FLOWER_SRCS;
 
   const particles = [];
