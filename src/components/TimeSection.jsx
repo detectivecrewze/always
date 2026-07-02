@@ -136,32 +136,61 @@ export default function TimeSection({ timeTitle, timeSubtitle, timeStartDate }) 
       const startDate = new Date(normalizedStartDate);
       const diff = now.getTime() - startDate.getTime();
       
-      if (diff < 0) return;
+      const isCountdown = diff < 0;
+      const targetDiff = Math.abs(diff);
 
-      const seconds = Math.floor((diff / 1000) % 60);
-      const minutes = Math.floor((diff / 60000) % 60);
-      const hours   = Math.floor((diff / 3600000) % 24);
+      const seconds = Math.floor((targetDiff / 1000) % 60);
+      const minutes = Math.floor((targetDiff / 60000) % 60);
+      const hours   = Math.floor((targetDiff / 3600000) % 24);
 
-      let years = now.getFullYear() - startDate.getFullYear();
-      let months = now.getMonth() - startDate.getMonth();
-      let days = now.getDate() - startDate.getDate();
+      let years = 0;
+      let months = 0;
+      let days = 0;
 
-      const startMs = startDate.getHours() * 3600000 + startDate.getMinutes() * 60000 + startDate.getSeconds() * 1000 + startDate.getMilliseconds();
-      const nowMs = now.getHours() * 3600000 + now.getMinutes() * 60000 + now.getSeconds() * 1000 + now.getMilliseconds();
+      if (isCountdown) {
+        years = startDate.getFullYear() - now.getFullYear();
+        months = startDate.getMonth() - now.getMonth();
+        days = startDate.getDate() - now.getDate();
 
-      if (nowMs < startMs) {
-        days -= 1;
-      }
+        const nowMs = now.getHours() * 3600000 + now.getMinutes() * 60000 + now.getSeconds() * 1000 + now.getMilliseconds();
+        const startMs = startDate.getHours() * 3600000 + startDate.getMinutes() * 60000 + startDate.getSeconds() * 1000 + startDate.getMilliseconds();
 
-      if (days < 0) {
-        months -= 1;
-        const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
-        days += prevMonth.getDate();
-      }
+        if (startMs < nowMs) {
+          days -= 1;
+        }
 
-      if (months < 0) {
-        years -= 1;
-        months += 12;
+        if (days < 0) {
+          months -= 1;
+          const prevMonth = new Date(startDate.getFullYear(), startDate.getMonth(), 0);
+          days += prevMonth.getDate();
+        }
+
+        if (months < 0) {
+          years -= 1;
+          months += 12;
+        }
+      } else {
+        years = now.getFullYear() - startDate.getFullYear();
+        months = now.getMonth() - startDate.getMonth();
+        days = now.getDate() - startDate.getDate();
+
+        const startMs = startDate.getHours() * 3600000 + startDate.getMinutes() * 60000 + startDate.getSeconds() * 1000 + startDate.getMilliseconds();
+        const nowMs = now.getHours() * 3600000 + now.getMinutes() * 60000 + now.getSeconds() * 1000 + now.getMilliseconds();
+
+        if (nowMs < startMs) {
+          days -= 1;
+        }
+
+        if (days < 0) {
+          months -= 1;
+          const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+          days += prevMonth.getDate();
+        }
+
+        if (months < 0) {
+          years -= 1;
+          months += 12;
+        }
       }
 
       setElapsed({ years, months, days, hours, minutes, seconds });
