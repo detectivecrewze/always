@@ -604,7 +604,39 @@ export default function StudioDashboard() {
               </div>
             </div>
             <div style={{ marginBottom: '1.5rem' }}>
-              <div style={S.label}>Photos / Videos ({selectedOrder.photos?.length || 0})</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <div style={{...S.label, marginBottom: 0}}>Photos / Videos ({selectedOrder.photos?.length || 0})</div>
+                {selectedOrder.photos && selectedOrder.photos.length > 0 && (
+                  <button
+                    onClick={async () => {
+                      const photos = selectedOrder.photos;
+                      for (let i = 0; i < photos.length; i++) {
+                        try {
+                          // Support both plain string URL and {url, caption} object format
+                          const rawUrl = typeof photos[i] === 'string' ? photos[i] : photos[i]?.url;
+                          if (!rawUrl) continue;
+                          const res = await fetch(rawUrl);
+                          const blob = await res.blob();
+                          const blobUrl = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = blobUrl;
+                          const ext = rawUrl.split('.').pop().split('?')[0] || 'jpg';
+                          a.download = `order_${selectedOrder.orderId}_media_${i + 1}.${ext}`;
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                          URL.revokeObjectURL(blobUrl);
+                        } catch (err) {
+                          console.error("Failed to download", err);
+                        }
+                      }
+                    }}
+                    style={{ ...S.actionBtn('#3B82F6'), padding: '4px 10px', fontSize: '0.75rem' }}
+                  >
+                    ⬇️ Download All
+                  </button>
+                )}
+              </div>
               {selectedOrder.photos && selectedOrder.photos.length > 0 ? (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
                   {selectedOrder.photos.map((p, i) => (

@@ -696,6 +696,31 @@ function TabGallery({ data, set, slug }) {
     }
   };
 
+  const [uploadingBulk, setUploadingBulk] = useState(false);
+  const handleBulkUpload = async (e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploadingBulk(true);
+    let currentPhotos = [...(data.photos || [])];
+    for (let i = 0; i < files.length; i++) {
+      if (currentPhotos.length >= 15) break;
+      const file = files[i];
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('slug', slug);
+      try {
+        const res = await fetch('/api/upload', { method: 'POST', body: fd });
+        const resData = await res.json();
+        if (resData.url) {
+          currentPhotos.push({ url: resData.url, caption: '' });
+          set('photos', [...currentPhotos]);
+        }
+      } catch { /* ignore */ }
+    }
+    setUploadingBulk(false);
+    e.target.value = '';
+  };
+
   return (<>
     <div style={S.sectionTitle}>Photo Gallery</div>
     <div style={S.sectionDesc}>Upload photos with captions. You can add up to 15 photos.</div>
@@ -717,9 +742,15 @@ function TabGallery({ data, set, slug }) {
         <Field label="Caption" value={typeof p === 'string' ? '' : p.caption} onChange={(v) => setPhoto(i, 'caption', v)} placeholder="caption text" />
       </div>
     ))}
-    {photos.length < 15 && (
-      <button style={S.smallBtn('#22C55E')} onClick={addPhoto}>+ Add Photo ({photos.length}/15)</button>
-    )}
+    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+      {photos.length < 15 && (
+        <button style={S.smallBtn('#22C55E')} onClick={addPhoto}>+ Add Photo ({photos.length}/15)</button>
+      )}
+      <label style={{ ...S.smallBtn('#3B82F6'), cursor: uploadingBulk ? 'wait' : 'pointer', opacity: uploadingBulk ? 0.7 : 1 }}>
+        {uploadingBulk ? 'Uploading...' : '📁 Bulk Upload Photos'}
+        <input type="file" multiple accept="image/*,video/*" onChange={handleBulkUpload} style={{ display: 'none' }} disabled={uploadingBulk} />
+      </label>
+    </div>
   </>);
 }
 
