@@ -41,8 +41,7 @@ export default function IntroSection({
         className="max-w-[560px] w-full"
         variants={containerVariants}
         initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.2 }}
+        animate="visible"
       >
         {/* Dark candlelight letter card */}
         <div
