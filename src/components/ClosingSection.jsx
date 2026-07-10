@@ -147,7 +147,7 @@ function CinemaModal({ secretPhoto, secretCaption, onClose }) {
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-16 pointer-events-none"
                 style={{ background: 'radial-gradient(ellipse, rgba(255,220,100,0.08) 0%, transparent 70%)' }} />
 
-              {/* Photo or Video */}
+              {/* Photo or Video or Link */}
               {secretPhoto && (
                 isVideo ? (
                   <video
@@ -158,13 +158,22 @@ function CinemaModal({ secretPhoto, secretCaption, onClose }) {
                     controls
                     playsInline
                   />
-                ) : (
+                ) : (secretPhoto.match(/\.(jpeg|jpg|gif|png|webp)$/i) || secretPhoto.includes('for-you-always') || secretPhoto.includes('cloudinary')) ? (
                   <img
                     src={secretPhoto}
                     alt="secret"
                     className="w-full aspect-[3/4] object-cover"
                     onError={(e) => { e.target.style.display = 'none'; }}
                   />
+                ) : (
+                  <div className="w-full aspect-[3/4] bg-[#111] flex flex-col items-center justify-center text-center p-6">
+                    <span className="text-3xl mb-4">🔗</span>
+                    <h3 className="font-serif text-[18px] text-[#e5e5e5] mb-2">Sebuah Tautan Rahasia</h3>
+                    <p className="font-sans text-[12px] text-white/60 mb-6">Seseorang meninggalkan pesan atau kenangan untukmu di tautan ini.</p>
+                    <a href={secretPhoto} target="_blank" rel="noopener noreferrer" className="px-5 py-2 rounded-full border border-white/20 text-white/80 font-sans text-[11px] uppercase tracking-widest hover:bg-white/10 transition-colors">
+                      Buka Tautan
+                    </a>
+                  </div>
                 )
               )}
 

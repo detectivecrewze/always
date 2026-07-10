@@ -859,7 +859,8 @@ function TabClosing({ data, set, slug }) {
     <Field label="Closing Line" value={data.closingLine} onChange={(v) => set('closingLine', v)} placeholder="always yours," />
     <Field label="Sender Name" value={data.sender} onChange={(v) => set('sender', v)} placeholder="Your Name" />
     <Field label="Celebrate Button Text" value={data.celebrateBtnText} onChange={(v) => set('celebrateBtnText', v)} placeholder="celebrate ✨" />
-    <FileUpload label="Secret Photo/Video" slug={slug} currentUrl={data.secretPhoto} onUploaded={(url) => set('secretPhoto', url)} onRemove={() => set('secretPhoto', '')} />
+    <FileUpload label="Secret Photo/Video (Upload)" slug={slug} currentUrl={data.secretPhoto} onUploaded={(url) => set('secretPhoto', url)} onRemove={() => set('secretPhoto', '')} />
+    <Field label="Atau Paste Direct Link" value={data.secretPhoto} onChange={(v) => set('secretPhoto', v)} placeholder="https://..." />
     <Field label="Secret Caption" value={data.secretCaption} onChange={(v) => set('secretCaption', v)} placeholder="a special note" />
   </>);
 }
