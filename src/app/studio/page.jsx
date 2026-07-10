@@ -425,30 +425,62 @@ export default function StudioDashboard() {
             </div>
           ) : (
             <div style={{ ...S.grid, gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
-              {filteredPending.map((o) => (
-                <div key={o.orderId} style={{ ...S.card, border: '1px solid #3B82F640' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                    <div style={{ ...S.cardSlug, color: '#3B82F6' }}>{o.orderId}</div>
-                    <div style={S.cardDate}>{o.createdAt}</div>
+              {filteredPending.map((o) => {
+                const submittedAt = o.createdAt ? new Date(o.createdAt) : null;
+                const isValidDate = submittedAt && !isNaN(submittedAt.getTime());
+                const dateStr = isValidDate
+                  ? submittedAt.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+                  : (o.createdAt || '—');
+                const timeStr = isValidDate
+                  ? submittedAt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false })
+                  : null;
+
+                // Compute how long ago
+                const diffMs = isValidDate ? Date.now() - submittedAt.getTime() : null;
+                const diffMins = diffMs ? Math.floor(diffMs / 60000) : null;
+                const agoStr = diffMins !== null
+                  ? diffMins < 60
+                    ? `${diffMins} mnt lalu`
+                    : diffMins < 1440
+                      ? `${Math.floor(diffMins / 60)} jam lalu`
+                      : `${Math.floor(diffMins / 1440)} hari lalu`
+                  : null;
+
+                return (
+                  <div key={o.orderId} style={{ ...S.card, border: '1px solid #3B82F640' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                      <div style={{ ...S.cardSlug, color: '#3B82F6' }}>{o.orderId}</div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.7rem', color: '#888' }}>{dateStr}</div>
+                        {timeStr && (
+                          <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f5f5f5', fontFamily: 'monospace', letterSpacing: '0.05em' }}>
+                            🕐 {timeStr}
+                          </div>
+                        )}
+                        {agoStr && (
+                          <div style={{ fontSize: '0.65rem', color: '#555', marginTop: '1px' }}>{agoStr}</div>
+                        )}
+                      </div>
+                    </div>
+                    <div style={S.cardName}>From: {o.sender}</div>
+                    <div style={{ fontSize: '0.85rem', color: '#aaa', marginBottom: '0.2rem' }}>To: {o.recipient} (/{o.slug})</div>
+                    <div style={{ fontSize: '0.8rem', color: '#888', marginBottom: '1rem' }}>Theme: {o.theme} | Moment: {o.moment}</div>
+                    <div style={S.actions}>
+                      <button style={S.actionBtn('#8B5CF6')} onClick={() => setSelectedOrder(o)}>View Details</button>
+                      <button style={{ ...S.actionBtn('#22C55E'), background: '#22C55E20' }} onClick={() => handleApplyOrder(o)} disabled={processingOrder === o.orderId}>
+                        {processingOrder === o.orderId ? 'Processing...' : 'Apply to Gift'}
+                      </button>
+                      <button style={S.actionBtn('#EF4444')} onClick={async () => {
+                        if (confirm('Mark as done?')) {
+                          await fetch(`/api/orders/${o.orderId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'done' }) });
+                          fetchGifts();
+                        }
+                      }}>Mark Done</button>
+                      <button style={{ ...S.actionBtn('#EF4444'), background: 'transparent', padding: '0.4rem', flex: '0 0 auto' }} onClick={() => handleDeleteOrder(o.orderId)} title="Hapus Pesanan">🗑️</button>
+                    </div>
                   </div>
-                  <div style={S.cardName}>From: {o.sender}</div>
-                  <div style={{ fontSize: '0.85rem', color: '#aaa', marginBottom: '0.2rem' }}>To: {o.recipient} (/{o.slug})</div>
-                  <div style={{ fontSize: '0.8rem', color: '#888', marginBottom: '1rem' }}>Theme: {o.theme} | Moment: {o.moment}</div>
-                  <div style={S.actions}>
-                    <button style={S.actionBtn('#8B5CF6')} onClick={() => setSelectedOrder(o)}>View Details</button>
-                    <button style={{ ...S.actionBtn('#22C55E'), background: '#22C55E20' }} onClick={() => handleApplyOrder(o)} disabled={processingOrder === o.orderId}>
-                      {processingOrder === o.orderId ? 'Processing...' : 'Apply to Gift'}
-                    </button>
-                    <button style={S.actionBtn('#EF4444')} onClick={async () => {
-                      if (confirm('Mark as done?')) {
-                        await fetch(`/api/orders/${o.orderId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'done' }) });
-                        fetchGifts();
-                      }
-                    }}>Mark Done</button>
-                    <button style={{ ...S.actionBtn('#EF4444'), background: 'transparent', padding: '0.4rem', flex: '0 0 auto' }} onClick={() => handleDeleteOrder(o.orderId)} title="Hapus Pesanan">🗑️</button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )
         )}
