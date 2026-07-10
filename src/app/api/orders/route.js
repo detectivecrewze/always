@@ -36,7 +36,7 @@ export async function POST(request) {
       ...data,
       orderId,
       status: 'pending',
-      createdAt: new Date().toISOString().split('T')[0],
+      createdAt: new Date().toISOString(),
     };
 
     if (isKVConfigured()) {
