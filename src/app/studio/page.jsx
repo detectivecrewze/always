@@ -616,8 +616,22 @@ export default function StudioDashboard() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
               <div><div style={S.label}>From</div><div style={{ fontSize: '1rem', color: '#f5f5f5' }}>{selectedOrder.sender}</div></div>
               <div><div style={S.label}>To</div><div style={{ fontSize: '1rem', color: '#f5f5f5' }}>{selectedOrder.recipient}</div></div>
-              <div><div style={S.label}>Moment</div><div style={{ fontSize: '0.9rem', color: '#f5f5f5' }}>{selectedOrder.moment} {selectedOrder.specialDate && `(${selectedOrder.specialDate}${selectedOrder.specialDateOccasion ? ` - ${selectedOrder.specialDateOccasion}` : ''})`}</div></div>
+              <div><div style={S.label}>Moment</div><div style={{ fontSize: '0.9rem', color: '#f5f5f5' }}>{selectedOrder.moment}{selectedOrder.milestoneNumber ? ` (ke-${selectedOrder.milestoneNumber})` : ''} {selectedOrder.specialDate && `(${selectedOrder.specialDate}${selectedOrder.specialDateOccasion ? ` - ${selectedOrder.specialDateOccasion}` : ''})`}</div></div>
               <div><div style={S.label}>Theme</div><div style={{ fontSize: '0.9rem', color: '#f5f5f5' }}>{selectedOrder.theme}</div></div>
+              {selectedOrder.relationship && (
+                <div><div style={S.label}>Hubungan</div><div style={{ fontSize: '0.9rem', color: '#f5f5f5' }}>{selectedOrder.relationship}</div></div>
+              )}
+              {selectedOrder.recipientBirthdate && (
+                <div><div style={S.label}>Tgl Lahir Penerima</div><div style={{ fontSize: '0.9rem', color: '#f5f5f5' }}>{selectedOrder.recipientBirthdate}</div></div>
+              )}
+              {selectedOrder.deadline && (
+                <div style={{ gridColumn: 'span 2' }}>
+                  <div style={S.label}>Deadline</div>
+                  <div style={{ fontSize: '0.95rem', color: '#FCD34D', fontWeight: 600 }}>
+                    {new Date(selectedOrder.deadline).toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' })}
+                  </div>
+                </div>
+              )}
               <div><div style={S.label}>Metaphor</div><div style={{ fontSize: '0.9rem', color: '#f5f5f5' }}>{selectedOrder.metaphorChoice}</div></div>
               <div><div style={S.label}>Writing Tone</div><div style={{ fontSize: '0.9rem', color: '#f5f5f5' }}>{Array.isArray(selectedOrder.tone) ? selectedOrder.tone.join(', ') : selectedOrder.tone}</div></div>
               <div style={{ gridColumn: 'span 2' }}>

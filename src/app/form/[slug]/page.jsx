@@ -22,6 +22,9 @@ export default function OrderForm() {
     recipient: '',
     moment: 'Ultah',
     milestoneNumber: '',
+    recipientBirthdate: '',
+    relationship: '',
+    deadline: '',
     theme: 'vintage-burgundy',
     tone: ['Puitis'],
     musicChoice: 'playlist', // 'playlist', 'request' or 'random'
@@ -198,6 +201,7 @@ export default function OrderForm() {
 
   const TONES = ['Santai', 'Puitis', 'Indoglish', 'Full English'];
   const MOMENTS = ['Ultah', 'Anniversary', 'LDR', 'Wisuda', 'Friendship', 'Just Because', 'Lainnya'];
+  const RELATIONSHIPS = ['Pasangan', 'Sahabat', 'Teman', 'Keluarga', 'Lainnya'];
 
   return (
     <div style={{
@@ -347,37 +351,112 @@ export default function OrderForm() {
                     />
                   </motion.div>
                 )}
+
+                {/* Tanggal Lahir Penerima — hanya muncul kalau Ultah */}
+                {data.moment === 'Ultah' && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    transition={{ duration: 0.3 }}
+                    style={{ marginTop: '1.25rem', overflow: 'hidden' }}
+                  >
+                    <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>
+                      Tanggal Lahir Penerima (Opsional)
+                    </label>
+                    <input
+                      type="date"
+                      value={data.recipientBirthdate || ''}
+                      onChange={e => update('recipientBirthdate', e.target.value)}
+                      style={{
+                        width: '100%', background: 'transparent', border: 'none',
+                        borderBottom: `1px solid ${currentTheme.text}40`, color: 'inherit',
+                        padding: '0.5rem 0', fontSize: '0.95rem', outline: 'none',
+                        transition: 'border-color 0.3s'
+                      }}
+                      onFocus={e => e.target.style.borderColor = currentTheme.text}
+                      onBlur={e => e.target.style.borderColor = `${currentTheme.text}40`}
+                    />
+                    <p style={{ fontSize: '0.72rem', opacity: 0.5, marginTop: '0.3rem', marginBottom: 0 }}>
+                      Digunakan untuk menghitung berapa tahun perjalanan hidup penerima.
+                    </p>
+                  </motion.div>
+                )}
+
+                {/* Tanggal Penting — disembunyikan jika Ultah karena sudah ada input Tanggal Lahir Penerima */}
+                {data.moment !== 'Ultah' && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    transition={{ duration: 0.3 }}
+                    style={{ marginTop: '1.25rem', overflow: 'hidden' }}
+                  >
+                    <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>
+                      {data.moment === 'Anniversary' ? 'Tanggal Anniversary (Opsional)' : 'Tanggal Penting (Opsional)'}
+                    </label>
+                    <input 
+                      type="date"
+                      value={data.specialDate || ''} 
+                      onChange={e => update('specialDate', e.target.value)} 
+                      style={{ 
+                        width: '100%', background: 'transparent', border: 'none', 
+                        borderBottom: `1px solid ${currentTheme.text}40`, color: 'inherit', 
+                        padding: '0.5rem 0', fontSize: '0.95rem', outline: 'none', 
+                        transition: 'border-color 0.3s' 
+                      }}
+                      onFocus={e => e.target.style.borderColor = currentTheme.text}
+                      onBlur={e => e.target.style.borderColor = `${currentTheme.text}40`}
+                    />
+                  </motion.div>
+                )}
+
+                {data.specialDate && data.moment === 'Lainnya' && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    transition={{ duration: 0.3 }}
+                    style={{ marginTop: '1rem', overflow: 'hidden' }}
+                  >
+                    <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>Nama Momen / Acara (Opsional)</label>
+                    <input 
+                      type="text"
+                      value={data.specialDateOccasion || ''} 
+                      onChange={e => update('specialDateOccasion', e.target.value)} 
+                      placeholder="Cth: Hari pertama kenalan, Wisuda, dll..."
+                      style={{ 
+                        width: '100%', background: 'transparent', border: 'none', 
+                        borderBottom: `1px solid ${currentTheme.text}40`, color: 'inherit', 
+                        padding: '0.5rem 0', fontSize: '0.95rem', outline: 'none',
+                        transition: 'border-color 0.3s'
+                      }}
+                      onFocus={e => e.target.style.borderColor = currentTheme.text}
+                      onBlur={e => e.target.style.borderColor = `${currentTheme.text}40`}
+                    />
+                  </motion.div>
+                )}
               </div>
 
+              {/* Hubungan Pengirim ke Penerima */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>Tanggal Penting (Opsional)</label>
-                <input 
-                  type="date"
-                  value={data.specialDate} onChange={e => update('specialDate', e.target.value)} 
-                  style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: `1px solid ${currentTheme.text}40`, color: 'inherit', padding: '0.5rem 0', fontSize: '1rem', outline: 'none', marginBottom: '1rem' }}
-                />
+                <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.75rem' }}>Kamu dan {data.recipient || 'penerima'} adalah...</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {RELATIONSHIPS.map(r => (
+                    <button
+                      key={r}
+                      onClick={() => update('relationship', r)}
+                      style={{
+                        padding: '0.5rem 1.1rem', borderRadius: '30px', fontSize: '0.82rem', cursor: 'pointer', transition: 'all 0.3s',
+                        background: data.relationship === r ? currentTheme.text : 'transparent',
+                        color: data.relationship === r ? currentTheme.bg : currentTheme.text,
+                        border: `1px solid ${data.relationship === r ? currentTheme.text : currentTheme.text + '40'}`
+                      }}
+                    >
+                      {r}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              {data.specialDate && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  transition={{ duration: 0.3 }}
-                  style={{ marginTop: '1rem' }}
-                >
-                  <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>Nama Momen / Acara (Opsional)</label>
-                  <input 
-                    type="text"
-                    value={data.specialDateOccasion || ''} 
-                    onChange={e => update('specialDateOccasion', e.target.value)} 
-                    placeholder="Cth: Anniversary, Ulang Tahun, Jadian..."
-                    style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: `1px solid ${currentTheme.text}40`, color: 'inherit', padding: '0.5rem 0', fontSize: '0.95rem', outline: 'none' }}
-                    onFocus={e => e.target.style.borderColor = currentTheme.text}
-                    onBlur={e => e.target.style.borderColor = `${currentTheme.text}40`}
-                  />
-                </motion.div>
-              )}
-            </div>
+              </div>
           </div>
         )}
 
@@ -685,6 +764,27 @@ export default function OrderForm() {
                 <input type="file" accept="image/*,video/mp4" ref={secretInputRef} style={{ display: 'none' }} onChange={(e) => handleFileChange(e, true)} />
               </div>
 
+              {/* Deadline — di sini sebelum submit */}
+              <div style={{ marginTop: '1rem', paddingTop: '1.5rem', borderTop: `1px solid ${currentTheme.text}15` }}>
+                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 500, marginBottom: '0.4rem' }}>⏰ Kapan gift harus jadi? (Opsional)</label>
+                <p style={{ fontSize: '0.78rem', opacity: 0.55, marginBottom: '0.75rem', lineHeight: 1.5 }}>
+                  Beri tahu kami jika ada deadline agar kami bisa memprioritaskan pesananmu.
+                </p>
+                <input
+                  type="datetime-local"
+                  value={data.deadline || ''}
+                  onChange={e => update('deadline', e.target.value)}
+                  style={{
+                    width: '100%', background: 'transparent', border: 'none',
+                    borderBottom: `1px solid ${currentTheme.text}40`, color: 'inherit',
+                    padding: '0.5rem 0', fontSize: '0.95rem', outline: 'none',
+                    transition: 'border-color 0.3s'
+                  }}
+                  onFocus={e => e.target.style.borderColor = currentTheme.text}
+                  onBlur={e => e.target.style.borderColor = `${currentTheme.text}40`}
+                />
+              </div>
+
             </div>
           </div>
         )}
@@ -757,10 +857,12 @@ export default function OrderForm() {
                   `Halo Digital Atelier! 🎁\n\nSaya sudah selesai mengisi form Memoria.\n\n` +
                   `📋 *Detail Pesanan:*\n` +
                   `• Order ID: ${orderId}\n` +
-                  `• Dari: ${data.sender}\n` +
+                  `• Dari: ${data.sender}${data.relationship ? ` (${data.relationship})` : ''}\n` +
                   `• Untuk: ${data.recipient}\n` +
-                  `• Momen: ${data.moment}${data.milestoneNumber ? ` (ke-${data.milestoneNumber})` : ''}\n\n` +
-                  `Mohon segera diproses ya. Terima kasih! 🌸`
+                  `• Momen: ${data.moment}${data.milestoneNumber ? ` (ke-${data.milestoneNumber})` : ''}\n` +
+                  (data.recipientBirthdate ? `• Tgl Lahir Penerima: ${data.recipientBirthdate}\n` : '') +
+                  (data.deadline ? `• ⏰ Deadline: ${new Date(data.deadline).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}\n` : '') +
+                  `\nMohon segera diproses ya. Terima kasih! 🌸`
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
