@@ -21,6 +21,7 @@ export default function OrderForm() {
     sender: '',
     recipient: '',
     moment: 'Ultah',
+    milestoneNumber: '',
     theme: 'vintage-burgundy',
     tone: ['Puitis'],
     musicChoice: 'playlist', // 'playlist', 'request' or 'random'
@@ -307,6 +308,34 @@ export default function OrderForm() {
                       value={data.customMoment || ''}
                       onChange={e => update('customMoment', e.target.value)}
                       placeholder="Tulis momen spesialmu di sini... (cth: Hari pertama kenalan)"
+                      style={{
+                        width: '100%', background: 'transparent', border: 'none',
+                        borderBottom: `1px solid ${currentTheme.text}40`, color: 'inherit',
+                        padding: '0.5rem 0', fontSize: '0.95rem', outline: 'none',
+                        transition: 'border-color 0.3s'
+                      }}
+                      onFocus={e => e.target.style.borderColor = currentTheme.text}
+                      onBlur={e => e.target.style.borderColor = `${currentTheme.text}40`}
+                    />
+                  </motion.div>
+                )}
+
+                {(data.moment === 'Ultah' || data.moment === 'Anniversary') && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    transition={{ duration: 0.3 }}
+                    style={{ marginTop: '1.25rem', overflow: 'hidden' }}
+                  >
+                    <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>
+                      {data.moment === 'Ultah' ? 'Ulang Tahun ke berapa? (Opsional)' : 'Anniversary ke berapa? (Opsional)'}
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={data.milestoneNumber || ''}
+                      onChange={e => update('milestoneNumber', e.target.value)}
+                      placeholder={data.moment === 'Ultah' ? 'Cth: 18, 20, 21...' : 'Cth: 1, 2, 5...'}
                       style={{
                         width: '100%', background: 'transparent', border: 'none',
                         borderBottom: `1px solid ${currentTheme.text}40`, color: 'inherit',
@@ -730,7 +759,7 @@ export default function OrderForm() {
                   `• Order ID: ${orderId}\n` +
                   `• Dari: ${data.sender}\n` +
                   `• Untuk: ${data.recipient}\n` +
-                  `• Momen: ${data.moment}\n\n` +
+                  `• Momen: ${data.moment}${data.milestoneNumber ? ` (ke-${data.milestoneNumber})` : ''}\n\n` +
                   `Mohon segera diproses ya. Terima kasih! 🌸`
                 )}`}
                 target="_blank"
