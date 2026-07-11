@@ -18,6 +18,7 @@ export default function StudioDashboard() {
   const [newSlug, setNewSlug] = useState('');
   const [newRecipient, setNewRecipient] = useState('');
   const [creating, setCreating] = useState(false);
+  const [createdSlug, setCreatedSlug] = useState(null);
   const [deleting, setDeleting] = useState(null);
   const [processingOrder, setProcessingOrder] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -169,8 +170,8 @@ export default function StudioDashboard() {
       createdAt: new Date().toISOString().split('T')[0],
     };
     await fetch('/api/gifts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(template) });
-    setCreating(false); setShowNew(false); setNewSlug(''); setNewRecipient('');
-    router.push(`/studio/${slug}/edit`);
+    setCreating(false); setShowNew(false); setNewRecipient('');
+    setCreatedSlug(slug);
   };
 
   const openRenameModal = (g) => {
@@ -359,7 +360,11 @@ export default function StudioDashboard() {
 
             {/* New Gift button — only on gifts tab */}
             {activeTab === 'gifts' && (
-              <button onClick={() => setShowNew(true)} style={S.newBtn}>+ New Gift</button>
+              <button onClick={() => {
+                setNewSlug('');
+                setNewRecipient('');
+                setShowNew(true);
+              }} style={S.newBtn}>+ New Gift</button>
             )}
           </div>
 
@@ -725,7 +730,38 @@ export default function StudioDashboard() {
             <label style={S.label}>Recipient Name</label>
             <input style={S.input} value={newRecipient} onChange={e => setNewRecipient(e.target.value)} placeholder="e.g. Nadia" required />
             <label style={S.label}>URL Slug</label>
-            <input style={S.input} value={newSlug} onChange={e => setNewSlug(e.target.value)} placeholder="e.g. untuk-nadia" required />
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <input
+                style={{ ...S.input, flex: 1, marginBottom: 0 }}
+                value={newSlug}
+                onChange={e => setNewSlug(e.target.value)}
+                placeholder="e.g. untuk-nadia atau auto-xxxxxxx"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const rand = Math.random().toString(36).slice(2, 9);
+                  const id = `auto-${rand}`;
+                  setNewSlug(id);
+                  setNewRecipient(id);
+                }}
+                style={{
+                  whiteSpace: 'nowrap',
+                  padding: '0 0.85rem',
+                  height: '42px',
+                  background: '#222',
+                  border: '1px solid #444',
+                  borderRadius: '8px',
+                  color: '#aaa',
+                  fontSize: '0.75rem',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                }}
+              >
+                🎲 Generate ID
+              </button>
+            </div>
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
               <button type="button" onClick={() => setShowNew(false)} style={{ ...S.logoutBtn, flex: 1 }}>Cancel</button>
               <button type="submit" disabled={creating} style={{ ...S.newBtn, flex: 1, opacity: creating ? 0.6 : 1 }}>
@@ -733,6 +769,46 @@ export default function StudioDashboard() {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* ── Post-Create Choice Modal ─────────────────────────────── */}
+      {createdSlug && (
+        <div style={S.modal} onClick={() => { setCreatedSlug(null); setNewSlug(''); }}>
+          <div style={{ ...S.modalCard, maxWidth: '420px' }} onClick={e => e.stopPropagation()}>
+            <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🎉</div>
+              <h2 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.25rem' }}>Gift Created!</h2>
+              <p style={{ fontSize: '0.8rem', color: '#888' }}>What would you like to do next?</p>
+            </div>
+            <div style={{ background: '#111', border: '1px solid #333', borderRadius: '8px', padding: '0.75rem 1rem', marginBottom: '1.25rem' }}>
+              <div style={{ fontSize: '0.65rem', color: '#666', marginBottom: '0.2rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Slug / KV ID</div>
+              <div style={{ fontSize: '0.85rem', color: '#f5f5f5', fontFamily: 'monospace' }}>{createdSlug}</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <button
+                onClick={() => {
+                  const formUrl = `${window.location.origin}/form/${createdSlug}`;
+                  navigator.clipboard.writeText(formUrl).then(() => alert('✅ Form link copied to clipboard!'));
+                }}
+                style={{ ...S.newBtn, background: 'linear-gradient(135deg, #10B981, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+              >
+                <span>🔗</span> Copy Form Link
+              </button>
+              <button
+                onClick={() => { setCreatedSlug(null); setNewSlug(''); router.push(`/studio/${createdSlug}/edit`); }}
+                style={{ ...S.newBtn, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+              >
+                <span>✏️</span> Open in Studio Editor
+              </button>
+              <button
+                onClick={() => { setCreatedSlug(null); setNewSlug(''); }}
+                style={{ ...S.logoutBtn, textAlign: 'center' }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
