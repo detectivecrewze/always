@@ -75,8 +75,10 @@ export default function OrderForm() {
     return () => clearTimeout(timer);
   }, [data, slug]);
 
-  const [files, setFiles] = useState([]); // Max 15
-  const [secretFile, setSecretFile] = useState(null); // Max 1
+  // Each item: { id, localUrl, remoteUrl, status, isVideo }
+  // status: 'uploading' | 'done' | 'error'
+  const [uploadedPhotos, setUploadedPhotos] = useState([]);
+  const [secretPhoto, setSecretPhoto] = useState(null);
 
   const fileInputRef = useRef(null);
   const secretInputRef = useRef(null);
@@ -117,49 +119,79 @@ export default function OrderForm() {
     });
   };
 
-  const handleFileChange = (e, isSecret) => {
-    const selected = Array.from(e.target.files);
-    // Videos must be <= 4.5MB for server limits. Images will be compressed.
-    const validFiles = selected.filter(f => f.type.startsWith('image/') || f.size <= 4.5 * 1024 * 1024);
-    if (validFiles.length < selected.length) alert('Beberapa video diabaikan karena ukurannya lebih dari 4.5MB.');
-    
-    if (isSecret) {
-      if (validFiles[0]) setSecretFile(validFiles[0]);
-    } else {
-      setFiles(prev => [...prev, ...validFiles].slice(0, 15)); // Max 15
+  // Upload a single file immediately and update state
+  const uploadOneFile = async (file, id, isSecret) => {
+    const compressed = await compressImage(file);
+    const fd = new FormData();
+    fd.append('file', compressed);
+    fd.append('slug', slug);
+    try {
+      const res = await fetch('/api/upload-public', { method: 'POST', body: fd });
+      if (!res.ok) throw new Error('Upload failed');
+      const { url } = await res.json();
+      if (isSecret) {
+        setSecretPhoto(prev => prev && prev.id === id ? { ...prev, remoteUrl: url, status: 'done' } : prev);
+      } else {
+        setUploadedPhotos(prev => prev.map(p => p.id === id ? { ...p, remoteUrl: url, status: 'done' } : p));
+      }
+    } catch {
+      if (isSecret) {
+        setSecretPhoto(prev => prev && prev.id === id ? { ...prev, status: 'error' } : prev);
+      } else {
+        setUploadedPhotos(prev => prev.map(p => p.id === id ? { ...p, status: 'error' } : p));
+      }
     }
   };
 
-  const uploadFiles = async () => {
-    const upload = async (file) => {
-      const compressed = await compressImage(file);
-      const fd = new FormData();
-      fd.append('file', compressed);
-      fd.append('slug', slug);
-      const res = await fetch('/api/upload-public', { method: 'POST', body: fd });
-      if (!res.ok) throw new Error('Upload failed');
-      return (await res.json()).url;
-    };
+  const handleFileChange = (e, isSecret) => {
+    const selected = Array.from(e.target.files);
+    // Reset input so same file can be re-selected
+    e.target.value = '';
+    // Videos must be <= 4.5MB. Images will be compressed.
+    const validFiles = selected.filter(f => f.type.startsWith('image/') || f.size <= 4.5 * 1024 * 1024);
+    if (validFiles.length < selected.length) alert('Beberapa video diabaikan karena ukurannya lebih dari 4.5MB.');
 
-    // Upload files concurrently for speed
-    const urls = await Promise.all(files.map(upload));
-    
-    let secretUrl = null;
-    if (secretFile) {
-      secretUrl = await upload(secretFile);
+    if (isSecret) {
+      const file = validFiles[0];
+      if (!file) return;
+      const id = `secret-${Date.now()}`;
+      const item = { id, localUrl: URL.createObjectURL(file), remoteUrl: null, status: 'uploading', isVideo: file.type.startsWith('video/') };
+      setSecretPhoto(item);
+      uploadOneFile(file, id, true);
+    } else {
+      // Limit to max 15 total
+      setUploadedPhotos(prev => {
+        const slots = 15 - prev.length;
+        const toAdd = validFiles.slice(0, slots);
+        const newItems = toAdd.map((file, i) => {
+          const id = `photo-${Date.now()}-${i}`;
+          // Trigger upload after state update
+          setTimeout(() => uploadOneFile(file, id, false), 0);
+          return { id, localUrl: URL.createObjectURL(file), remoteUrl: null, status: 'uploading', isVideo: file.type.startsWith('video/') };
+        });
+        return [...prev, ...newItems];
+      });
     }
-    return { photos: urls, secretPhoto: secretUrl };
   };
 
   const handleSubmit = async () => {
+    // Check if any uploads are still in progress
+    const stillUploading = uploadedPhotos.some(p => p.status === 'uploading') ||
+      (secretPhoto && secretPhoto.status === 'uploading');
+    if (stillUploading) {
+      alert('Foto masih dalam proses upload, mohon tunggu sebentar.');
+      return;
+    }
+
     setSubmitting(true);
     try {
-      const uploaded = await uploadFiles();
+      const photos = uploadedPhotos.filter(p => p.status === 'done').map(p => p.remoteUrl);
+      const secretPhotoUrl = secretPhoto?.status === 'done' ? secretPhoto.remoteUrl : null;
       const payload = {
         ...data,
         slug,
-        photos: uploaded.photos,
-        secretPhoto: uploaded.secretPhoto,
+        photos,
+        secretPhoto: secretPhotoUrl,
       };
 
       const res = await fetch('/api/orders', {
@@ -682,72 +714,139 @@ export default function OrderForm() {
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
               
-              {/* Main Gallery */}
+              {/* Main Gallery — Instant Upload */}
               <div>
                 <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1rem' }}>
                   <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>Galeri Foto/Video</span>
-                  <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>{files.length} / 15 Terpilih</span>
+                  <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>
+                    {uploadedPhotos.filter(p => p.status === 'done').length} / 15 Tersimpan
+                  </span>
                 </label>
-                
-                <div 
-                  onClick={() => fileInputRef.current?.click()}
-                  style={{ 
-                    border: `1px dashed ${currentTheme.text}60`, borderRadius: '16px', padding: '2rem 1rem', 
-                    textAlign: 'center', cursor: 'pointer', background: 'rgba(0,0,0,0.05)', transition: 'background 0.3s' 
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.1)'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.05)'}
-                >
-                  <div style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'center' }}>
-                    <ImageIcon size={48} strokeWidth={1} opacity={0.7} />
-                  </div>
-                  <div style={{ fontSize: '0.9rem' }}>Klik untuk memilih file</div>
-                  <div style={{ fontSize: '0.75rem', opacity: 0.6, mt: 1 }}>Maksimal 15 file. (Video Max 4.5MB)</div>
-                </div>
-                <input type="file" multiple accept="image/*,video/mp4" ref={fileInputRef} style={{ display: 'none' }} onChange={(e) => handleFileChange(e, false)} />
-                
-                {files.length > 0 && (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px', marginTop: '1rem' }}>
-                    {files.map((f, i) => (
-                      <div key={i} style={{ aspectRatio: '1', borderRadius: '8px', overflow: 'hidden', background: 'rgba(0,0,0,0.2)' }}>
-                        {f.type.startsWith('image/') ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={URL.createObjectURL(f)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+
+                {/* Thumbnail grid */}
+                {uploadedPhotos.length > 0 && (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '1rem' }}>
+                    {uploadedPhotos.map((item) => (
+                      <div key={item.id} style={{ position: 'relative', aspectRatio: '1', borderRadius: '10px', overflow: 'hidden', background: 'rgba(0,0,0,0.2)' }}>
+                        {/* Preview */}
+                        {item.isVideo ? (
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.65rem', opacity: 0.7, flexDirection: 'column', gap: '4px' }}>
+                            <Video size={20} strokeWidth={1.5} />
+                            <span>VIDEO</span>
+                          </div>
                         ) : (
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.7rem' }}>VIDEO</div>
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={item.localUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        )}
+
+                        {/* Uploading overlay — spinner */}
+                        {item.status === 'uploading' && (
+                          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ width: '22px', height: '22px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                          </div>
+                        )}
+
+                        {/* Done overlay — checkmark */}
+                        {item.status === 'done' && (
+                          <div style={{ position: 'absolute', bottom: '4px', right: '4px', background: 'rgba(34,197,94,0.9)', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          </div>
+                        )}
+
+                        {/* Error overlay — retry */}
+                        {item.status === 'error' && (
+                          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                            <span style={{ fontSize: '0.6rem', color: '#f87171' }}>Gagal</span>
+                            <button
+                              style={{ fontSize: '0.6rem', background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer' }}
+                              onClick={() => setUploadedPhotos(prev => prev.filter(p => p.id !== item.id))}
+                            >
+                              Hapus
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Delete button (top-right) — always visible on done */}
+                        {item.status === 'done' && (
+                          <button
+                            onClick={() => setUploadedPhotos(prev => prev.filter(p => p.id !== item.id))}
+                            style={{ position: 'absolute', top: '3px', right: '3px', width: '20px', height: '20px', borderRadius: '50%', background: 'rgba(0,0,0,0.6)', border: 'none', color: '#fff', fontSize: '11px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}
+                            title="Hapus foto ini"
+                          >
+                            ✕
+                          </button>
                         )}
                       </div>
                     ))}
                   </div>
                 )}
+
+                {/* Add more button */}
+                {uploadedPhotos.length < 15 && (
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    style={{
+                      width: '100%', padding: '0.85rem', border: `1px dashed ${currentTheme.text}50`,
+                      borderRadius: '12px', background: 'rgba(0,0,0,0.04)', color: currentTheme.text,
+                      cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center',
+                      justifyContent: 'center', gap: '8px', transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.09)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,0,0,0.04)'}
+                  >
+                    <ImageIcon size={18} strokeWidth={1.5} />
+                    {uploadedPhotos.length === 0 ? 'Pilih Foto / Video (maks. 15)' : '+ Tambah Foto / Video Lagi'}
+                  </button>
+                )}
+                <input type="file" multiple accept="image/*,video/mp4" ref={fileInputRef} style={{ display: 'none' }} onChange={(e) => handleFileChange(e, false)} />
+                <p style={{ fontSize: '0.72rem', opacity: 0.5, marginTop: '0.5rem', textAlign: 'center' }}>Video maks. 4.5MB. Foto akan dikompres otomatis.</p>
               </div>
 
-              {/* Secret Ending */}
+              {/* Secret Ending — Instant Upload */}
               <div style={{ animation: 'fadeIn 0.5s ease-out', animationDelay: '0.2s', animationFillMode: 'both' }}>
                 <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1rem' }}>
                   <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>Foto/Video Kejutan Akhir</span>
                   <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>Optional</span>
                 </label>
-                
-                <div 
+
+                <div
                   onClick={() => secretInputRef.current?.click()}
-                  style={{ 
-                    border: `1px dashed ${secretFile ? currentTheme.text : currentTheme.text + '60'}`, 
-                    borderRadius: '16px', padding: '1.5rem 1rem', 
-                    textAlign: 'center', cursor: 'pointer', 
-                    background: secretFile ? currentTheme.text + '10' : 'rgba(0,0,0,0.05)'
+                  style={{
+                    border: `1px dashed ${secretPhoto ? currentTheme.text : currentTheme.text + '60'}`,
+                    borderRadius: '16px', padding: '1.5rem 1rem',
+                    textAlign: 'center', cursor: 'pointer',
+                    background: secretPhoto?.status === 'done' ? currentTheme.text + '10' : 'rgba(0,0,0,0.05)',
+                    position: 'relative', overflow: 'hidden'
                   }}
                 >
-                  {secretFile ? (
+                  {secretPhoto ? (
                     <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: '8px', overflow: 'hidden', background: 'rgba(0,0,0,0.2)' }}>
-                      {secretFile.type.startsWith('image/') ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={URL.createObjectURL(secretFile)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      ) : (
+                      {/* Preview */}
+                      {secretPhoto.isVideo ? (
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.9rem', fontWeight: 500, gap: '8px' }}>
                           <Video size={20} strokeWidth={2} opacity={0.8} /> VIDEO TERPILIH
                         </div>
+                      ) : (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={secretPhoto.localUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       )}
+
+                      {/* Spinner overlay */}
+                      {secretPhoto.status === 'uploading' && (
+                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '8px' }}>
+                          <div style={{ width: '26px', height: '26px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                          <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.7)' }}>Menyimpan...</span>
+                        </div>
+                      )}
+
+                      {/* Done badge */}
+                      {secretPhoto.status === 'done' && (
+                        <div style={{ position: 'absolute', top: '6px', right: '6px', background: 'rgba(34,197,94,0.9)', borderRadius: '50%', width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        </div>
+                      )}
+
+                      {/* Hover to change */}
                       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.2s' }} onMouseEnter={e => e.currentTarget.style.opacity = 1} onMouseLeave={e => e.currentTarget.style.opacity = 0}>
                         <span style={{ color: '#fff', fontSize: '0.85rem', fontWeight: 500 }}>Klik untuk mengganti</span>
                       </div>
@@ -761,6 +860,16 @@ export default function OrderForm() {
                     </>
                   )}
                 </div>
+
+                {/* Remove secret photo */}
+                {secretPhoto && secretPhoto.status === 'done' && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setSecretPhoto(null); }}
+                    style={{ marginTop: '0.5rem', background: 'transparent', border: 'none', color: currentTheme.text, opacity: 0.5, fontSize: '0.78rem', cursor: 'pointer', display: 'block', width: '100%', textAlign: 'center' }}
+                  >
+                    Hapus foto kejutan
+                  </button>
+                )}
                 <input type="file" accept="image/*,video/mp4" ref={secretInputRef} style={{ display: 'none' }} onChange={(e) => handleFileChange(e, true)} />
               </div>
 
