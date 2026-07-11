@@ -135,11 +135,13 @@ export default function GiftPage({ data }) {
               />
             )}
 
-            <Gallery 
-              photos={data.photos} 
-              galleryTitle1={data.galleryTitle1}
-              galleryTitle2={data.galleryTitle2}
-            />
+            {data.photos && data.photos.length > 0 && (
+              <Gallery 
+                photos={data.photos} 
+                galleryTitle1={data.galleryTitle1}
+                galleryTitle2={data.galleryTitle2}
+              />
+            )}
 
             <ClosingSection
               closingLine={data.closingLine}
