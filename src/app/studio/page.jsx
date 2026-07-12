@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import playlist from './playlist.json';
 import AestheticQRCode from '@/components/AestheticQRCode';
@@ -31,6 +31,7 @@ export default function StudioDashboard() {
   const [editingOrder, setEditingOrder] = useState(null); // { orderId, photos: [...], message: '', secretPhoto: '' }
   const [savingOrder, setSavingOrder] = useState(false);
   const [newPhotoUrl, setNewPhotoUrl] = useState('');
+  const newPhotoInputRef = useRef(null);
 
   // Tab & Search state
   const [activeTab, setActiveTab] = useState('gifts');
@@ -308,10 +309,15 @@ export default function StudioDashboard() {
   };
 
   const handleAddPhoto = () => {
-    const url = newPhotoUrl.trim();
-    if (!url) return;
+    // Read from ref as fallback in case React state is stale
+    const url = (newPhotoInputRef.current?.value || newPhotoUrl || '').trim();
+    if (!url) {
+      alert('Paste URL foto/video dulu sebelum klik Tambah');
+      return;
+    }
     setEditingOrder(prev => ({ ...prev, photos: [...prev.photos, url] }));
     setNewPhotoUrl('');
+    if (newPhotoInputRef.current) newPhotoInputRef.current.value = '';
   };
 
   const handleRemovePhoto = (index) => {
@@ -832,6 +838,7 @@ export default function StudioDashboard() {
                   {/* Add new photo URL input */}
                   <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
                     <input
+                      ref={newPhotoInputRef}
                       type="text"
                       value={newPhotoUrl}
                       onChange={e => setNewPhotoUrl(e.target.value)}
