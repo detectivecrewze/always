@@ -16,6 +16,26 @@ function writeLocalOrders(orders) {
   fs.writeFileSync(filePath, JSON.stringify(orders, null, 2));
 }
 
+// GET /api/orders/:orderId — fetch single order
+export async function GET(request, { params: paramsPromise }) {
+  if (!await verifySession(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  const params = await paramsPromise;
+  const { orderId } = params;
+
+  if (isKVConfigured()) {
+    const order = await getOrder(orderId);
+    if (!order) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    return NextResponse.json(order);
+  } else {
+    const orders = readLocalOrders();
+    const order = orders.find(o => o.orderId === orderId);
+    if (!order) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    return NextResponse.json(order);
+  }
+}
+
 // PUT /api/orders/:orderId — update order status
 export async function PUT(request, { params: paramsPromise }) {
   if (!await verifySession(request)) {

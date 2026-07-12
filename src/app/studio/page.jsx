@@ -27,6 +27,11 @@ export default function StudioDashboard() {
   const [renaming, setRenaming] = useState(false);
   const [cleaningUp, setCleaningUp] = useState(false);
 
+  // Order editing state
+  const [editingOrder, setEditingOrder] = useState(null); // { orderId, photos: [...], message: '', secretPhoto: '' }
+  const [savingOrder, setSavingOrder] = useState(false);
+  const [newPhotoUrl, setNewPhotoUrl] = useState('');
+
   // Tab & Search state
   const [activeTab, setActiveTab] = useState('gifts');
   const [searchQuery, setSearchQuery] = useState('');
@@ -290,6 +295,58 @@ export default function StudioDashboard() {
   const handleLogout = async () => {
     await fetch('/api/auth', { method: 'DELETE' });
     router.push('/studio/login');
+  };
+
+  // ── Order Edit Handlers ───────────────────────────────────────────
+  const startEditOrder = (order) => {
+    setEditingOrder({
+      orderId: order.orderId,
+      photos: order.photos ? [...order.photos] : [],
+      message: order.message || '',
+      secretPhoto: order.secretPhoto || '',
+    });
+  };
+
+  const handleAddPhoto = () => {
+    const url = newPhotoUrl.trim();
+    if (!url) return;
+    setEditingOrder(prev => ({ ...prev, photos: [...prev.photos, url] }));
+    setNewPhotoUrl('');
+  };
+
+  const handleRemovePhoto = (index) => {
+    setEditingOrder(prev => ({ ...prev, photos: prev.photos.filter((_, i) => i !== index) }));
+  };
+
+  const handleSaveOrder = async () => {
+    if (!editingOrder) return;
+    setSavingOrder(true);
+    try {
+      // Fetch the full order first
+      const res = await fetch(`/api/orders/${editingOrder.orderId}`);
+      if (!res.ok) throw new Error('Cannot fetch order');
+      const existing = await res.json();
+      const updated = {
+        ...existing,
+        photos: editingOrder.photos,
+        message: editingOrder.message,
+        secretPhoto: editingOrder.secretPhoto,
+      };
+      const putRes = await fetch(`/api/orders/${editingOrder.orderId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated),
+      });
+      if (!putRes.ok) throw new Error('Failed to save');
+      // Refresh data and update selectedOrder
+      await fetchGifts();
+      setSelectedOrder(updated);
+      setEditingOrder(null);
+      alert('✅ Pesanan berhasil diupdate!');
+    } catch (err) {
+      alert('❌ Gagal menyimpan: ' + err.message);
+    }
+    setSavingOrder(false);
   };
 
   // ── Styles ────────────────────────────────────────────────────────
@@ -666,14 +723,27 @@ export default function StudioDashboard() {
 
       {/* ── View Order / Draft Modal ─────────────────────────────── */}
       {selectedOrder && (
-        <div style={S.modal} onClick={() => setSelectedOrder(null)}>
-          <div style={{ ...S.modalCard, maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-              {selectedOrder.isDraft ? 'Live Draft Details (Not Submitted)' : 'Order Details'}
-            </h2>
+        <div style={S.modal} onClick={() => { setSelectedOrder(null); setEditingOrder(null); setNewPhotoUrl(''); }}>
+          <div style={{ ...S.modalCard, maxWidth: '620px', maxHeight: '92vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 600, margin: 0 }}>
+                {selectedOrder.isDraft ? 'Live Draft Details' : 'Order Details'}
+              </h2>
+              {/* Edit toggle — only for real orders (not drafts) */}
+              {!selectedOrder.isDraft && (
+                <button
+                  onClick={() => editingOrder ? setEditingOrder(null) : startEditOrder(selectedOrder)}
+                  style={{ ...S.actionBtn(editingOrder ? '#EF4444' : '#F59E0B'), padding: '0.3rem 0.8rem', fontSize: '0.75rem' }}
+                >
+                  {editingOrder ? '✕ Batal Edit' : '✏️ Edit Pesanan'}
+                </button>
+              )}
+            </div>
             <div style={{ fontSize: '0.8rem', color: selectedOrder.isDraft ? '#EAB308' : '#888', fontFamily: 'monospace', marginBottom: '1.5rem' }}>
               {selectedOrder.isDraft ? 'DRAFT IN PROGRESS' : selectedOrder.orderId}
             </div>
+
+            {/* ── Order info grid ── */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
               <div><div style={S.label}>From</div><div style={{ fontSize: '1rem', color: '#f5f5f5' }}>{selectedOrder.sender}</div></div>
               <div><div style={S.label}>To</div><div style={{ fontSize: '1rem', color: '#f5f5f5' }}>{selectedOrder.recipient}</div></div>
@@ -704,22 +774,38 @@ export default function StudioDashboard() {
                 </div>
               </div>
             </div>
-            <div style={{ marginBottom: '1.5rem' }}>
-              <div style={S.label}>Message</div>
-              <div style={{ background: '#0a0a0a', border: '1px solid #262626', borderRadius: '8px', padding: '1rem', fontSize: '0.9rem', color: '#ddd', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>
-                {selectedOrder.message || 'No message provided.'}
-              </div>
-            </div>
+
+            {/* ── Message ── */}
             <div style={{ marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                <div style={{...S.label, marginBottom: 0}}>Photos / Videos ({selectedOrder.photos?.length || 0})</div>
-                {selectedOrder.photos && selectedOrder.photos.length > 0 && (
+                <div style={{ ...S.label, marginBottom: 0 }}>Message</div>
+              </div>
+              {editingOrder ? (
+                <textarea
+                  value={editingOrder.message}
+                  onChange={e => setEditingOrder(prev => ({ ...prev, message: e.target.value }))}
+                  rows={8}
+                  style={{ ...S.input, marginBottom: 0, resize: 'vertical', lineHeight: 1.6, fontSize: '0.85rem', whiteSpace: 'pre-wrap' }}
+                />
+              ) : (
+                <div style={{ background: '#0a0a0a', border: '1px solid #262626', borderRadius: '8px', padding: '1rem', fontSize: '0.9rem', color: '#ddd', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>
+                  {selectedOrder.message || 'No message provided.'}
+                </div>
+              )}
+            </div>
+
+            {/* ── Photos / Videos ── */}
+            <div style={{ marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <div style={{ ...S.label, marginBottom: 0 }}>
+                  Photos / Videos ({editingOrder ? editingOrder.photos.length : (selectedOrder.photos?.length || 0)})
+                </div>
+                {!editingOrder && selectedOrder.photos && selectedOrder.photos.length > 0 && (
                   <button
                     onClick={async () => {
                       const photos = selectedOrder.photos;
                       for (let i = 0; i < photos.length; i++) {
                         try {
-                          // Support both plain string URL and {url, caption} object format
                           const rawUrl = typeof photos[i] === 'string' ? photos[i] : photos[i]?.url;
                           if (!rawUrl) continue;
                           const res = await fetch(rawUrl);
@@ -729,13 +815,9 @@ export default function StudioDashboard() {
                           a.href = blobUrl;
                           const ext = rawUrl.split('.').pop().split('?')[0] || 'jpg';
                           a.download = `order_${selectedOrder.orderId}_media_${i + 1}.${ext}`;
-                          document.body.appendChild(a);
-                          a.click();
-                          document.body.removeChild(a);
+                          document.body.appendChild(a); a.click(); document.body.removeChild(a);
                           URL.revokeObjectURL(blobUrl);
-                        } catch (err) {
-                          console.error("Failed to download", err);
-                        }
+                        } catch (err) { console.error('Failed to download', err); }
                       }
                     }}
                     style={{ ...S.actionBtn('#3B82F6'), padding: '4px 10px', fontSize: '0.75rem' }}
@@ -744,35 +826,132 @@ export default function StudioDashboard() {
                   </button>
                 )}
               </div>
-              {selectedOrder.photos && selectedOrder.photos.length > 0 ? (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
-                  {selectedOrder.photos.map((p, i) => (
-                    <a key={i} href={p} target="_blank" rel="noreferrer" style={{ display: 'block', aspectRatio: '1', borderRadius: '6px', overflow: 'hidden', background: '#222' }}>
-                      {p.endsWith('.mp4') ? (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.6rem' }}>VIDEO</div>
-                      ) : (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={p} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      )}
-                    </a>
-                  ))}
-                </div>
+
+              {editingOrder ? (
+                <>
+                  {/* Add new photo URL input */}
+                  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                    <input
+                      type="text"
+                      value={newPhotoUrl}
+                      onChange={e => setNewPhotoUrl(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddPhoto())}
+                      placeholder="Paste URL foto/video lalu Enter atau klik Tambah"
+                      style={{ ...S.input, flex: 1, marginBottom: 0, fontSize: '0.8rem' }}
+                    />
+                    <button
+                      onClick={handleAddPhoto}
+                      disabled={!newPhotoUrl.trim()}
+                      style={{ ...S.actionBtn('#22C55E'), background: '#22C55E20', whiteSpace: 'nowrap', padding: '0 1rem', opacity: newPhotoUrl.trim() ? 1 : 0.5 }}
+                    >
+                      + Tambah
+                    </button>
+                  </div>
+
+                  {/* Photo list with remove buttons */}
+                  {editingOrder.photos.length > 0 ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+                      {editingOrder.photos.map((p, i) => {
+                        const url = typeof p === 'string' ? p : p?.url;
+                        const isVideo = url && (url.includes('.mp4') || url.includes('.mov') || url.includes('.webm'));
+                        return (
+                          <div key={i} style={{ position: 'relative', aspectRatio: '1', borderRadius: '6px', overflow: 'hidden', background: '#222', border: '1px solid #333' }}>
+                            {isVideo ? (
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.6rem', color: '#888' }}>VIDEO</div>
+                            ) : (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            )}
+                            <button
+                              onClick={() => handleRemovePhoto(i)}
+                              style={{
+                                position: 'absolute', top: '3px', right: '3px',
+                                background: 'rgba(239,68,68,0.85)', border: 'none', borderRadius: '50%',
+                                width: '20px', height: '20px', cursor: 'pointer',
+                                fontSize: '0.6rem', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, lineHeight: 1
+                              }}
+                              title="Hapus foto ini"
+                            >✕</button>
+                            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.6)', fontSize: '0.55rem', color: '#aaa', textAlign: 'center', padding: '2px' }}>#{i + 1}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '0.8rem', color: '#666', padding: '1rem', background: '#0a0a0a', border: '1px dashed #333', borderRadius: '8px', textAlign: 'center' }}>Belum ada foto. Paste URL di atas untuk menambah.</div>
+                  )}
+                </>
               ) : (
-                <div style={{ fontSize: '0.8rem', color: '#666' }}>No media uploaded.</div>
+                selectedOrder.photos && selectedOrder.photos.length > 0 ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
+                    {selectedOrder.photos.map((p, i) => {
+                      const url = typeof p === 'string' ? p : p?.url;
+                      return (
+                        <a key={i} href={url} target="_blank" rel="noreferrer" style={{ display: 'block', aspectRatio: '1', borderRadius: '6px', overflow: 'hidden', background: '#222' }}>
+                          {url && (url.endsWith('.mp4') || url.endsWith('.mov')) ? (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.6rem' }}>VIDEO</div>
+                          ) : (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          )}
+                        </a>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div style={{ fontSize: '0.8rem', color: '#666' }}>No media uploaded.</div>
+                )
               )}
             </div>
-            <div style={{ marginBottom: '2rem' }}>
+
+            {/* ── Secret Photo ── */}
+            <div style={{ marginBottom: '1.5rem' }}>
               <div style={S.label}>Secret Ending Media</div>
-              {selectedOrder.secretPhoto ? (
-                <a href={selectedOrder.secretPhoto} target="_blank" rel="noreferrer" style={{ display: 'inline-block', padding: '0.5rem 1rem', background: '#222', borderRadius: '6px', fontSize: '0.8rem', color: '#f5f5f5', textDecoration: 'none' }}>
-                  View Secret File 🔗
-                </a>
+              {editingOrder ? (
+                <input
+                  type="text"
+                  value={editingOrder.secretPhoto}
+                  onChange={e => setEditingOrder(prev => ({ ...prev, secretPhoto: e.target.value }))}
+                  placeholder="URL secret photo/video (opsional)"
+                  style={{ ...S.input, marginBottom: 0, fontSize: '0.8rem' }}
+                />
               ) : (
-                <div style={{ fontSize: '0.8rem', color: '#666' }}>No secret media.</div>
+                selectedOrder.secretPhoto ? (
+                  <a href={selectedOrder.secretPhoto} target="_blank" rel="noreferrer" style={{ display: 'inline-block', padding: '0.5rem 1rem', background: '#222', borderRadius: '6px', fontSize: '0.8rem', color: '#f5f5f5', textDecoration: 'none' }}>
+                    View Secret File 🔗
+                  </a>
+                ) : (
+                  <div style={{ fontSize: '0.8rem', color: '#666' }}>No secret media.</div>
+                )
               )}
             </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <button onClick={() => setSelectedOrder(null)} style={{ padding: '0.6rem 1.5rem', background: '#333', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem' }}>Close</button>
+
+            {/* ── Action buttons ── */}
+            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+              {editingOrder ? (
+                <>
+                  <button
+                    onClick={() => { setEditingOrder(null); setNewPhotoUrl(''); }}
+                    style={{ padding: '0.6rem 1.2rem', background: '#222', color: '#aaa', border: '1px solid #333', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem' }}
+                  >
+                    Batal
+                  </button>
+                  <button
+                    onClick={handleSaveOrder}
+                    disabled={savingOrder}
+                    style={{ ...S.newBtn, background: 'linear-gradient(135deg, #22C55E, #15803D)', opacity: savingOrder ? 0.6 : 1 }}
+                  >
+                    {savingOrder ? 'Menyimpan...' : '💾 Simpan Perubahan'}
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => { setSelectedOrder(null); setEditingOrder(null); setNewPhotoUrl(''); }}
+                  style={{ padding: '0.6rem 1.5rem', background: '#333', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem' }}
+                >
+                  Close
+                </button>
+              )}
             </div>
           </div>
         </div>
