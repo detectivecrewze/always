@@ -648,6 +648,8 @@ export default function OrderForm() {
             <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', fontWeight: 500 }}>Pesan Utama</h2>
             <p style={{ fontSize: '0.85rem', opacity: 0.7, marginBottom: '2rem', lineHeight: 1.6 }}>
               Ceritakan saja intinya secara santai. Tim *copywriter* kami yang akan mengubahnya menjadi kalimat yang sangat puitis dan indah.
+              <br /><br />
+              <strong>Hint:</strong> Semakin banyak pesan / cerita yang kamu bagikan, maka akan semakin personal dan istimewa hasil gift-nya nanti ✨
             </p>
             
             <textarea 

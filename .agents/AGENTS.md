@@ -94,11 +94,18 @@ When the user asks to process a new order, ALWAYS follow these steps:
 > Contoh: `["Happy", "19th", "Birthday", "To", "My", "Precious", "Amorcito", "I", "Love", "You", "Forever"]`.
 > JANGAN menggunakan kalimat panjang di dalam satu caption foto.
 
+> **PENTING**: Jumlah kata di array `words` HARUS SAMA PERSIS dengan jumlah foto yang diupload oleh customer (`orderPhotos.length`). Jangan di-hardcode ke 14 jika fotonya kurang dari itu!
+
 ```javascript
 const order = await cfGet(`order:${orderId}`);
 const orderPhotos = (order && order.photos) ? order.photos : [];
+
+// Buat kalimat yang jumlah katanya SAMA PERSIS dengan orderPhotos.length
+// Contoh: Jika orderPhotos.length = 8, buat array words berisi 8 kata.
+const words = ["Happy", "Birthday", "To", "My", "Favorite", "Person", "I", "Love"];
+
 const photos = [];
-for (let i = 0; i < 14; i++) {
+for (let i = 0; i < orderPhotos.length; i++) {
   photos.push({
     url: orderPhotos[i] || '', // Use actual URL from KV
     caption: words[i] || ''
@@ -179,3 +186,20 @@ const secretPhoto = (order && order.secretPhoto) ? order.secretPhoto : '';
    **JANGAN PERNAH** menggunakan closing template default seperti: 
    *"No matter where life takes us, know that somewhere in the universe, there is a garden blooming with every feeling I have ever held for you. You deserve the world. You deserve all the flowers. You deserve everything."*
    - Buat closing text sendiri yang **dipersonalisasi** berdasarkan cerita/konteks customer (misal: LDR disuruh cepat pulang, apresiasi atas kelulusan, rasa syukur atas kesabaran, dll).
+   - Pastikan teks closing **ringkas dan padat**, jangan terlalu panjang dan bertele-tele.
+
+3. **Hero Subtitle Harus Lebih Bermakna**:
+   - Jika membuat hero section (misal Ultah), jangan hanya menggunakan template standar yang sangat pendek seperti *"20 years of you."*
+   - Buat sedikit lebih panjang dan puitis/bermakna, contohnya *"20 years of you making the world a brighter place."* atau *"20 beautiful years of your journey."*
+
+4. **Handling Out-of-Schema Metaphors (e.g., Time / Waktu)**:
+   - Terkadang customer memilih metafora yang tidak standar (seperti "Time (Waktu)").
+   - **TETAP GUNAKAN** schema yang sama (`reasons` dengan 6 item). Jangan mengubah key pada JSON. Cukup sesuaikan judul dan deskripsi dari Reason Cards agar selaras dengan metafora tersebut (misal: "Jejak Waktu", "Waktu Berjalan", dsb).
+
+5. **Handling Highly Emotional / Bittersweet Messages**:
+   - Jika pesan customer mengandung kesedihan, kekecewaan, curhatan, atau passive-aggressive (contoh: diselingkuhi tapi masih memaafkan, rindu mantan), **JANGAN** menggunakan template ulang tahun yang terlalu ceria dan generik.
+   - Sesuaikan *tone* agar lebih empatik, *bittersweet*, dan mengalir seperti curhatan natural.
+   - Ubah `celebrateBtnText` menjadi sesuatu yang lebih pas, contohnya `"miss you ✨"` atau `"tetap sayang ✨"`.
+
+6. **Gaya Bahasa Anak Muda (ABG / Teenager)**:
+   - Jika mendeteksi customer masih remaja (umur belasan) dan meminta bahasa santai, gunakan gaya bahasa yang sesuai (misal: repetisi huruf "akuuu", "sayangg", "banget", "yaa"). Hal ini membuat hasil *generate* terasa lebih natural dan tidak kaku seperti robot AI.
