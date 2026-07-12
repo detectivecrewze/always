@@ -752,7 +752,7 @@ export default function StudioDashboard() {
             {/* ── Order info grid ── */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
               <div><div style={S.label}>From</div><div style={{ fontSize: '1rem', color: '#f5f5f5' }}>{selectedOrder.sender}</div></div>
-              <div><div style={S.label}>To</div><div style={{ fontSize: '1rem', color: '#f5f5f5' }}>{selectedOrder.recipient}</div></div>
+              <div><div style={S.label}>To</div><div style={{ fontSize: '1rem', color: '#f5f5f5' }}>{selectedOrder.recipient} {selectedOrder.nickname && <span style={{ opacity: 0.7, fontSize: '0.85em' }}>({selectedOrder.nickname})</span>}</div></div>
               <div><div style={S.label}>Moment</div><div style={{ fontSize: '0.9rem', color: '#f5f5f5' }}>{selectedOrder.moment}{selectedOrder.milestoneNumber ? ` (ke-${selectedOrder.milestoneNumber})` : ''} {selectedOrder.specialDate && `(${selectedOrder.specialDate}${selectedOrder.specialDateOccasion ? ` - ${selectedOrder.specialDateOccasion}` : ''})`}</div></div>
               <div><div style={S.label}>Theme</div><div style={{ fontSize: '0.9rem', color: '#f5f5f5' }}>{selectedOrder.theme}</div></div>
               {selectedOrder.relationship && (
@@ -769,7 +769,6 @@ export default function StudioDashboard() {
                   </div>
                 </div>
               )}
-              <div><div style={S.label}>Metaphor</div><div style={{ fontSize: '0.9rem', color: '#f5f5f5' }}>{selectedOrder.metaphorChoice}</div></div>
               <div><div style={S.label}>Writing Tone</div><div style={{ fontSize: '0.9rem', color: '#f5f5f5' }}>{Array.isArray(selectedOrder.tone) ? selectedOrder.tone.join(', ') : selectedOrder.tone}</div></div>
               <div style={{ gridColumn: 'span 2' }}>
                 <div style={S.label}>Music Choice</div>
