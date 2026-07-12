@@ -20,6 +20,7 @@ export default function OrderForm() {
   const [data, setData] = useState({
     sender: '',
     recipient: '',
+    nickname: '',
     moment: 'Ultah',
     milestoneNumber: '',
     recipientBirthdate: '',
@@ -313,10 +314,22 @@ export default function OrderForm() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>Untuk (Panggilan Sayang / Nama)</label>
+                <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>Untuk (Nama Lengkap / Nama Pendek)</label>
                 <input 
                   value={data.recipient} onChange={e => update('recipient', e.target.value)} 
-                  placeholder="Misal: Nadia"
+                  placeholder="Misal: Nadia Aulia"
+                  style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: `1px solid ${currentTheme.text}40`, color: 'inherit', padding: '0.5rem 0', fontSize: '1rem', outline: 'none', transition: 'border-color 0.3s' }}
+                  onFocus={(e) => e.target.style.borderColor = currentTheme.text}
+                  onBlur={(e) => e.target.style.borderColor = `${currentTheme.text}40`}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.25rem' }}>Panggilan Sayang <span style={{ opacity: 0.5 }}>(Opsional)</span></label>
+                <p style={{ fontSize: '0.75rem', opacity: 0.5, marginBottom: '0.5rem', lineHeight: 1.4 }}>Panggilan spesial yang biasa kamu sebut (misal: sayang, cinta, beb, dll)</p>
+                <input 
+                  value={data.nickname} onChange={e => update('nickname', e.target.value)} 
+                  placeholder="Misal: Sayang, Beb, Cinta..."
                   style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: `1px solid ${currentTheme.text}40`, color: 'inherit', padding: '0.5rem 0', fontSize: '1rem', outline: 'none', transition: 'border-color 0.3s' }}
                   onFocus={(e) => e.target.style.borderColor = currentTheme.text}
                   onBlur={(e) => e.target.style.borderColor = `${currentTheme.text}40`}
@@ -531,43 +544,7 @@ export default function OrderForm() {
                 </div>
               </div>
 
-              <div style={{ marginBottom: '2rem' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.2rem' }}>Tema Bagian Metafora</label>
-                <p style={{ fontSize: '0.75rem', opacity: 0.7, marginBottom: '1.25rem', lineHeight: 1.4 }}>Pilih satu tema khusus yang akan kami gunakan untuk salah satu bagian (section) di dalam surat cinta Anda.</p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
-                  {STORY_CONCEPTS.map(concept => {
-                    const isSelected = data.metaphorChoice === concept.id;
-                    return (
-                      <button 
-                        key={concept.id} 
-                        onClick={() => update('metaphorChoice', concept.id)}
-                        type="button"
-                        style={{ 
-                          padding: '1.25rem 1rem', 
-                          borderRadius: '12px', 
-                          cursor: 'pointer', 
-                          transition: 'all 0.3s ease',
-                          background: isSelected ? currentTheme.text : 'rgba(255, 255, 255, 0.03)',
-                          color: isSelected ? currentTheme.bg : currentTheme.text,
-                          border: `1px solid ${isSelected ? currentTheme.text : currentTheme.text + '30'}`,
-                          textAlign: 'left',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '0.5rem'
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span>{concept.icon}</span>
-                          <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{concept.title}</span>
-                        </div>
-                        <span style={{ fontSize: '0.75rem', lineHeight: 1.4, opacity: isSelected ? 0.9 : 0.6 }}>
-                          {concept.desc}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+              {/* Metaphor section hidden — no longer used */}
 
               <div style={{ marginBottom: '2rem' }}>
                 <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.2rem' }}>Tema Bagian Alasan Cinta</label>
@@ -994,7 +971,7 @@ export default function OrderForm() {
                   `📋 *Detail Pesanan:*\n` +
                   `• Order ID: ${orderId}\n` +
                   `• Dari: ${data.sender}${data.relationship ? ` (${data.relationship})` : ''}\n` +
-                  `• Untuk: ${data.recipient}\n` +
+                  `• Untuk: ${data.recipient}${data.nickname ? ` (Panggilan: ${data.nickname})` : ''}\n` +
                   `• Momen: ${data.moment}${data.milestoneNumber ? ` (ke-${data.milestoneNumber})` : ''}\n` +
                   (data.recipientBirthdate ? `• Tgl Lahir Penerima: ${data.recipientBirthdate}\n` : '') +
                   (data.deadline ? `• ⏰ Deadline: ${new Date(data.deadline).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}\n` : '') +
