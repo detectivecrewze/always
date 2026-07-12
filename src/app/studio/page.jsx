@@ -41,7 +41,16 @@ export default function StudioDashboard() {
   const router = useRouter();
 
   // ── Derived data ────────────────────────────────────────────────
-  const pendingOrders = useMemo(() => orders.filter(o => o.status === 'pending'), [orders]);
+  const pendingOrders = useMemo(() => {
+    const pending = orders.filter(o => o.status === 'pending');
+    // Sort by deadline soonest first; orders without deadline go to end
+    return pending.sort((a, b) => {
+      const da = a.deadline ? new Date(a.deadline).getTime() : Infinity;
+      const db = b.deadline ? new Date(b.deadline).getTime() : Infinity;
+      return da - db;
+    });
+  }, [orders]);
+
   const doneOrders = useMemo(() => orders.filter(o => o.status === 'done'), [orders]);
   const liveDrafts = useMemo(() => drafts.filter(d => !orders.some(o => o.slug === d.slug)), [drafts, orders]);
 
@@ -451,8 +460,31 @@ export default function StudioDashboard() {
                       : `${Math.floor(diffMins / 1440)} hari lalu`
                   : null;
 
+                // ── Deadline logic ────────────────────────────────────────
+                const deadlineRaw = o.deadline; // ISO string or null
+                const deadlineDate = deadlineRaw ? new Date(deadlineRaw) : null;
+                const deadlineValid = deadlineDate && !isNaN(deadlineDate.getTime());
+                const msUntilDeadline = deadlineValid ? deadlineDate.getTime() - Date.now() : null;
+                const hoursUntil = msUntilDeadline !== null ? msUntilDeadline / 3600000 : null;
+                const deadlinePassed = hoursUntil !== null && hoursUntil < 0;
+                const deadlineColor = deadlinePassed
+                  ? '#EF4444'
+                  : hoursUntil !== null && hoursUntil < 24
+                    ? '#F59E0B'
+                    : '#22C55E';
+                const deadlineLabel = deadlineValid
+                  ? deadlineDate.toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false })
+                  : null;
+                const deadlineCountdown = hoursUntil !== null
+                  ? deadlinePassed
+                    ? `lewat ${Math.abs(Math.round(hoursUntil))} jam`
+                    : hoursUntil < 24
+                      ? `${Math.floor(hoursUntil)}j ${Math.floor((hoursUntil % 1) * 60)}m lagi`
+                      : `${Math.floor(hoursUntil / 24)}h ${Math.floor(hoursUntil % 24)}j lagi`
+                  : null;
+
                 return (
-                  <div key={o.orderId} style={{ ...S.card, border: '1px solid #3B82F640' }}>
+                  <div key={o.orderId} style={{ ...S.card, border: `1px solid ${deadlineValid ? deadlineColor + '40' : '#3B82F640'}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                       <div style={{ ...S.cardSlug, color: '#3B82F6' }}>{o.orderId}</div>
                       <div style={{ textAlign: 'right' }}>
@@ -467,6 +499,29 @@ export default function StudioDashboard() {
                         )}
                       </div>
                     </div>
+
+                    {/* ── Deadline badge ── */}
+                    {deadlineLabel && (
+                      <div style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+                        background: deadlineColor + '18',
+                        border: `1px solid ${deadlineColor}55`,
+                        borderRadius: '6px',
+                        padding: '0.25rem 0.6rem',
+                        marginBottom: '0.75rem',
+                        fontSize: '0.72rem',
+                        color: deadlineColor,
+                        fontWeight: 600,
+                        letterSpacing: '0.02em',
+                      }}>
+                        <span>{deadlinePassed ? '🔴' : hoursUntil < 24 ? '🟡' : '🟢'}</span>
+                        <span>Deadline: {deadlineLabel}</span>
+                        {deadlineCountdown && (
+                          <span style={{ opacity: 0.75, fontWeight: 400 }}>· {deadlineCountdown}</span>
+                        )}
+                      </div>
+                    )}
+
                     <div style={S.cardName}>From: {o.sender}</div>
                     <div style={{ fontSize: '0.85rem', color: '#aaa', marginBottom: '0.2rem' }}>To: {o.recipient} (/{o.slug})</div>
                     <div style={{ fontSize: '0.8rem', color: '#888', marginBottom: '1rem' }}>Theme: {o.theme} | Moment: {o.moment}</div>
@@ -486,6 +541,7 @@ export default function StudioDashboard() {
                   </div>
                 );
               })}
+
             </div>
           )
         )}
