@@ -841,8 +841,7 @@ export default function StudioDashboard() {
                     />
                     <button
                       onClick={handleAddPhoto}
-                      disabled={!newPhotoUrl.trim()}
-                      style={{ ...S.actionBtn('#22C55E'), background: '#22C55E20', whiteSpace: 'nowrap', padding: '0 1rem', opacity: newPhotoUrl.trim() ? 1 : 0.5 }}
+                      style={{ ...S.actionBtn('#22C55E'), background: '#22C55E20', whiteSpace: 'nowrap', padding: '0 1rem' }}
                     >
                       + Tambah
                     </button>
