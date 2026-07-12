@@ -105,7 +105,7 @@ function FilmStrip({ side }) {
 }
 
 // ── Cinema Modal ──────────────────────────────────────────────────
-function CinemaModal({ secretPhoto, secretCaption, onClose }) {
+function CinemaModal({ secretPhoto, secretCaption, secretVideoMuted, onClose }) {
   const isVideo = secretPhoto && (secretPhoto.endsWith('.mp4') || secretPhoto.endsWith('.webm') || secretPhoto.endsWith('.mov'));
 
   return (
@@ -157,6 +157,7 @@ function CinemaModal({ secretPhoto, secretCaption, onClose }) {
                     loop
                     controls
                     playsInline
+                    muted={secretVideoMuted}
                   />
                 ) : (secretPhoto.match(/\.(jpeg|jpg|gif|png|webp)$/i) || secretPhoto.includes('for-you-always') || secretPhoto.includes('cloudinary')) ? (
                   <img
@@ -234,7 +235,7 @@ const itemVariants = {
 };
 
 // ── Main Component ────────────────────────────────────────────────
-export default function ClosingSection({ closingLine, sender, secretPhoto, secretCaption, closingPreTitle, closingTitle1, closingTitle2, closingParagraph, celebrateBtnText, onCinemaToggle }) {
+export default function ClosingSection({ closingLine, sender, secretPhoto, secretCaption, secretVideoMuted, closingPreTitle, closingTitle1, closingTitle2, closingParagraph, celebrateBtnText, onCinemaToggle }) {
   const [celebrating, setCelebrating] = useState(false);
   const [celebrateCount, setCelebrateCount] = useState(0);
   const [showCinema, setShowCinema] = useState(false);
@@ -325,6 +326,7 @@ export default function ClosingSection({ closingLine, sender, secretPhoto, secre
         <CinemaModal
           secretPhoto={secretPhoto}
           secretCaption={secretCaption}
+          secretVideoMuted={secretVideoMuted}
           onClose={() => {
             setShowCinema(false);
             if (onCinemaToggle) onCinemaToggle(false);

@@ -148,6 +148,7 @@ export default function GiftPage({ data }) {
               sender={data.sender}
               secretPhoto={data.secretPhoto}
               secretCaption={data.secretCaption}
+              secretVideoMuted={data.secretVideoMuted ?? false}
               closingPreTitle={data.closingPreTitle}
               closingTitle1={data.closingTitle1}
               closingTitle2={data.closingTitle2}
@@ -156,8 +157,9 @@ export default function GiftPage({ data }) {
               onCinemaToggle={(isOpen) => {
                 if (!audioRef.current) return;
                 const isVideo = data.secretPhoto && /\.(mp4|webm|mov)$/i.test(data.secretPhoto);
-                if (!isVideo) return; // Keep music playing if it's just a photo
-                
+                // If video is muted, music stays playing — no need to pause
+                if (!isVideo || data.secretVideoMuted) return;
+
                 if (isOpen) {
                   audioRef.current.pause();
                 } else if (isPlaying) {

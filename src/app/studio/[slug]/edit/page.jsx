@@ -103,6 +103,41 @@ function Field({ label, value, onChange, multiline, placeholder }) {
   );
 }
 
+function Toggle({ label, desc, value, onChange }) {
+  return (
+    <div
+      onClick={() => onChange(!value)}
+      style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        gap: '12px', cursor: 'pointer', padding: '12px 14px',
+        background: value ? 'rgba(139,92,246,0.08)' : '#111',
+        border: `1px solid ${value ? '#8B5CF6' : '#1f1f1f'}`,
+        borderRadius: '10px', marginBottom: '10px', userSelect: 'none',
+        transition: 'all 0.2s'
+      }}
+    >
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: '12px', fontWeight: 600, color: value ? '#a78bfa' : '#aaa', marginBottom: '2px' }}>{label}</div>
+        {desc && <div style={{ fontSize: '11px', color: '#555', lineHeight: 1.4 }}>{desc}</div>}
+      </div>
+      <div style={{
+        width: '40px', height: '22px', borderRadius: '11px', flexShrink: 0,
+        background: value ? '#8B5CF6' : '#2a2a2a',
+        border: `1px solid ${value ? '#8B5CF6' : '#333'}`,
+        position: 'relative', transition: 'background 0.2s'
+      }}>
+        <div style={{
+          position: 'absolute', top: '3px',
+          left: value ? '20px' : '3px',
+          width: '14px', height: '14px', borderRadius: '50%',
+          background: value ? '#fff' : '#555',
+          transition: 'left 0.2s, background 0.2s'
+        }} />
+      </div>
+    </div>
+  );
+}
+
 function FileUpload({ label, slug, currentUrl, onUploaded, onRemove }) {
   const [uploading, setUploading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -862,6 +897,12 @@ function TabClosing({ data, set, slug }) {
     <FileUpload label="Secret Photo/Video (Upload)" slug={slug} currentUrl={data.secretPhoto} onUploaded={(url) => set('secretPhoto', url)} onRemove={() => set('secretPhoto', '')} />
     <Field label="Atau Paste Direct Link" value={data.secretPhoto} onChange={(v) => set('secretPhoto', v)} placeholder="https://..." />
     <Field label="Secret Caption" value={data.secretCaption} onChange={(v) => set('secretCaption', v)} placeholder="a special note" />
+    <Toggle
+      label="🔇 Video Tanpa Suara (Muted)"
+      desc="Aktifkan jika customer ingin video kejutan tanpa suara — musik background tetap playing"
+      value={data.secretVideoMuted ?? false}
+      onChange={(v) => set('secretVideoMuted', v)}
+    />
   </>);
 }
 

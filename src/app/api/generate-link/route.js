@@ -101,6 +101,7 @@ export async function POST(request) {
     celebrateBtnText: 'celebrate ✨',
     secretPhoto: '/photos/1.jpg',
     secretCaption: 'this is just for you — my favourite memory of us.',
+    secretVideoMuted: false,
     createdAt: new Date().toISOString().split('T')[0],
     _autoCreated: true, // flag so Studio knows it came from payment
   };
