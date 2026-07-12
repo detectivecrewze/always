@@ -131,32 +131,32 @@ async function main() {
     ],
     introSignOff: "With all my love,\nSapry",
 
-    reasonsTitle1: "The Beautiful",
-    reasonsTitle2: "Flowers",
+    reasonsTitle1: "Alasan",
+    reasonsTitle2: "Terindah",
     reasons: [
       {
-        title: "Endless Gratitude",
-        desc: "Makasih ya udah mau bertahan sama aku, you truly mean everything to me."
+        title: "Rasa Syukur",
+        desc: "Terima kasih sudah memilih bertahan. Kehadiranmu sangat berarti untukku."
       },
       {
-        title: "My Greatest Luck",
-        desc: "Aku selalu ngerasa beruntung banget bisa punya kamu in my life."
+        title: "Keberuntunganku",
+        desc: "Memilikimu adalah salah satu hal terbaik yang pernah terjadi dalam hidupku."
       },
       {
-        title: "Distance Between Us",
-        desc: "Walau jarak memisahkan kita sementara, my heart always stays with you."
+        title: "Meski Berjarak",
+        desc: "Sejauh apapun jarak memisahkan, perasaanku selalu dekat bersamamu."
       },
       {
-        title: "Be Good My Love",
-        desc: "Jangan nakal-nakal ya kalau ngga ada aku, keep being the sweet girl I love."
+        title: "Jaga Diri",
+        desc: "Jangan nakal saat aku tidak ada. Tetaplah jadi sosok yang selalu aku banggakan."
       },
       {
-        title: "Waiting For You",
-        desc: "Aku akan selalu setia nungguin kamu balik ke Samarinda ya sayang."
+        title: "Menunggumu",
+        desc: "Waktu mungkin berjalan lambat, tapi aku selalu sabar menunggumu kembali ke Samarinda."
       },
       {
-        title: "Forever Yours",
-        desc: "No matter how far you are, perasaanku akan selalu menetap untukmu."
+        title: "Selalu Milikmu",
+        desc: "Di manapun kamu berada, hatiku akan selalu menetap dan menjadi tempatmu pulang."
       }
     ],
 
