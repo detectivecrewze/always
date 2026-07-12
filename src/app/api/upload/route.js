@@ -4,6 +4,14 @@ import { isR2Configured, uploadFile, getPublicUrl } from '@/lib/r2';
 import fs from 'fs';
 import path from 'path';
 
+// Remove Next.js default 4MB body size limit — allow large video/audio uploads
+export const config = {
+  api: {
+    bodyParser: false,
+    responseLimit: false,
+  },
+};
+
 export async function POST(request) {
   if (!await verifySession(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

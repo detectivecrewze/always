@@ -3,6 +3,14 @@ import { isR2Configured, uploadFile } from '@/lib/r2';
 import fs from 'fs';
 import path from 'path';
 
+// Remove Next.js default body size limit — allow large video/audio uploads
+export const config = {
+  api: {
+    bodyParser: false,
+    responseLimit: false,
+  },
+};
+
 export async function POST(request) {
   try {
     const formData = await request.formData();
@@ -13,11 +21,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    // Validate file size: 10MB max
     const buffer = Buffer.from(await file.arrayBuffer());
-    if (buffer.length > 10 * 1024 * 1024) {
-      return NextResponse.json({ error: 'File too large (max 10MB)' }, { status: 400 });
-    }
 
     const filename = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
     const key = `orders/${slug}/${Date.now()}-${filename}`;
