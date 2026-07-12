@@ -92,9 +92,18 @@ export default function OrderForm() {
 
   const update = (key, val) => setData(p => ({ ...p, [key]: val }));
 
+  const [validationError, setValidationError] = useState('');
+
   const handleNext = () => {
-    if (step === 1 && (!data.sender || !data.recipient)) return alert('Mohon isi nama pengirim dan penerima.');
-    if (step === 3 && !data.message) return alert('Mohon isi pesan utama yang ingin disampaikan.');
+    setValidationError('');
+    if (step === 1 && (!data.sender || !data.recipient)) {
+      setValidationError('Mohon isi nama pengirim dan penerima.');
+      return;
+    }
+    if (step === 3 && !data.message) {
+      setValidationError('Mohon isi pesan utama yang ingin disampaikan.');
+      return;
+    }
     setStep(s => Math.min(4, s + 1));
   };
 
@@ -900,42 +909,58 @@ export default function OrderForm() {
 
         {/* Navigation Buttons */}
         {step < 5 && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '3rem', paddingTop: '1.5rem', borderTop: `1px solid ${currentTheme.text}20` }}>
-            <button 
-              onClick={handlePrev} 
-              disabled={submitting || step === 1}
-              style={{ 
-                background: 'transparent', border: 'none', color: currentTheme.text, fontSize: '0.9rem', 
-                fontWeight: 500, cursor: step === 1 ? 'default' : 'pointer', opacity: step === 1 ? 0 : 0.7 
-              }}
-            >
-              ← Kembali
-            </button>
-            
-            {step < 4 ? (
-              <button 
-                onClick={handleNext}
-                style={{ 
-                  background: currentTheme.text, color: currentTheme.bg, border: 'none', padding: '0.8rem 2rem', 
-                  borderRadius: '30px', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer', transition: 'transform 0.2s'
-                }}
-                onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'}
-                onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
-              >
-                Selanjutnya →
-              </button>
-            ) : (
-              <button 
-                onClick={handleSubmit} disabled={submitting}
-                style={{ 
-                  background: currentTheme.text, color: currentTheme.bg, border: 'none', padding: '0.8rem 2.5rem', 
-                  borderRadius: '30px', fontSize: '0.9rem', fontWeight: 600, cursor: submitting ? 'wait' : 'pointer',
-                  opacity: submitting ? 0.7 : 1
-                }}
-              >
-                {submitting ? 'Mengirim Data...' : 'Selesai & Kirim'}
-              </button>
+          <div style={{ marginTop: '3rem', paddingTop: '1.5rem', borderTop: `1px solid ${currentTheme.text}20` }}>
+            {/* Inline validation error */}
+            {validationError && (
+              <div style={{
+                background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)',
+                borderRadius: '10px', padding: '0.6rem 1rem', marginBottom: '1rem',
+                fontSize: '0.82rem', color: '#f87171', textAlign: 'center'
+              }}>
+                ⚠️ {validationError}
+              </div>
             )}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <button
+                onClick={handlePrev}
+                disabled={submitting || step === 1}
+                style={{
+                  background: 'transparent', border: 'none', color: currentTheme.text, fontSize: '0.9rem',
+                  fontWeight: 500, cursor: step === 1 ? 'default' : 'pointer', opacity: step === 1 ? 0 : 0.7,
+                  padding: '0.8rem 1rem', minHeight: '44px', touchAction: 'manipulation'
+                }}
+              >
+                ← Kembali
+              </button>
+
+              {step < 4 ? (
+                <button
+                  onClick={handleNext}
+                  style={{
+                    background: currentTheme.text, color: currentTheme.bg, border: 'none',
+                    padding: '0.8rem 2rem', borderRadius: '30px', fontSize: '0.9rem',
+                    fontWeight: 600, cursor: 'pointer', minHeight: '44px', minWidth: '140px',
+                    touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
+                    userSelect: 'none'
+                  }}
+                >
+                  Selanjutnya →
+                </button>
+              ) : (
+                <button
+                  onClick={handleSubmit} disabled={submitting}
+                  style={{
+                    background: currentTheme.text, color: currentTheme.bg, border: 'none',
+                    padding: '0.8rem 2.5rem', borderRadius: '30px', fontSize: '0.9rem',
+                    fontWeight: 600, cursor: submitting ? 'wait' : 'pointer',
+                    opacity: submitting ? 0.7 : 1, minHeight: '44px',
+                    touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent'
+                  }}
+                >
+                  {submitting ? 'Mengirim Data...' : 'Selesai & Kirim'}
+                </button>
+              )}
+            </div>
           </div>
         )}
 
