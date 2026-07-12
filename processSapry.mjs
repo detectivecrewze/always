@@ -170,7 +170,7 @@ async function main() {
 
     closingTitle1: "See You",
     closingTitle2: "Soon",
-    closingText: "Enjoy your 20th birthday, Yutiza. May your days be as beautiful as you are. Cepat pulang ke Samarinda ya.",
+    closingParagraph: "Selamat ulang tahun yang ke-20, Yutiza. Semoga hari-harimu selalu seindah dirimu. Jangan lama-lama di sana, aku tunggu kamu cepat pulang ke Samarinda ya.",
     celebrateBtnText: "miss you ✨"
   };
 
