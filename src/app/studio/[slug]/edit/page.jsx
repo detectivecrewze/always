@@ -773,7 +773,8 @@ function TabGallery({ data, set, slug }) {
           </div>
           <button style={S.smallBtn('#EF4444')} onClick={() => removePhoto(i)}>Remove</button>
         </div>
-        <FileUpload label="Image" slug={slug} currentUrl={typeof p === 'string' ? p : p.url} onUploaded={(url) => setPhoto(i, 'url', url)} onRemove={() => setPhoto(i, 'url', '')} />
+        <FileUpload label="Image Upload" slug={slug} currentUrl={typeof p === 'string' ? p : p.url} onUploaded={(url) => setPhoto(i, 'url', url)} onRemove={() => setPhoto(i, 'url', '')} />
+        <Field label="Or input Image/Video URL directly" value={typeof p === 'string' ? p : p.url} onChange={(v) => setPhoto(i, 'url', v)} placeholder="https://..." />
         <Field label="Caption" value={typeof p === 'string' ? '' : p.caption} onChange={(v) => setPhoto(i, 'caption', v)} placeholder="caption text" />
       </div>
     ))}
