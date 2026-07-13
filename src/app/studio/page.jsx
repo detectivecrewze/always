@@ -770,6 +770,9 @@ export default function StudioDashboard() {
                 </div>
               )}
               <div><div style={S.label}>Writing Tone</div><div style={{ fontSize: '0.9rem', color: '#f5f5f5' }}>{Array.isArray(selectedOrder.tone) ? selectedOrder.tone.join(', ') : selectedOrder.tone}</div></div>
+              {selectedOrder.reasonChoice && (
+                <div><div style={S.label}>Tema Alasan Cinta</div><div style={{ fontSize: '0.9rem', color: '#f5f5f5' }}>{selectedOrder.reasonChoice}</div></div>
+              )}
               <div style={{ gridColumn: 'span 2' }}>
                 <div style={S.label}>Music Choice</div>
                 <div style={{ fontSize: '0.9rem', color: '#f5f5f5' }}>
