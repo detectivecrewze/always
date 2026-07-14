@@ -83,6 +83,19 @@ export default function StudioDashboard() {
   // History pagination
   const paginatedHistory = useMemo(() => filteredDone.slice(0, historyPage * HISTORY_PAGE_SIZE), [filteredDone, historyPage]);
 
+  // Warna tab statistics
+  const themeData = useMemo(() => {
+    const aggregated = {};
+    gifts.forEach(g => {
+      const t = g.theme || 'unknown';
+      if (!aggregated[t]) aggregated[t] = [];
+      aggregated[t].push(g);
+    });
+    return Object.entries(aggregated)
+      .map(([theme, list]) => ({ theme, list, count: list.length }))
+      .sort((a, b) => b.count - a.count);
+  }, [gifts]);
+
   // ── Fetch ────────────────────────────────────────────────────────
   const fetchGifts = async () => {
     try {
@@ -387,6 +400,7 @@ export default function StudioDashboard() {
     { id: 'orders', label: 'Pesanan Masuk', badge: pendingOrders.length, badgeColor: '#3B82F6' },
     { id: 'drafts', label: 'Live Drafts', badge: liveDrafts.length, badgeColor: '#EAB308' },
     { id: 'history', label: 'Riwayat', badge: doneOrders.length, badgeColor: '#888' },
+    { id: 'colors', label: 'Warna', badge: null, badgeColor: null },
     { id: 'qr', label: 'QR Generator', badge: null, badgeColor: null },
   ];
 
@@ -722,6 +736,41 @@ export default function StudioDashboard() {
             <div style={{ flex: '1 1 300px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0a0a', borderRadius: '12px', padding: '2rem', border: '1px solid #1a1a1a' }}>
               <AestheticQRCode url={qrUrl} themeConfig={themes[qrTheme]} size={240} />
             </div>
+          </div>
+        )}
+
+        {/* ── TAB: WARNA (STATISTIK TEMA) ───────────────────────── */}
+        {activeTab === 'colors' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <h2 style={{ color: '#fff', fontSize: '1.2rem', marginBottom: '1rem' }}>Statistik Warna / Tema</h2>
+            {themeData.map(({ theme, list, count }) => (
+              <div key={theme} style={{ ...S.card, padding: '1.25rem', background: '#111' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                  <h3 style={{ fontSize: '1.15rem', margin: 0, color: '#f5f5f5', textTransform: 'capitalize' }}>
+                    {theme.replace(/-/g, ' ')}
+                  </h3>
+                  <span style={{ background: '#333', padding: '4px 10px', borderRadius: '20px', fontSize: '0.8rem', color: '#fff', fontWeight: 600 }}>
+                    {count} Kado
+                  </span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.75rem' }}>
+                  {list.map(g => (
+                    <a key={g.slug || g.id} href={`/${g.slug || g.id}`} target="_blank" rel="noopener noreferrer" style={{
+                      display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#1a1a1a', padding: '0.75rem', borderRadius: '8px',
+                      textDecoration: 'none', color: '#ccc', fontSize: '0.85rem', transition: 'background 0.2s', border: '1px solid #333'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#262626'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = '#1a1a1a'}
+                    >
+                      <span style={{ background: '#3B82F6', color: '#fff', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', fontSize: '0.75rem' }}>🔗</span>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {g.recipient || g.slug || g.id}
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         )}
 

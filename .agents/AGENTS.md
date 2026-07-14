@@ -45,7 +45,7 @@ When the user asks to process a new order, ALWAYS follow these steps:
 
 | Field | Rule |
 |---|---|
-| `timeTitle` | `"Your Journey"` untuk Ultah/individual, `"Our Journey"` untuk Anniversary/LDR/Couples |
+| `timeTitle` | `"Your Journey"` untuk Ultah/individual, `"Our Journey"` untuk Anniversary/LDR/Couples. **PENTING**: Jika momennya spesifik ("Lainnya", misal: "Dinner pertama"), JANGAN gunakan template generik. Buat judul yang spesifik menyesuaikan momen (contoh: `"Since Our First Dinner"`). |
 | `timeStartDate` | Gunakan tanggal lahir penerima untuk Ultah. Gunakan tanggal mulai hubungan untuk Anniversary/LDR. **Validasi tahun** — jika customer input tahun yang tidak masuk akal (misal 2026 untuk lahir), koreksi sendiri. |
 | `metaphorChoice` | Walaupun customer memilih Seasons (4 Musim), Flowers, atau Keepsakes, **tetap gunakan `reasons` (6 buah)**. Jangan pernah menggunakan key `seasons` di `giftData` karena akan menyebabkan error di frontend! |
 | `secretCaption` | Selalu berikan caption kontekstual yang manis. Jangan biarkan kosong. |
@@ -54,7 +54,7 @@ When the user asks to process a new order, ALWAYS follow these steps:
 | `gateTitle` | **WAJIB ADA** di `giftData`. Jangan sampai terlewat agar Amplop depan tidak "undefined". |
 | `recipient` | **WAJIB ADA** di `giftData` (bukan cuma di draft) untuk `<title>` SEO tab browser. |
 | `introText` | **JANGAN** pernah meringkas/memendekkan pesan asli customer! Gunakan seluruh isi pesan customer. Pisahkan per kalimat atau paragraf menjadi **Array of Strings** (contoh: `introText: ["paragraf 1", "paragraf 2"]`) agar rapi di UI. |
-| `reasons` | **Wajib** buat persis **6 buah Reason Cards** (bukan 3 atau 4). Gunakan key `desc` BUKAN `text` (contoh: `{ title: "...", desc: "..." }`). Sesuaikan bahasa `title` dengan writing tone (jangan full English jika tone santai Indoglish). Buat `desc` **padat dan ringkas**, jangan terlalu panjang. |
+| `reasons` | **Wajib** buat persis **6 buah Reason Cards**. Gunakan key `desc` BUKAN `text`. Sesuaikan bahasa `title` dengan writing tone. **CRITICAL**: Buat `desc` **sangat padat dan ringkas** (1 kalimat pendek). **JANGAN PERNAH** menggunakan karakter em-dash (`—`) atau tanda hubung panjang di dalam deskripsi. |
 | `closingTitle1/2` | Sesuaikan dengan momen (Ultah → "Happy Birthday", LDR → "See You Soon", dsb) |
 | `celebrateBtnText` | Kreatif & sesuai momen: "celebrate ✨", "miss you ✨", "goodbye ✨", dll |
 
@@ -148,9 +148,10 @@ const secretPhoto = (order && order.secretPhoto) ? order.secretPhoto : '';
 - Nada tetap positif dan hangat meski ada nuansa sedih
 - Hindari terlalu melodramatik
 
-### Anniversary vs Ultah
+### Anniversary, Ultah, & Momen Khusus
 - **Anniversary**: `timeTitle` = "Our Journey", hitung dari tanggal mulai hubungan, gunakan anniversary date sebagai `specialDate`
 - **Ultah**: `timeTitle` = "Your Journey", hitung dari tanggal lahir
+- **Momen Khusus (Lainnya)**: JANGAN gunakan template generik "Your/Our Journey". Buat `timeTitle` yang merepresentasikan momen tersebut secara spesifik sesuai konteks yang diinginkan customer (contoh: "Since Our First Dinner", "Since Graduation Day").
 
 ---
 
@@ -203,3 +204,6 @@ const secretPhoto = (order && order.secretPhoto) ? order.secretPhoto : '';
 
 6. **Gaya Bahasa Anak Muda (ABG / Teenager)**:
    - Jika mendeteksi customer masih remaja (umur belasan) dan meminta bahasa santai, gunakan gaya bahasa yang sesuai (misal: repetisi huruf "akuuu", "sayangg", "banget", "yaa"). Hal ini membuat hasil *generate* terasa lebih natural dan tidak kaku seperti robot AI.
+
+7. **Standarisasi Teks Gate (Amplop Depan)**:
+   - Secara default, teks untuk halaman Gate (seperti `gateTitle`) **harus selalu** diisi dengan `"Something Special For u"`. Jangan gunakan template teks lain kecuali ada instruksi spesifik.

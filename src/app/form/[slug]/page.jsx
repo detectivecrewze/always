@@ -157,9 +157,9 @@ export default function OrderForm() {
     const selected = Array.from(e.target.files);
     // Reset input so same file can be re-selected
     e.target.value = '';
-    // Videos must be <= 4.5MB. Images will be compressed.
-    const validFiles = selected.filter(f => f.type.startsWith('image/') || f.size <= 4.5 * 1024 * 1024);
-    if (validFiles.length < selected.length) alert('Beberapa video diabaikan karena ukurannya lebih dari 4.5MB.');
+    // Videos must be <= 15MB. Images will be compressed.
+    const validFiles = selected.filter(f => f.type.startsWith('image/') || f.size <= 15 * 1024 * 1024);
+    if (validFiles.length < selected.length) alert('Beberapa video diabaikan karena ukurannya lebih dari 15MB.');
 
     if (isSecret) {
       const file = validFiles[0];
@@ -787,7 +787,7 @@ export default function OrderForm() {
                   </button>
                 )}
                 <input type="file" multiple accept="image/*,video/mp4" ref={fileInputRef} style={{ display: 'none' }} onChange={(e) => handleFileChange(e, false)} />
-                <p style={{ fontSize: '0.72rem', opacity: 0.5, marginTop: '0.5rem', textAlign: 'center' }}>Video maks. 4.5MB. Foto akan dikompres otomatis.</p>
+                <p style={{ fontSize: '0.72rem', opacity: 0.5, marginTop: '0.5rem', textAlign: 'center' }}>Video maks. 15MB. Foto akan dikompres otomatis.</p>
               </div>
 
               {/* Secret Ending — Instant Upload */}
