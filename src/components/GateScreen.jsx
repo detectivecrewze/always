@@ -169,7 +169,7 @@ function buildParticles(count, themeName) {
 }
 
 // ─── Main component ──────────────────────────────────────────────────────────
-export default function GateScreen({ gateSubtitle, onInteraction, onOpen, themeColors, themeName }) {
+export default function GateScreen({ gateSubtitle, onInteraction, onOpen, themeColors, themeName, disableFountain }) {
   const [phase, setPhase] = useState('idle'); // idle | fountain | done
   const [exitPhase, setExitPhase] = useState('none'); // none | left | right
   const timerRef = useRef(null);
@@ -190,11 +190,19 @@ export default function GateScreen({ gateSubtitle, onInteraction, onOpen, themeC
     [activeAccent]
   );
 
-  // Click handler: idle → fountain
+  // Click handler: idle → fountain (or skip fountain if disableFountain is true)
   const handleClick = useCallback(() => {
     if (phase !== 'idle') return;
-    setPhase('fountain');
     if (onInteraction) onInteraction();
+
+    if (disableFountain) {
+      // Skip flower animation — go straight to gift page
+      setPhase('done');
+      setTimeout(() => { if (onOpen) onOpen(); }, 400);
+      return;
+    }
+
+    setPhase('fountain');
     
     // Sequential swipe out animations — start after flowers have settled
     setTimeout(() => setExitPhase('left'), 4200);
@@ -205,11 +213,11 @@ export default function GateScreen({ gateSubtitle, onInteraction, onOpen, themeC
       setPhase('done');
       setTimeout(() => { if (onOpen) onOpen(); }, 400);
     }, 5500);
-  }, [phase, onOpen]);
+  }, [phase, onOpen, disableFountain]);
 
   useEffect(() => () => clearTimeout(timerRef.current), []);
 
-  const isFountain = phase === 'fountain' || phase === 'done';
+  const isFountain = !disableFountain && (phase === 'fountain' || phase === 'done');
 
   return (
     <motion.div

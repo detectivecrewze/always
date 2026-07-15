@@ -76,6 +76,7 @@ export default function GiftPage({ data }) {
           <GateScreen
             themeName={data.theme}
             gateSubtitle={data.gateSubtitle}
+            disableFountain={data.disableFountain ?? false}
             onInteraction={handleInteraction}
             onOpen={handleGateFinish}
             themeColors={[t.particle, t.accent, t.textMuted]}

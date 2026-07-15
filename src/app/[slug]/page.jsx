@@ -2,6 +2,8 @@ import { getGiftBySlug } from '@/lib/getData';
 import { notFound } from 'next/navigation';
 import GiftPage from './GiftPage';
 
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const gift = await getGiftBySlug(slug);
