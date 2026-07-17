@@ -207,3 +207,13 @@ const secretPhoto = (order && order.secretPhoto) ? order.secretPhoto : '';
 
 7. **Standarisasi Teks Gate (Amplop Depan)**:
    - Secara default, teks untuk halaman Gate (seperti `gateTitle`) **harus selalu** diisi dengan `"Something Special For u"`. Jangan gunakan template teks lain kecuali ada instruksi spesifik.
+8. **WhatsApp Preview Template**:
+   - Setiap kali selesai memproses order baru, SELALU lampirkan template pesan WhatsApp di akhir respons agar tim (user) bisa langsung copy-paste ke customer.
+   - Gunakan format ini:
+     ```text
+     Halo kak! ✨
+     Boleh minta tolong di-preview dulu yaa hasilnya (ini belum final):
+     👉 https://anniv.for-you-always.my.id/{KV_ID}
+
+     Nanti kalau ada bagian yang mau direvisi, tolong di-list aja ya kak. Kalau dirasa sudah oke semua, kabarin aku biar langsung aku buatin barcode-nya! 🙏
+     ```

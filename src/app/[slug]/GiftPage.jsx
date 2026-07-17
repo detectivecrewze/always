@@ -125,6 +125,8 @@ export default function GiftPage({ data }) {
               reasons={data.reasons} 
               reasonsTitle1={data.reasonsTitle1}
               reasonsTitle2={data.reasonsTitle2}
+              reasonsHintTap={data.reasonsHintTap}
+              reasonsHintAll={data.reasonsHintAll}
             />
 
             {data.seasons && (

@@ -846,7 +846,9 @@ function TabMusic({ data, set, slug }) {
     <Field label="Song Title" value={music.title} onChange={(v) => setMusic('title', v)} placeholder="Song Title" />
     <Field label="Artist" value={music.artist} onChange={(v) => setMusic('artist', v)} placeholder="Artist Name" />
     <FileUpload label="Audio File" slug={slug} currentUrl={music.file} onUploaded={(url) => setMusic('file', url)} onRemove={() => setMusic('file', '')} />
+    <Field label="Or input Audio URL directly" value={music.file || ''} onChange={(v) => setMusic('file', v)} placeholder="https://..." />
     <FileUpload label="Cover Image" slug={slug} currentUrl={music.cover} onUploaded={(url) => setMusic('cover', url)} onRemove={() => setMusic('cover', '')} />
+    <Field label="Or input Cover Image URL directly" value={music.cover || ''} onChange={(v) => setMusic('cover', v)} placeholder="https://..." />
   </>);
 }
 

@@ -128,7 +128,7 @@ const itemVariants = {
 };
 
 // ── Main Component ────────────────────────────────────────────────
-export default function ReasonCards({ reasons, reasonsTitle1, reasonsTitle2 }) {
+export default function ReasonCards({ reasons, reasonsTitle1, reasonsTitle2, reasonsHintTap, reasonsHintAll }) {
   const [revealedCount, setRevealedCount] = useState(0);
   const allRevealed = revealedCount >= reasons.length;
 
@@ -160,8 +160,8 @@ export default function ReasonCards({ reasons, reasonsTitle1, reasonsTitle2 }) {
           className="font-serif italic text-sm text-text-muted/60"
         >
           {allRevealed
-            ? '✨ all reasons revealed ✨'
-            : `${revealedCount} of ${reasons.length} revealed — tap a card to unlock`}
+            ? (reasonsHintAll || '✨ all reasons revealed ✨')
+            : `${revealedCount} / ${reasons.length} ${reasonsHintTap || 'revealed — tap a card to unlock'}`}
         </motion.p>
       </motion.div>
 
