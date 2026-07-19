@@ -732,10 +732,16 @@ function TabGallery({ data, set, slug }) {
   const movePhoto = (idx, direction) => {
     const next = [...photos];
     if (direction === 'up' && idx > 0) {
-      [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
+      // Only swap the URLs — captions stay locked to their position index
+      const tempUrl = next[idx - 1].url;
+      next[idx - 1] = { ...next[idx - 1], url: next[idx].url };
+      next[idx] = { ...next[idx], url: tempUrl };
       set('photos', next);
     } else if (direction === 'down' && idx < next.length - 1) {
-      [next[idx + 1], next[idx]] = [next[idx], next[idx + 1]];
+      // Only swap the URLs — captions stay locked to their position index
+      const tempUrl = next[idx + 1].url;
+      next[idx + 1] = { ...next[idx + 1], url: next[idx].url };
+      next[idx] = { ...next[idx], url: tempUrl };
       set('photos', next);
     }
   };
