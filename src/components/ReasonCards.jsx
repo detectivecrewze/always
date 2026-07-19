@@ -56,6 +56,16 @@ function AnimatedSparkle() {
 
 const icons = [AnimatedHeart, AnimatedStar, AnimatedFlower, AnimatedMoon, AnimatedMusic, AnimatedSparkle];
 
+// Helper: detect leading emoji in a string
+function extractLeadingEmoji(str) {
+  if (!str) return null;
+  // Match emoji at the end of title (e.g. "Certified Bad Therapist 😂")
+  const emojiRegex = /\p{Emoji_Presentation}|\p{Extended_Pictographic}/gu;
+  const matches = str.match(emojiRegex);
+  return matches ? matches[matches.length - 1] : null;
+}
+
+
 // ── Locked placeholder card ───────────────────────────────────────
 function LockedCard({ index, onReveal }) {
   return (
@@ -89,6 +99,7 @@ function LockedCard({ index, onReveal }) {
 // ── Revealed card ─────────────────────────────────────────────────
 function RevealedCard({ reason, index }) {
   const Icon = icons[index % icons.length];
+  const emoji = extractLeadingEmoji(reason.title) || reason.icon;
   return (
     <motion.div
       layout
@@ -99,12 +110,19 @@ function RevealedCard({ reason, index }) {
       className="glass rounded-2xl p-5 md:p-6"
       style={{ perspective: '800px' }}
     >
-      <div className="mb-3"><Icon /></div>
+      <div className="mb-3">
+        {emoji ? (
+          <span className="text-2xl">{emoji}</span>
+        ) : (
+          <Icon />
+        )}
+      </div>
       <h3 className="font-serif font-bold text-sm md:text-base text-text mb-1">{reason.title}</h3>
       <p className="font-sans text-xs md:text-sm text-text-muted leading-relaxed font-light">{reason.desc}</p>
     </motion.div>
   );
 }
+
 
 const containerVariants = {
   hidden: { opacity: 0 },

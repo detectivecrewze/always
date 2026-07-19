@@ -101,9 +101,10 @@ export default function SeasonsSection({ seasons, seasonsTitle1, seasonsTitle2, 
             
             // Get the icon key (default to the original 4 seasons if not set)
             const iconKey = season.icon || FALLBACK_KEYS[idx % 4];
-            const iconConfig = SEASON_ICONS[iconKey] || SEASON_ICONS.star;
-            const SVGIcon = iconConfig.component;
-            const strokeColor = iconConfig.defaultColor;
+            const iconConfig = SEASON_ICONS[iconKey];
+            const isEmoji = !iconConfig;
+            const SVGIcon = !isEmoji ? iconConfig.component : null;
+            const strokeColor = !isEmoji ? iconConfig.defaultColor : null;
 
             return (
               <motion.div
@@ -126,7 +127,11 @@ export default function SeasonsSection({ seasons, seasonsTitle1, seasonsTitle2, 
                 transition={{ duration: 0.4, ease: 'easeInOut' }}
               >
                 <motion.div layout="position" className="mb-4">
-                  <SVGIcon color={strokeColor} />
+                  {isEmoji ? (
+                    <span className="text-3xl">{season.icon}</span>
+                  ) : (
+                    <SVGIcon color={strokeColor} />
+                  )}
                 </motion.div>
                 
                 <motion.h3 layout="position" className="font-serif font-bold text-base text-text mb-1">
