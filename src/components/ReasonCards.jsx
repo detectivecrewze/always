@@ -112,7 +112,13 @@ function RevealedCard({ reason, index }) {
     >
       <div className="mb-3">
         {emoji ? (
-          <span className="text-2xl">{emoji}</span>
+          <motion.span
+            className="text-2xl inline-block"
+            animate={{ scale: [1, 1.2, 1], opacity: [0.85, 1, 0.85] }}
+            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut', delay: index * 0.3 }}
+          >
+            {emoji}
+          </motion.span>
         ) : (
           <Icon />
         )}
