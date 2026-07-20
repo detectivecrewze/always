@@ -818,7 +818,9 @@ export default function StudioDashboard() {
                   </div>
                 </div>
               )}
+              <div><div style={S.label}>Bahasa</div><div style={{ fontSize: '0.9rem', color: '#f5f5f5' }}>{selectedOrder.language === 'Lainnya / Custom' && selectedOrder.customLanguage ? `Custom: ${selectedOrder.customLanguage}` : (selectedOrder.language || '-')}</div></div>
               <div><div style={S.label}>Writing Tone</div><div style={{ fontSize: '0.9rem', color: '#f5f5f5' }}>{Array.isArray(selectedOrder.tone) ? selectedOrder.tone.join(', ') : selectedOrder.tone}</div></div>
+
               {selectedOrder.reasonChoice && (
                 <div><div style={S.label}>Tema Alasan Cinta</div><div style={{ fontSize: '0.9rem', color: '#f5f5f5' }}>{selectedOrder.reasonChoice}</div></div>
               )}

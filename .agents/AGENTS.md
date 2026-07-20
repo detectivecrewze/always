@@ -91,19 +91,22 @@ When the user asks to process a new order, ALWAYS follow these steps:
 
 ## Example Pattern for Photos
 
-> **ATURAN GALLERY QUOTES**: Caption untuk foto (array `words`) HARUS berupa **1 kata pendek per foto** yang jika digabungkan membentuk sebuah kalimat manis. 
-> Contoh: `["Happy", "19th", "Birthday", "To", "My", "Precious", "Amorcito", "I", "Love", "You", "Forever"]`.
-> JANGAN menggunakan kalimat panjang di dalam satu caption foto.
-
-> **PENTING**: Jumlah kata di array `words` HARUS SAMA PERSIS dengan jumlah foto yang diupload oleh customer (`orderPhotos.length`). Jangan di-hardcode ke 14 jika fotonya kurang dari itu!
+> **ATURAN GALLERY QUOTES (REVISI PENTING)**: 
+> 1. Caption untuk foto (array `words`) HARUS berupa **1 kata pendek per foto** yang jika digabungkan membentuk sebuah kalimat manis. 
+> 2. **SANGAT KRITIKAL**: JUMLAH KATA dalam kalimatmu **HARUS SAMA PERSIS** dengan jumlah foto aktual di `orderPhotos.length`! Jangan ditebak, jangan di-hardcode ke 14/15, dan **JANGAN di-looping/modulo** (karena akan menghasilkan kalimat aneh/berulang).
+> 3. Cara yang benar: Selalu cari tahu dulu berapa jumlah `orderPhotos.length` yang di-upload customer, lalu rangkai sebuah kalimat yang jumlah katanya *tepat dan pas* dengan jumlah foto tersebut.
+> 
+> Contoh: Jika customer hanya upload 8 foto, buatlah kalimat dengan tepat 8 kata:
+> `const words = ["Selamat", "Ulang", "Tahun", "Gadis", "Paling", "Cantik", "Kesayanganku", "🤍"];`
 
 ```javascript
 const order = await cfGet(`order:${orderId}`);
 const orderPhotos = (order && order.photos) ? order.photos : [];
 
-// Buat kalimat yang jumlah katanya SAMA PERSIS dengan orderPhotos.length
-// Contoh: Jika orderPhotos.length = 8, buat array words berisi 8 kata.
-const words = ["Happy", "Birthday", "To", "My", "Favorite", "Person", "I", "Love"];
+// Rangkai kalimat yang jumlah katanya SAMA PERSIS dengan orderPhotos.length!
+// JANGAN gunakan modulo/looping array untuk mengisi kekurangan kata.
+// Misal foto ada 8, siapkan array berisi 8 kata.
+const words = ["Selamat", "Ulang", "Tahun", "Orang", "Paling", "Spesial", "Buat", "Aku"];
 
 const photos = [];
 for (let i = 0; i < orderPhotos.length; i++) {
@@ -133,7 +136,7 @@ Biar hasil generate tidak monoton, selalu variasikan judul-judul di bawah ini (j
   - "Visual" + "Diaries"
 
 ### 2. Reason Cards (`reasonsTitle1` & `reasonsTitle2`)
-- **Default:** "The Reason" + "I Love You"
+- **Default:** "6 Reasons Why" + "I Love You"
 - **Opsi Lain:**
   - "Why You Are" + "So Special"
   - "Things I" + "Adore About You"
@@ -167,6 +170,8 @@ Biar hasil generate tidak monoton, selalu variasikan judul-judul di bawah ini (j
 - **Lupa `recipient` dan `gateSubtitle` di `giftData`**: Akan menyebabkan browser tab title dan amplop depan merender tulisan "undefined".
 - **Lupa `timeEnabled: true` dan `timeSubtitle`**: Time Section tidak akan muncul atau formatnya tidak lengkap.
 - **Salah Key pada Reason Cards**: Key untuk teks adalah `desc`, BUKAN `text`. Jika salah, deskripsi akan kosong di UI.
+- **Salah Key pada Season Cards**: Key untuk Season Cards adalah `name`, `teaser` (teks pendek sebelum di-tap), dan `message` (teks panjang saat di-tap). Jangan gunakan `desc` karena akan membuat kartu kosong.
+- **Salah Key pada Closing Section**: Key untuk teks panjang di akhir surat adalah `closingParagraph`, BUKAN `closingText`. Jika menggunakan `closingText`, teks akan otomatis kembali ke template bawaan bahasa Inggris.
 - **Jangan mulai YouTube search** untuk lagu. User yang input manual.
 - **Forgetting to fetch `order.photos`**: DO NOT hardcode `/photos/1.jpg`.
 - **Misgendering / Wrong Pronoun in Headers**: Use "Your Journey" for birthdays (e.g. "Ultah"), and "Our Journey" for Anniversaries/LDR.
@@ -281,3 +286,9 @@ Biar hasil generate tidak monoton, selalu variasikan judul-judul di bawah ini (j
     - Untuk *Reason Cards*, tambahkan properti `icon` berisi **1 emoji** (contoh: `icon: "😂"` atau `icon: "🥀"`) pada setiap objek di array `reasons`. Jangan gabungkan emoji di dalam `title`.
     - Untuk *Season Cards*, ubah properti `icon` dari yang sebelumnya teks string standar (`spring`, `summer`, dll) menjadi **1 emoji** (contoh: `icon: "🚦"` atau `icon: "🌧️"`) pada setiap objek di array `seasons`. Jangan gabungkan emoji di dalam `name`.
     - Sistem website sudah mendukung *render* otomatis emoji menjadi ikon besar yang mempercantik tampilan kartu jika diset melalui *field* `icon`.
+
+12. **Naturalisasi Bahasa Indonesia (Anti-Kaku)**:
+    - **SANGAT KRITIKAL**: Hindari menghasilkan teks Bahasa Indonesia yang baku, kaku, dan terlalu formal layaknya robot atau buku cetak.
+    - **Tiru Gaya Asli Customer**: Jika pesan dari customer cukup panjang, perhatikan dan **TIRU** pilihan kosakata mereka. Jika mereka memakai kata "nggak", "udah", "banget", "bikin", "capek", maka gunakan kata-kata yang sama. 
+    - **Puitis yang Natural**: Sekalipun customer memilih *writing tone* "Puitis", JANGAN otomatis berubah menggunakan bahasa sastra kuno atau terlalu berat (contoh hindari: "niscaya", "senantiasa", "dikau", "kalbu") KECUALI customer memang menulis dengan gaya seperti itu. Gunakan "Puitis Santai/Modern".
+    - Prioritas utama dari setiap surat adalah membuatnya terasa 100% ditulis oleh manusia yang sedang berbicara langsung ke pasangannya.

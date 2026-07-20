@@ -27,7 +27,10 @@ export default function OrderForm() {
     relationship: '',
     deadline: '',
     theme: 'vintage-burgundy',
-    tone: ['Puitis'],
+    tone: ['Santai'],
+    language: 'Full Indonesia',
+    customLanguage: '',
+
     musicChoice: 'playlist', // 'playlist', 'request' or 'random'
     music: '',
     specialDate: '',
@@ -241,7 +244,19 @@ export default function OrderForm() {
     { id: 'gratitude', icon: <Sparkles size={24} strokeWidth={1.5} />, title: 'Rasa Syukur (Gratitude)', desc: 'Segala hal yang kamu syukuri atas kehadiran dia.' },
   ];
 
-  const TONES = ['Santai', 'Puitis', 'Indoglish', 'Full English'];
+  const LANGUAGES = [
+    { id: 'Full Indonesia', label: 'Full Indonesia', hint: 'Surat ditulis 100% dalam Bahasa Indonesia.' },
+    { id: 'Full English', label: 'Full English', hint: 'Surat ditulis 100% dalam Bahasa Inggris.' },
+    { id: 'Indoglish', label: 'Indoglish', hint: 'Campuran Bahasa Indonesia dan Inggris secara natural.' },
+    { id: 'Lainnya / Custom', label: 'Lainnya / Custom ✏️', hint: 'Ketik preferensi bahasamu sendiri di bawah ini.' },
+  ];
+  const VIBES = [
+    { id: 'Santai', label: 'Santai 😊', hint: 'Kasual, seperti ngobrol biasa, pakai kata-kata sehari-hari.' },
+    { id: 'Puitis', label: 'Puitis ✨', hint: 'Bermakna dan mengalir, tapi tetap natural, bukan kaku seperti sajak.' },
+    { id: 'Romantis', label: 'Romantis 🌹', hint: 'Hangat, intim, dan penuh rasa sayang yang tulus.' },
+    { id: 'Mengharukan', label: 'Mengharukan 🥺', hint: 'Dalam, emosional, cocok untuk perasaan yang sulit diungkapkan.' },
+    { id: 'Bucin / ABG', label: 'Bucin / ABG 💕', hint: 'Manja, lebay (sedikit!), pakai repetisi kata dan banyak emoji 🥰' },
+  ];
   const MOMENTS = ['Ultah', 'Anniversary', 'LDR', 'Wisuda', 'Friendship', 'Just Because', 'Lainnya'];
   const RELATIONSHIPS = ['Pasangan', 'Sahabat', 'Teman', 'Keluarga', 'Lainnya'];
 
@@ -584,36 +599,104 @@ export default function OrderForm() {
                 </div>
               </div>
 
+              {/* LANGUAGE SELECTION */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '1rem' }}>Gaya Bahasa Penulisan (Bisa pilih lebih dari satu)</label>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {TONES.map(m => {
-                    const isSelected = Array.isArray(data.tone) ? data.tone.includes(m) : data.tone === m;
+                <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>Bahasa Penulisan</label>
+                <p style={{ fontSize: '0.72rem', opacity: 0.5, marginBottom: '1rem', lineHeight: 1.5 }}>Pilih satu bahasa utama untuk surat kamu.</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '0.75rem' }}>
+                  {LANGUAGES.map(lang => {
+                    const isSelected = data.language === lang.id;
                     return (
-                      <button 
-                        key={m} 
-                        onClick={() => {
-                          let current = Array.isArray(data.tone) ? [...data.tone] : [data.tone];
-                          if (isSelected) {
-                            current = current.filter(t => t !== m);
-                            if (current.length === 0) current = [m]; // Ensure at least one is selected
-                          } else {
-                            current.push(m);
-                          }
-                          update('tone', current);
-                        }}
-                        style={{ 
-                          padding: '0.5rem 1rem', borderRadius: '8px', fontSize: '0.8rem', cursor: 'pointer', transition: 'all 0.3s',
-                          background: isSelected ? currentTheme.text + '20' : 'transparent',
-                          color: currentTheme.text,
-                          border: `1px solid ${isSelected ? currentTheme.text : 'transparent'}`
+                      <button
+                        key={lang.id}
+                        onClick={() => update('language', lang.id)}
+                        style={{
+                          padding: '0.5rem 1.1rem', borderRadius: '8px', fontSize: '0.82rem', cursor: 'pointer', transition: 'all 0.3s',
+                          background: isSelected ? currentTheme.text : 'transparent',
+                          color: isSelected ? currentTheme.bg : currentTheme.text,
+                          border: `1px solid ${isSelected ? currentTheme.text : currentTheme.text + '40'}`,
+                          fontWeight: isSelected ? 600 : 400
                         }}
                       >
-                        {m}
+                        {lang.label}
                       </button>
                     );
                   })}
                 </div>
+                {/* Hint for selected language */}
+                {data.language && (() => {
+                  const selected = LANGUAGES.find(l => l.id === data.language);
+                  return selected ? (
+                    <p style={{ fontSize: '0.72rem', opacity: 0.55, lineHeight: 1.5, padding: '0.5rem 0.75rem', borderLeft: `2px solid ${currentTheme.text}40`, marginTop: '0.25rem' }}>
+                      💬 {selected.hint}
+                    </p>
+                  ) : null;
+                })()}
+                {/* Custom language text input */}
+                {data.language === 'Lainnya / Custom' && (
+                  <div style={{ marginTop: '0.75rem' }}>
+                    <input
+                      type="text"
+                      value={data.customLanguage || ''}
+                      onChange={e => update('customLanguage', e.target.value)}
+                      placeholder="Contoh: Bahasa Jawa, campuran Korea-Indonesia, dll..."
+                      style={{
+                        width: '100%', padding: '0.6rem 0.9rem', borderRadius: '8px', fontSize: '0.82rem',
+                        background: 'rgba(0,0,0,0.1)', border: `1px solid ${currentTheme.text}40`,
+                        color: 'inherit', outline: 'none'
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* VIBE / TONE SELECTION */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>Gaya Penulisan (Vibe)</label>
+                <p style={{ fontSize: '0.72rem', opacity: 0.5, marginBottom: '1rem', lineHeight: 1.5 }}>Boleh pilih lebih dari satu untuk hasil yang lebih pas.</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '0.75rem' }}>
+                  {VIBES.map(vibe => {
+                    const toneArr = Array.isArray(data.tone) ? data.tone : (data.tone ? [data.tone] : []);
+                    const isSelected = toneArr.includes(vibe.id);
+                    return (
+                      <button
+                        key={vibe.id}
+                        onClick={() => {
+                          let current = [...toneArr];
+                          if (isSelected) {
+                            current = current.filter(t => t !== vibe.id);
+                            if (current.length === 0) current = [vibe.id];
+                          } else {
+                            current.push(vibe.id);
+                          }
+                          update('tone', current);
+                        }}
+                        style={{
+                          padding: '0.5rem 1.1rem', borderRadius: '8px', fontSize: '0.82rem', cursor: 'pointer', transition: 'all 0.3s',
+                          background: isSelected ? currentTheme.text + '25' : 'transparent',
+                          color: currentTheme.text,
+                          border: `1px solid ${isSelected ? currentTheme.text : currentTheme.text + '40'}`,
+                          fontWeight: isSelected ? 600 : 400
+                        }}
+                      >
+                        {vibe.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {/* Hints for selected vibes */}
+                {Array.isArray(data.tone) && data.tone.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginTop: '0.25rem' }}>
+                    {data.tone.map(t => {
+                      const v = VIBES.find(vb => vb.id === t);
+                      return v ? (
+                        <p key={t} style={{ fontSize: '0.72rem', opacity: 0.55, lineHeight: 1.5, padding: '0.4rem 0.75rem', borderLeft: `2px solid ${currentTheme.text}40` }}>
+                          💬 <strong>{v.label.split(' ')[0]}</strong>: {v.hint}
+                        </p>
+                      ) : null;
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           </div>
