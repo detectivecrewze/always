@@ -732,21 +732,17 @@ function TabGallery({ data, set, slug }) {
   const movePhoto = (idx, direction) => {
     const next = [...photos];
     if (direction === 'up' && idx > 0) {
-      // Only swap the URLs — captions stay locked to their position index
-      const tempUrl = next[idx - 1].url;
-      next[idx - 1] = { ...next[idx - 1], url: next[idx].url };
-      next[idx] = { ...next[idx], url: tempUrl };
+      [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
       set('photos', next);
     } else if (direction === 'down' && idx < next.length - 1) {
-      // Only swap the URLs — captions stay locked to their position index
-      const tempUrl = next[idx + 1].url;
-      next[idx + 1] = { ...next[idx + 1], url: next[idx].url };
-      next[idx] = { ...next[idx], url: tempUrl };
+      [next[idx + 1], next[idx]] = [next[idx], next[idx + 1]];
       set('photos', next);
     }
   };
 
   const [uploadingBulk, setUploadingBulk] = useState(false);
+  const [mixFlash, setMixFlash] = useState(false);
+
   const handleBulkUpload = async (e) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -771,6 +767,62 @@ function TabGallery({ data, set, slug }) {
     e.target.value = '';
   };
 
+  const isVid = (url) => url && /\.(mp4|webm|mov)$/i.test(url);
+
+  const mixPhotos = () => {
+    if (photos.length < 2) return;
+
+    const getUrl = (p) => (typeof p === 'string' ? p : p.url) || '';
+
+    // Extract URLs only — captions stay locked to their position index
+    const allUrls = photos.map(getUrl);
+    const photoUrls = allUrls.filter(u => u && !isVid(u));
+    const videoUrls = allUrls.filter(u => isVid(u));
+
+    let mixedUrls;
+
+    if (photoUrls.length > 0 && videoUrls.length > 0) {
+      // Smart Interleave: alternate photo/video URLs
+      mixedUrls = [];
+      let pi = 0, vi = 0;
+      while (pi < photoUrls.length || vi < videoUrls.length) {
+        const photoLeft = photoUrls.length - pi;
+        const videoLeft = videoUrls.length - vi;
+        if (photoLeft >= videoLeft && pi < photoUrls.length) {
+          mixedUrls.push(photoUrls[pi++]);
+          if (vi < videoUrls.length) mixedUrls.push(videoUrls[vi++]);
+        } else if (vi < videoUrls.length) {
+          mixedUrls.push(videoUrls[vi++]);
+          if (pi < photoUrls.length) mixedUrls.push(photoUrls[pi++]);
+        }
+      }
+      // Append empty slots at the end
+      const emptyCount = allUrls.filter(u => !u).length;
+      for (let i = 0; i < emptyCount; i++) mixedUrls.push('');
+    } else {
+      // Fisher-Yates shuffle of URLs only
+      mixedUrls = [...allUrls];
+      for (let i = mixedUrls.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [mixedUrls[i], mixedUrls[j]] = [mixedUrls[j], mixedUrls[i]];
+      }
+    }
+
+    // Apply shuffled URLs back — caption stays locked to its slot
+    const next = photos.map((p, i) => ({
+      ...(typeof p === 'string' ? { url: p, caption: '' } : p),
+      url: mixedUrls[i] ?? '',
+    }));
+    set('photos', next);
+    setMixFlash(true);
+    setTimeout(() => setMixFlash(false), 2000);
+  };
+
+  const photoCount = photos.filter(p => { const u = (typeof p === 'string' ? p : p.url) || ''; return u && !isVid(u); }).length;
+  const videoCount = photos.filter(p => isVid((typeof p === 'string' ? p : p.url) || '')).length;
+  const hasMedia = photos.filter(p => (typeof p === 'string' ? p : p.url)).length >= 2;
+  const isMixed = photoCount > 0 && videoCount > 0;
+
   return (<>
     <div style={S.sectionTitle}>Photo Gallery</div>
     <div style={S.sectionDesc}>Upload photos with captions. You can add up to 15 photos.</div>
@@ -793,6 +845,16 @@ function TabGallery({ data, set, slug }) {
         <Field label="Caption" value={typeof p === 'string' ? '' : p.caption} onChange={(v) => setPhoto(i, 'caption', v)} placeholder="caption text" />
       </div>
     ))}
+    {/* Distribution pill */}
+    {photos.length > 0 && (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem', marginBottom: '0.25rem' }}>
+        <span style={{ fontSize: '0.65rem', color: '#555' }}>
+          {photoCount > 0 && `📸 ${photoCount} foto`}
+          {photoCount > 0 && videoCount > 0 && ' · '}
+          {videoCount > 0 && `🎬 ${videoCount} video`}
+        </span>
+      </div>
+    )}
     <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
       {photos.length < 15 && (
         <button style={S.smallBtn('#22C55E')} onClick={addPhoto}>+ Add Photo ({photos.length}/15)</button>
@@ -801,6 +863,25 @@ function TabGallery({ data, set, slug }) {
         {uploadingBulk ? 'Uploading...' : '📁 Bulk Upload Photos'}
         <input type="file" multiple accept="image/*,video/*" onChange={handleBulkUpload} style={{ display: 'none' }} disabled={uploadingBulk} />
       </label>
+      <button
+        onClick={mixPhotos}
+        disabled={!hasMedia}
+        title={
+          !hasMedia
+            ? 'Tambah minimal 2 foto/video dulu.'
+            : isMixed
+            ? 'Smart Interleave: foto & video akan disusun bergantian'
+            : 'Shuffle: acak urutan foto secara random'
+        }
+        style={{
+          ...S.smallBtn(hasMedia ? '#F59E0B' : '#444'),
+          opacity: hasMedia ? 1 : 0.45,
+          cursor: hasMedia ? 'pointer' : 'not-allowed',
+          fontWeight: 500,
+        }}
+      >
+        {mixFlash ? '✓ Gallery re-mixed!' : isMixed ? '🔀 Mix Photos & Videos' : '🔀 Shuffle Photos'}
+      </button>
     </div>
   </>);
 }
