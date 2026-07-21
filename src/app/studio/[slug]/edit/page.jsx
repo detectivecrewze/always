@@ -782,18 +782,19 @@ function TabGallery({ data, set, slug }) {
     let mixedUrls;
 
     if (photoUrls.length > 0 && videoUrls.length > 0) {
-      // Smart Interleave: alternate photo/video URLs
+      // Checkerboard Interleave (silang): Photo, Video, Video, Photo
       mixedUrls = [];
       let pi = 0, vi = 0;
-      while (pi < photoUrls.length || vi < videoUrls.length) {
-        const photoLeft = photoUrls.length - pi;
-        const videoLeft = videoUrls.length - vi;
-        if (photoLeft >= videoLeft && pi < photoUrls.length) {
-          mixedUrls.push(photoUrls[pi++]);
-          if (vi < videoUrls.length) mixedUrls.push(videoUrls[vi++]);
-        } else if (vi < videoUrls.length) {
-          mixedUrls.push(videoUrls[vi++]);
+      const totalMedia = photoUrls.length + videoUrls.length;
+      for (let i = 0; i < totalMedia; i++) {
+        // Pattern repeats every 4 items: indices 0, 3 want Photo. Indices 1, 2 want Video.
+        const wantsPhoto = (i % 4 === 0 || i % 4 === 3);
+        if (wantsPhoto) {
           if (pi < photoUrls.length) mixedUrls.push(photoUrls[pi++]);
+          else mixedUrls.push(videoUrls[vi++]);
+        } else {
+          if (vi < videoUrls.length) mixedUrls.push(videoUrls[vi++]);
+          else mixedUrls.push(photoUrls[pi++]);
         }
       }
       // Append empty slots at the end
