@@ -119,20 +119,27 @@ function TimeCard({ value, label, delay }) {
 }
 
 // ── Main Component ────────────────────────────────────────────────
-export default function TimeSection({ timeTitle, timeSubtitle, timeStartDate }) {
+export default function TimeSection({ timeTitle, timeSubtitle, timeStartDate, timeZone = 'Asia/Jakarta' }) {
   const [elapsed, setElapsed] = useState({ years: 0, months: 0, days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
     if (!timeStartDate) return;
     
-    // Normalize to prevent UTC shift. 'YYYY-MM-DD' becomes local midnight
+    // Normalize to prevent UTC shift. Use / for better browser compatibility.
     let normalizedStartDate = timeStartDate;
     if (/^\d{4}-\d{2}-\d{2}$/.test(normalizedStartDate)) {
-      normalizedStartDate += 'T00:00:00';
+      normalizedStartDate = normalizedStartDate.replace(/-/g, '/') + ' 00:00:00';
     }
 
     const tick = () => {
-      const now = new Date();
+      const realNow = new Date();
+      let nowStr;
+      try {
+        nowStr = realNow.toLocaleString('en-US', { timeZone });
+      } catch (e) {
+        nowStr = realNow.toLocaleString('en-US', { timeZone: 'Asia/Jakarta' });
+      }
+      const now = new Date(nowStr);
       const startDate = new Date(normalizedStartDate);
       const diff = now.getTime() - startDate.getTime();
       

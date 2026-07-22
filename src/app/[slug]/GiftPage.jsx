@@ -108,6 +108,7 @@ export default function GiftPage({ data }) {
                 timeTitle={data.timeTitle}
                 timeSubtitle={data.timeSubtitle}
                 timeStartDate={data.timeStartDate}
+                timeZone={data.timeZone}
               />
             )}
 

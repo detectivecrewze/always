@@ -356,6 +356,20 @@ function TabTime({ data, set }) {
       <Field label="Start Date" value={data.timeStartDate || ''} onChange={(v) => set('timeStartDate', v)} placeholder="YYYY-MM-DD" />
       <div style={{ fontSize: '0.7rem', color: '#666', marginTop: '-0.5rem', marginBottom: '1rem' }}>Format: YYYY-MM-DD (e.g. 2022-02-14)</div>
       
+      <div style={{ marginBottom: '12px' }}>
+        <div style={{ fontSize: '0.75rem', color: '#666', marginBottom: '4px', fontWeight: 600 }}>Timezone</div>
+        <select 
+          style={{ ...S.input, appearance: 'auto', marginBottom: 0 }}
+          value={data.timeZone || 'Asia/Jakarta'}
+          onChange={(e) => set('timeZone', e.target.value)}
+        >
+          <option value="Asia/Jakarta">WIB (Asia/Jakarta)</option>
+          <option value="Asia/Makassar">WITA (Asia/Makassar)</option>
+          <option value="Asia/Jayapura">WIT (Asia/Jayapura)</option>
+          <option value="UTC">UTC</option>
+        </select>
+      </div>
+      
       <Field label="Pre-title" value={data.timeSubtitle} onChange={(v) => set('timeSubtitle', v)} placeholder="days of" />
       <Field label="Main Title" value={data.timeTitle} onChange={(v) => set('timeTitle', v)} placeholder="Loving You" />
     </div>

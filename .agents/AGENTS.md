@@ -54,7 +54,7 @@ When the user asks to process a new order, ALWAYS follow these steps:
 | `gateSubtitle` | **WAJIB ADA** di `giftData`. Jangan sampai terlewat agar Amplop depan tidak "undefined". |
 | `recipient` | **WAJIB ADA** di `giftData` (bukan cuma di draft) untuk `<title>` SEO tab browser. |
 | `introText` | **JANGAN** pernah meringkas/memendekkan pesan asli customer! Gunakan seluruh isi pesan customer. Pisahkan per kalimat atau paragraf menjadi **Array of Strings** (contoh: `introText: ["paragraf 1", "paragraf 2"]`) agar rapi di UI. |
-| `reasons` | **Wajib** buat persis **6 buah Reason Cards**. Gunakan key `desc` BUKAN `text`. Sesuaikan bahasa `title` dengan writing tone. **CRITICAL**: Buat `desc` **sangat padat dan ringkas** (1 kalimat pendek). **JANGAN PERNAH** menggunakan karakter em-dash (`—`) atau tanda hubung panjang di dalam deskripsi. |
+| `reasons` | **Wajib** buat persis **6 buah Reason Cards**. Gunakan key `desc` BUKAN `text`. Sesuaikan bahasa `title` dengan writing tone. **CRITICAL**: Buat `desc` **sangat padat dan ringkas** (1 kalimat pendek). **JANGAN PERNAH** menggunakan karakter em-dash (`—`) atau tanda hubung panjang di **section manapun**. |
 | `closingTitle1/2` | Sesuaikan dengan momen (Ultah → "Happy Birthday", LDR → "See You Soon", dsb) |
 | `celebrateBtnText` | Kreatif & sesuai momen: "celebrate ✨", "miss you ✨", "goodbye ✨", dll |
 | `sender` | **WAJIB ADA** di `giftData`. Nama pengirim (from) agar muncul sebagai tanda tangan di bagian akhir Closing Section. |
@@ -202,7 +202,7 @@ Biar hasil generate tidak monoton, selalu variasikan judul-judul di bawah ini (j
 
 ### Anniversary, Ultah, & Momen Khusus
 - **Anniversary**: `timeTitle` default adalah "Our Journey", namun *sangat disarankan* menggunakan variasi lain agar tidak monoton, seperti: "Our Story", "Us Through Time", "Chapters of Us", "Growing Together", "Since We Met", "Miles of Love", atau "Beautiful Moments". Hitung dari tanggal mulai hubungan, gunakan anniversary date sebagai `specialDate`
-- **Ultah**: `timeTitle` default adalah "Your Journey", namun *sangat disarankan* menggunakan variasi lain agar tidak monoton, seperti: "The Story of You", "A Beautiful Life", "Chapter of You", "Miles & Memories", "Growing Gracefully", "Since Day One", atau "Time of Your Life". Hitung dari tanggal lahir.
+- **Ultah**: `timeTitle` default adalah "Your Journey" (atau "Hadirmu Di Dunia.." untuk bahasa Indonesia), namun *sangat disarankan* menggunakan variasi lain agar tidak monoton, seperti: "The Story of You", "A Beautiful Life", "Chapter of You", "Miles & Memories", "Growing Gracefully", "Since Day One", atau "Time of Your Life". Hitung dari tanggal lahir.
 - **Momen Khusus (Lainnya)**: JANGAN gunakan template generik "Your/Our Journey". Buat `timeTitle` yang merepresentasikan momen tersebut secara spesifik sesuai konteks yang diinginkan customer (contoh: "Since Our First Dinner", "Since Graduation Day").
 
 ---
