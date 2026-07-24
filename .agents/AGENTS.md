@@ -2,6 +2,10 @@
 
 This file serves as a persistent guide for creating and processing gifts for the Loves Edition project. It outlines the schema, workflow, and common pitfalls.
 
+> [!NOTE]
+> **Active Experimental Branch**: `feature/pin-gate`
+> Fitur opsional **Secret PIN Protection Gate** (gembok PIN 4–6 digit sebelum mukabuka gift) sudah dibuat & diuji di branch `feature/pin-gate`. Branch ini jangan dihapus dan siap di-merge/dilanjutkan jika tim ingin merilisnya nanti.
+
 ---
 
 ## Workflow for Processing Orders
@@ -50,7 +54,7 @@ When the user asks to process a new order, ALWAYS follow these steps:
 | `metaphorChoice` | **Secara default (wajib), tetap buatkan `reasons` (6 buah) Reason Cards.** Opsi `seasons` (dengan 4 kartu metafora) sekarang **bersifat opsional**. JANGAN buat `seasons` array KECUALI jika user (saya) secara eksplisit memintanya. Jika diminta, pilih salah satu dari 4 preset yang tersedia di Studio Editor yang paling cocok dengan konteks cerita customer: **1. Seasons** (Spring, Summer, Autumn, Winter), **2. Flowers** (Rose, Tulip, Lily, Sunflower), **3. Time of Day** (Sunrise, Noon, Dusk, Midnight), atau **4. Keepsakes** (The Flame, The Letter, The Promise, The Key). Sesuaikan *copywriting* isi pesannya dengan pesan asli customer. |
 | `secretCaption` | Selalu berikan caption kontekstual yang manis. Jangan biarkan kosong. |
 | `writing tone` | Baca dengan seksama. Lihat tabel tone di bawah. |
-| `heroLine1/2` | **Wajib** menyertakan nama panggilan/nama penerima atau unsur romantis yang kuat. Contoh: `heroLine1: "To My Precious,"`, `heroLine2: "Amorcito"`. Jangan hanya template kaku. |
+| `heroPreTitle` & `heroLine1/2` | **WAJIB ADA** di `giftData`. `heroPreTitle` harus selalu diisi kalimat pembuka manis (contoh: `"to my prettiest girl"`, `"to my favorite person"`, `"a special birthday wish"`). `heroLine1/2` wajib menyertakan nama panggilan/nama penerima atau unsur romantis yang kuat (contoh: `heroLine1: "To My Precious,"`, `heroLine2: "Amorcito"`). Jangan biarkan `heroPreTitle` terlewat agar tidak kosong. |
 | `gateSubtitle` | **WAJIB ADA** di `giftData`. Jangan sampai terlewat agar Amplop depan tidak "undefined". |
 | `recipient` | **WAJIB ADA** di `giftData` (bukan cuma di draft) untuk `<title>` SEO tab browser. |
 | `introText` | **JANGAN** pernah meringkas/memendekkan pesan asli customer! Gunakan seluruh isi pesan customer. Pisahkan per kalimat atau paragraf menjadi **Array of Strings** (contoh: `introText: ["paragraf 1", "paragraf 2"]`) agar rapi di UI. |

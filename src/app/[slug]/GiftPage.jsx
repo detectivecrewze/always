@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import GateScreen from '@/components/GateScreen';
+import PinGateScreen from '@/components/PinGateScreen';
 
 import AmbientParticles from '@/components/AmbientParticles';
 import HeroSection from '@/components/HeroSection';
@@ -16,6 +17,7 @@ import ClosingSection from '@/components/ClosingSection';
 import { themes, defaultTheme } from '@/lib/themes';
 
 export default function GiftPage({ data }) {
+  const [pinUnlocked, setPinUnlocked] = useState(!data.pinEnabled);
   const [gateOpen, setGateOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef(null);
@@ -70,9 +72,22 @@ export default function GiftPage({ data }) {
       {/* Audio element — always mounted if music exists */}
       {data.music?.file && <audio ref={audioRef} src={data.music.file} loop preload="auto" />}
 
+      {/* PIN Gate Screen (Optional) */}
+      <AnimatePresence mode="wait">
+        {data.pinEnabled && !pinUnlocked && (
+          <PinGateScreen
+            pinCode={data.pinCode || ''}
+            pinHint={data.pinHint || ''}
+            recipientName={data.recipient || ''}
+            themeColors={[t.particle, t.accent, t.textMuted]}
+            onUnlock={() => setPinUnlocked(true)}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Gate Screen */}
       <AnimatePresence mode="wait">
-        {!gateOpen && (
+        {pinUnlocked && !gateOpen && (
           <GateScreen
             themeName={data.theme}
             gateSubtitle={data.gateSubtitle}

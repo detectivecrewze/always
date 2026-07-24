@@ -24,12 +24,11 @@ async function cfGet(key) {
 }
 
 async function main() {
-  const orderId = 'ORD-MRYODO2U';
-  console.log(`Fetching order data for ${orderId}...`);
-  const order = await cfGet(`order:${orderId}`);
-  const orderPhotos = (order && order.photos) ? order.photos : [];
-  console.log('Order photos count:', orderPhotos.length);
-  console.log('Order photos:', orderPhotos);
+  const kvId = 'auto-dfj1b8s';
+  console.log(`Fetching gift data for ${kvId}...`);
+  const gift = await cfGet(`gift:${kvId}`);
+  console.log('Gift photos count:', gift?.photos?.length);
+  console.log('Gift photos:', gift?.photos);
 }
 
 main().catch(console.error);

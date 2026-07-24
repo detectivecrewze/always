@@ -262,14 +262,30 @@ function TabOpening({ data, set }) {
     <div style={S.sectionDesc}>The first thing visitors see before entering.</div>
     <Field label="Gate Subtitle" value={data.gateSubtitle} onChange={(v) => set('gateSubtitle', v)} placeholder="a gift for someone special" />
     <div className="w-full h-px bg-[#1a1a1a] my-4" />
-    <div style={S.sectionTitle}>Flower Animation</div>
-    <div style={S.sectionDesc}>Control the fountain flower animation when the gift box is tapped.</div>
+    <div style={S.sectionTitle}>🔒 Secret PIN Protection (Optional)</div>
+    <div style={S.sectionDesc}>Lindungi gift dengan 4 - 6 digit PIN rahasia sebelum penerima bisa membukanya.</div>
     <Toggle
-      label="🌸 Nonaktifkan Animasi Bunga"
-      desc="Saat kado dibuka, langsung masuk ke halaman gift tanpa animasi bunga."
-      value={data.disableFountain ?? false}
-      onChange={(v) => set('disableFountain', v)}
+      label="🔒 Aktifkan Security PIN Gate"
+      desc="Penerima wajib memasukkan PIN rahasia terlebih dahulu."
+      value={data.pinEnabled ?? false}
+      onChange={(v) => set('pinEnabled', v)}
     />
+    {data.pinEnabled && (
+      <div className="mt-3 space-y-3 pl-3 border-l-2 border-accent/30">
+        <Field
+          label="Secret PIN Code (Max 6 Digit)"
+          value={data.pinCode || ''}
+          onChange={(v) => set('pinCode', v.replace(/\D/g, '').slice(0, 6))}
+          placeholder="contoh: 240722 atau 1234"
+        />
+        <Field
+          label="PIN Hint / Clue (Opsional)"
+          value={data.pinHint || ''}
+          onChange={(v) => set('pinHint', v)}
+          placeholder="contoh: Tanggal jadian kita ✨"
+        />
+      </div>
+    )}
   </>);
 }
 
