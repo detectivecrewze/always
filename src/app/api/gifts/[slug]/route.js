@@ -28,15 +28,22 @@ function generateRandomEditKey() {
 
 // Helper to check authorization
 async function checkAuth(request, gift, slug) {
-  const isAdmin = await verifySession(request);
-  if (isAdmin) return { authorized: true, isAdmin: true };
-
   const url = new URL(request.url);
   const key = url.searchParams.get('key');
-  if (!key || !gift || !gift.editKey) return { authorized: false, isAdmin: false };
+  const isAdmin = await verifySession(request);
 
-  if (key === gift.editKey) {
-    return { authorized: true, isAdmin: false };
+  // If a ?key= parameter is explicitly supplied in the URL, it MUST be valid
+  if (key) {
+    if (gift && gift.editKey && key === gift.editKey) {
+      return { authorized: true, isAdmin };
+    }
+    // Supplied key is wrong -> Deny access (even if admin cookie exists)
+    return { authorized: false, isAdmin: false };
+  }
+
+  // If no key in URL, require Admin session cookie
+  if (isAdmin) {
+    return { authorized: true, isAdmin: true };
   }
 
   return { authorized: false, isAdmin: false };
