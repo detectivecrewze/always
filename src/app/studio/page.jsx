@@ -274,8 +274,21 @@ export default function StudioDashboard() {
     alert(`Link form tersalin: ${url}`);
   };
 
-  const copySelfEditLink = (gift) => {
-    const keyToUse = gift.editKey || `edit-${gift.slug}`;
+  const copySelfEditLink = async (gift) => {
+    let keyToUse = gift.editKey;
+    if (!keyToUse || keyToUse.startsWith('edit-')) {
+      try {
+        const res = await fetch(`/api/gifts/${gift.slug}`);
+        if (res.ok) {
+          const fresh = await res.json();
+          keyToUse = fresh.editKey;
+        }
+      } catch { /* ignore */ }
+    }
+    if (!keyToUse) {
+      alert('Gagal mengambil key penyuntingan.');
+      return;
+    }
     const url = `${window.location.origin}/studio/${gift.slug}/edit?key=${keyToUse}`;
     navigator.clipboard.writeText(url);
     alert(`Link Self-Edit Customer tersalin:\n${url}`);

@@ -20,6 +20,12 @@ function writeLocalGifts(gifts) {
   fs.writeFileSync(filePath, JSON.stringify(gifts, null, 2));
 }
 
+import crypto from 'crypto';
+
+function generateRandomEditKey() {
+  return crypto.randomBytes(8).toString('hex'); // 16-character random hex token e.g. "f47a9b2c8e1d3056"
+}
+
 // Helper to check authorization
 async function checkAuth(request, gift, slug) {
   const isAdmin = await verifySession(request);
@@ -27,10 +33,9 @@ async function checkAuth(request, gift, slug) {
 
   const url = new URL(request.url);
   const key = url.searchParams.get('key');
-  if (!key) return { authorized: false, isAdmin: false };
+  if (!key || !gift || !gift.editKey) return { authorized: false, isAdmin: false };
 
-  const expectedKey = (gift && gift.editKey) ? gift.editKey : `edit-${slug}`;
-  if (key === expectedKey) {
+  if (key === gift.editKey) {
     return { authorized: true, isAdmin: false };
   }
 
@@ -55,9 +60,12 @@ export async function GET(request, { params }) {
     return unauthorized();
   }
 
-  // Ensure gift has an editKey for sharing
-  if (!gift.editKey) {
-    gift.editKey = `edit-${slug}`;
+  // Auto-generate a secure random editKey if gift doesn't have one yet or if it uses old predictable format
+  if (!gift.editKey || gift.editKey.startsWith('edit-')) {
+    gift.editKey = generateRandomEditKey();
+    if (isKVConfigured()) {
+      await putGift(slug, gift);
+    }
   }
 
   return NextResponse.json({
@@ -92,9 +100,11 @@ export async function PUT(request, { params }) {
     }
   }
 
-  // Ensure editKey is preserved or assigned
-  if (!updatedData.editKey) {
-    updatedData.editKey = (existingGift && existingGift.editKey) ? existingGift.editKey : `edit-${oldSlug}`;
+  // Ensure a secure random editKey is preserved or assigned
+  if (!updatedData.editKey || updatedData.editKey.startsWith('edit-')) {
+    updatedData.editKey = (existingGift && existingGift.editKey && !existingGift.editKey.startsWith('edit-'))
+      ? existingGift.editKey
+      : generateRandomEditKey();
   }
 
   const newSlug = updatedData.slug || oldSlug;

@@ -1104,7 +1104,11 @@ export default function StudioEditor({ params: paramsPromise }) {
   };
 
   const copySelfEditLink = () => {
-    const keyToUse = editKey || data?.editKey || `edit-${slug}`;
+    const keyToUse = editKey || data?.editKey;
+    if (!keyToUse) {
+      alert('Key penyuntingan belum tersedia.');
+      return;
+    }
     const fullUrl = `${window.location.origin}/studio/${slug}/edit?key=${keyToUse}`;
     navigator.clipboard.writeText(fullUrl);
     setCopiedLink(true);
