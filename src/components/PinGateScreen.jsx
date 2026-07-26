@@ -75,7 +75,7 @@ export default function PinGateScreen({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
       transition={{ duration: 0.8 }}
-      className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-bg/85 backdrop-blur-2xl p-4 sm:p-8 overflow-y-auto overflow-x-hidden text-text select-none"
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-start sm:justify-center bg-bg/85 backdrop-blur-2xl px-4 py-6 sm:p-8 overflow-y-auto overflow-x-hidden text-text select-none"
     >
       {/* Animated Organic Background Blooms */}
       <div className="fixed inset-0 pointer-events-none opacity-50 mix-blend-screen">
@@ -103,8 +103,8 @@ export default function PinGateScreen({
         />
       </div>
 
-      {/* Main Content Layout - Safely Centered */}
-      <div className="relative z-10 w-full max-w-[340px] flex flex-col items-center justify-center gap-6 sm:gap-10 py-8 my-auto min-h-full">
+      {/* Main Content Layout - Safely Centered with Top Padding for Mobile */}
+      <div className="relative z-10 w-full max-w-[340px] flex flex-col items-center justify-center gap-4 sm:gap-8 my-auto pt-8 pb-10 sm:py-8">
         
         {/* Header Area */}
         <div className="flex flex-col items-center text-center space-y-6 w-full">
