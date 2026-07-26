@@ -274,6 +274,13 @@ export default function StudioDashboard() {
     alert(`Link form tersalin: ${url}`);
   };
 
+  const copySelfEditLink = (gift) => {
+    const keyToUse = gift.editKey || `edit-${gift.slug}`;
+    const url = `${window.location.origin}/studio/${gift.slug}/edit?key=${keyToUse}`;
+    navigator.clipboard.writeText(url);
+    alert(`Link Self-Edit Customer tersalin:\n${url}`);
+  };
+
   const handleExport = (slug) => window.open(`/api/export/${slug}`, '_blank');
 
   const handleDeleteOrder = async (orderId) => {
@@ -490,6 +497,7 @@ export default function StudioDashboard() {
                   <div style={S.cardDate}>{g.createdAt || 'Unknown date'}</div>
                   <div style={S.actions}>
                     <button style={S.actionBtn('#E11D48')} onClick={() => router.push(`/studio/${g.slug}/edit`)}>Edit</button>
+                    <button style={S.actionBtn('#EC4899')} onClick={() => copySelfEditLink(g)}>Copy Edit Link</button>
                     <button style={S.actionBtn('#8B5CF6')} onClick={() => window.open(`/${g.slug}`, '_blank')}>Preview</button>
                     <button style={S.actionBtn('#22C55E')} onClick={() => handleExport(g.slug)}>Export</button>
                     <button style={S.actionBtn('#10B981')} onClick={() => copyFormLink(g.slug)}>Copy Form Link</button>

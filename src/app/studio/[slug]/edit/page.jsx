@@ -1048,15 +1048,30 @@ export default function StudioEditor({ params: paramsPromise }) {
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
   const [previewKey, setPreviewKey] = useState(0);
+  const [editKey, setEditKey] = useState(null);
+  const [accessDenied, setAccessDenied] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   useEffect(() => {
+    const keyFromUrl = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('key') : null;
+    if (keyFromUrl) setEditKey(keyFromUrl);
+
     (async () => {
-      const res = await fetch(`/api/gifts/${slug}`);
-      if (res.status === 401) { router.push('/studio/login'); return; }
-      if (res.status === 404) { router.push('/studio'); return; }
+      const fetchUrl = keyFromUrl ? `/api/gifts/${slug}?key=${keyFromUrl}` : `/api/gifts/${slug}`;
+      const res = await fetch(fetchUrl);
+      if (res.status === 401) {
+        if (keyFromUrl) setAccessDenied(true);
+        else router.push('/studio/login');
+        return;
+      }
+      if (res.status === 404) {
+        if (keyFromUrl) setAccessDenied(true);
+        else router.push('/studio');
+        return;
+      }
       setData(await res.json());
     })();
-  }, [slug]);
+  }, [slug, router]);
 
   const set = useCallback((key, val) => {
     setData((prev) => ({ ...prev, [key]: val }));
@@ -1068,7 +1083,8 @@ export default function StudioEditor({ params: paramsPromise }) {
     setSaving(true);
     setSaveStatus('');
     try {
-      const res = await fetch(`/api/gifts/${slug}`, {
+      const saveUrl = editKey ? `/api/gifts/${slug}?key=${editKey}` : `/api/gifts/${slug}`;
+      const res = await fetch(saveUrl, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -1078,7 +1094,8 @@ export default function StudioEditor({ params: paramsPromise }) {
         setPreviewKey((k) => k + 1);
         setTimeout(() => setSaveStatus(''), 3000);
       } else if (res.status === 401) {
-        router.push('/studio/login');
+        if (editKey) setSaveStatus('error');
+        else router.push('/studio/login');
       } else {
         setSaveStatus('error');
       }
@@ -1086,12 +1103,33 @@ export default function StudioEditor({ params: paramsPromise }) {
     setSaving(false);
   };
 
+  const copySelfEditLink = () => {
+    const keyToUse = editKey || data?.editKey || `edit-${slug}`;
+    const fullUrl = `${window.location.origin}/studio/${slug}/edit?key=${keyToUse}`;
+    navigator.clipboard.writeText(fullUrl);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2500);
+  };
+
+  if (accessDenied) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[100dvh] bg-[#050505] text-[#f5f5f5] p-6 text-center font-sans">
+        <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 text-2xl mb-4">🔒</div>
+        <h1 className="text-lg font-semibold mb-2">Akses Ditolak / Link Tidak Valid</h1>
+        <p className="text-xs text-[#888] max-w-sm leading-relaxed mb-6">
+          Link edit ini tidak valid atau telah kadaluwarsa. Silakan hubungi admin untuk mendapatkan link penyuntingan kado Anda.
+        </p>
+      </div>
+    );
+  }
+
   if (!data) return (
     <div className="flex items-center justify-center h-[100dvh] bg-[#050505]">
       <p className="text-[#555] font-sans">Loading editor...</p>
     </div>
   );
 
+  const isSelfEditMode = data._isSelfEdit || !!editKey;
   const ActivePanel = TAB_COMPONENTS[activeTab];
 
   return (
@@ -1100,7 +1138,11 @@ export default function StudioEditor({ params: paramsPromise }) {
       <div className="w-full md:w-[260px] bg-[#0a0a0a] border-b md:border-b-0 md:border-r border-[#1a1a1a] flex flex-col shrink-0 z-20">
         <div style={S.sideHeader}>
           <span style={S.brand}>loves<span style={S.dot}>·</span>studio</span>
-          <button style={S.backBtn} onClick={() => router.push('/studio')}>← Back</button>
+          {isSelfEditMode ? (
+            <span style={{ fontSize: '0.65rem', color: '#F472B6', background: 'rgba(244,114,182,0.1)', border: '1px solid rgba(244,114,182,0.2)', padding: '0.2rem 0.5rem', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Self-Edit</span>
+          ) : (
+            <button style={S.backBtn} onClick={() => router.push('/studio')}>← Back</button>
+          )}
         </div>
 
         <div className="flex flex-row md:flex-col overflow-x-auto md:overflow-y-auto py-2 md:py-3 px-2 md:px-0 gap-1 hide-scrollbar flex-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
@@ -1143,7 +1185,17 @@ export default function StudioEditor({ params: paramsPromise }) {
             <div style={S.topTitle}>{data.recipient || slug}</div>
             <div style={{ fontSize: '0.65rem', color: '#555', fontFamily: 'monospace' }}>/{slug}</div>
           </div>
-          <button style={S.smallBtn('#8B5CF6')} onClick={() => window.open(`/${slug}`, '_blank')}>Open Preview ↗</button>
+          <div className="flex items-center gap-2">
+            {!isSelfEditMode && (
+              <button 
+                style={S.smallBtn(copiedLink ? '#22C55E' : '#EC4899')} 
+                onClick={copySelfEditLink}
+              >
+                {copiedLink ? '✓ Copied Link!' : '📋 Copy Customer Edit Link'}
+              </button>
+            )}
+            <button style={S.smallBtn('#8B5CF6')} onClick={() => window.open(`/${slug}`, '_blank')}>Open Preview ↗</button>
+          </div>
         </div>
 
         {/* Split View */}
