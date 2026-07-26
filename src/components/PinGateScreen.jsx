@@ -18,6 +18,10 @@ export default function PinGateScreen({
   const maxDigits = Math.min(Math.max(safePinCode.length || 4, 4), 6);
   const targetPin = safePinCode;
 
+  // Safe color access
+  const primaryColor = themeColors[0] || 'var(--color-accent)';
+  const secondaryColor = themeColors[1] || 'var(--color-text)';
+
   const handleDigitPress = useCallback((digit) => {
     if (isUnlocked) return;
     setIsError(false);
@@ -32,7 +36,7 @@ export default function PinGateScreen({
           setIsUnlocked(true);
           setTimeout(() => {
             if (onUnlock) onUnlock();
-          }, 850);
+          }, 1200);
         } else if (next.length === maxDigits) {
           setIsError(true);
           setTimeout(() => {
@@ -51,12 +55,6 @@ export default function PinGateScreen({
     setInputPin((prev) => prev.slice(0, -1));
   }, [isUnlocked]);
 
-  const handleClear = useCallback(() => {
-    if (isUnlocked) return;
-    setIsError(false);
-    setInputPin('');
-  }, [isUnlocked]);
-
   // Physical keyboard support
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -65,276 +63,207 @@ export default function PinGateScreen({
         handleDigitPress(e.key);
       } else if (e.key === 'Backspace') {
         handleBackspace();
-      } else if (e.key === 'Escape' || e.key === 'Delete') {
-        handleClear();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleDigitPress, handleBackspace, handleClear, isUnlocked]);
+  }, [handleDigitPress, handleBackspace, isUnlocked]);
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0, scale: 1.05, filter: 'blur(12px)' }}
-      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed inset-0 z-50 flex flex-col items-center justify-between bg-bg/95 backdrop-blur-2xl px-4 py-8 overflow-y-auto select-none font-sans"
+      exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+      transition={{ duration: 0.8 }}
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-bg/85 backdrop-blur-2xl p-4 sm:p-8 overflow-y-auto overflow-x-hidden text-text select-none"
     >
-      {/* Dynamic Background Glows */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div 
-          className="absolute -top-32 left-1/2 -translate-x-1/2 w-[450px] h-[450px] rounded-full blur-[130px] opacity-35 transition-all duration-1000"
-          style={{ backgroundColor: themeColors[1] || 'var(--color-accent)' }}
+      {/* Animated Organic Background Blooms */}
+      <div className="fixed inset-0 pointer-events-none opacity-50 mix-blend-screen">
+        <motion.div
+          animate={{
+            scale: [1, 1.25, 1],
+            rotate: [0, 90, 0],
+            x: ['-10%', '10%', '-10%'],
+            y: ['-10%', '15%', '-10%'],
+          }}
+          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -top-[10%] -left-[10%] w-[60vh] h-[60vh] rounded-full blur-[100px] opacity-40"
+          style={{ backgroundColor: primaryColor }}
         />
-        <div 
-          className="absolute -bottom-32 left-1/2 -translate-x-1/2 w-[450px] h-[450px] rounded-full blur-[130px] opacity-25 transition-all duration-1000"
-          style={{ backgroundColor: themeColors[0] || 'var(--color-particle)' }}
+        <motion.div
+          animate={{
+            scale: [1, 1.3, 1],
+            rotate: [0, -90, 0],
+            x: ['10%', '-10%', '10%'],
+            y: ['15%', '-15%', '15%'],
+          }}
+          transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -bottom-[10%] -right-[10%] w-[70vh] h-[70vh] rounded-full blur-[120px] opacity-30"
+          style={{ backgroundColor: secondaryColor }}
         />
-
-        {/* Ambient Sparkles */}
-        {[...Array(6)].map((_, i) => (
-          <motion.div
-            key={i}
-            animate={{
-              y: [0, -25, 0],
-              opacity: [0.2, 0.7, 0.2],
-              scale: [0.8, 1.2, 0.8],
-            }}
-            transition={{
-              duration: 4 + i * 0.8,
-              repeat: Infinity,
-              ease: 'easeInOut',
-              delay: i * 0.4,
-            }}
-            className="absolute rounded-full bg-accent/40 blur-[1px]"
-            style={{
-              top: `${12 + i * 14}%`,
-              left: `${15 + (i * 15) % 70}%`,
-              width: `${4 + (i % 3) * 2}px`,
-              height: `${4 + (i % 3) * 2}px`,
-            }}
-          />
-        ))}
       </div>
 
-      {/* Top Header Section */}
-      <div className="relative z-10 w-full max-w-sm flex flex-col items-center text-center mt-2 shrink-0">
-        {/* Heart Lock Emblem Container */}
-        <motion.div
-          animate={
-            isUnlocked
-              ? { scale: [1, 1.25, 0.95], rotate: [0, -8, 8, 0] }
-              : isError
-              ? { x: [-12, 12, -8, 8, -4, 4, 0] }
-              : { y: [0, -6, 0] }
-          }
-          transition={
-            isUnlocked
-              ? { duration: 0.7, ease: 'easeOut' }
-              : isError
-              ? { duration: 0.5 }
-              : { duration: 5, repeat: Infinity, ease: 'easeInOut' }
-          }
-          className="relative mb-5 flex items-center justify-center flex-none shrink-0"
-        >
-          {/* Glowing Aura */}
-          <div
-            className="absolute inset-0 rounded-full blur-xl opacity-50 transition-all duration-700"
-            style={{
-              backgroundColor: isUnlocked
-                ? '#10b981'
-                : isError
-                ? '#ef4444'
-                : 'var(--color-accent)'
-            }}
-          />
-
-          {/* Fixed Dimensions Outer Ring */}
-          <div 
-            className="relative p-1 rounded-full bg-gradient-to-b from-text/25 via-text/10 to-transparent backdrop-blur-md shadow-2xl border border-text/20 flex-none shrink-0 aspect-square"
-            style={{ width: '96px', height: '96px' }}
-          >
-            {/* Fixed Dimensions Inner Glass Orb */}
-            <div 
-              className="relative rounded-full bg-surface/60 backdrop-blur-xl border border-text/15 flex items-center justify-center shadow-inner overflow-hidden flex-none shrink-0 aspect-square"
-              style={{ width: '88px', height: '88px' }}
-            >
-              {/* Shimmer */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-text/10 to-transparent opacity-60 pointer-events-none" />
-
-              {/* Heart Lock SVG */}
-              <svg
-                className={`w-10 h-10 transition-all duration-700 ${
-                  isUnlocked
-                    ? 'text-emerald-400 scale-110 drop-shadow-[0_0_15px_rgba(16,185,129,0.8)]'
-                    : isError
-                    ? 'text-red-400 drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]'
-                    : 'text-accent drop-shadow-[0_0_12px_var(--color-accent)]'
-                }`}
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                {isUnlocked ? (
-                  <g>
-                    <path d="M7 10V7a5 5 0 0 1 9.9-1" className="transition-all duration-500" />
-                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="currentColor" fillOpacity="0.18" />
-                    <circle cx="12" cy="12" r="1.5" fill="currentColor" />
-                    <path d="M12 13.5v3" strokeWidth="2" />
-                  </g>
-                ) : (
-                  <g>
-                    <path d="M7 10V7a5 5 0 0 1 10 0v3" />
-                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="currentColor" fillOpacity="0.18" />
-                    <circle cx="12" cy="13" r="1.25" fill="currentColor" />
-                    <path d="M12 14.25v2.5" strokeWidth="2" />
-                  </g>
-                )}
-              </svg>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Title */}
-        <motion.h2 
-          key={isUnlocked ? 'unlocked' : 'locked'}
-          initial={{ opacity: 0, y: 5 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-2xl sm:text-3xl font-serif tracking-tight font-medium text-text mb-1"
-        >
-          {isUnlocked ? 'Love Unlocked ✨' : 'Locked With Love'}
-        </motion.h2>
+      {/* Main Content Layout - Safely Centered */}
+      <div className="relative z-10 w-full max-w-[340px] flex flex-col items-center justify-center gap-6 sm:gap-10 py-8 my-auto min-h-full">
         
-        <p className="text-xs text-text-muted max-w-xs font-light tracking-wide leading-relaxed px-2">
-          {isUnlocked
-            ? 'Membuka rahasia manis di dalamnya...'
-            : recipientName
-            ? `Masukkan PIN rahasia untuk membuka pesan hangat ${recipientName}`
-            : 'Masukkan PIN rahasia untuk membuka pesan hangat'}
-        </p>
-
-        {/* Hint Badge */}
-        {pinHint && !isUnlocked && (
+        {/* Header Area */}
+        <div className="flex flex-col items-center text-center space-y-6 w-full">
+          {/* Lock / Heart Icon */}
           <motion.div
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-2.5 px-4 py-1 rounded-full bg-accent/10 border border-accent/25 text-accent text-[11px] font-medium tracking-wide flex items-center gap-1.5 shadow-sm backdrop-blur-md"
+            animate={
+              isUnlocked
+                ? { scale: [1, 1.15, 1], rotateY: [0, 180, 360] }
+                : isError
+                ? { x: [-8, 8, -6, 6, -3, 3, 0] }
+                : { y: [0, -4, 0] }
+            }
+            transition={
+              isUnlocked
+                ? { duration: 1, ease: "easeOut" }
+                : isError
+                ? { duration: 0.5 }
+                : { duration: 4.5, repeat: Infinity, ease: "easeInOut" }
+            }
+            className="w-16 h-16 sm:w-20 sm:h-20 mb-2 flex items-center justify-center rounded-2xl sm:rounded-[1.5rem] bg-white/5 border border-white/5 shadow-xl backdrop-blur-xl"
           >
-            <span>💡 Hint:</span>
-            <span className="font-semibold text-text">{pinHint}</span>
-          </motion.div>
-        )}
-      </div>
-
-      {/* Center PIN Dots */}
-      <div className="relative z-10 w-full max-w-xs flex flex-col items-center my-4 shrink-0">
-        <motion.div
-          animate={isError ? { x: [-12, 12, -8, 8, -4, 4, 0] } : {}}
-          transition={{ duration: 0.4 }}
-          className="flex items-center justify-center gap-3.5"
-        >
-          {Array.from({ length: maxDigits }).map((_, idx) => {
-            const isFilled = idx < inputPin.length;
-            return (
-              <motion.div
-                key={idx}
-                animate={
-                  isUnlocked
-                    ? { scale: [1, 1.3, 1], backgroundColor: '#10b981' }
-                    : isFilled
-                    ? { scale: [1, 1.25, 1] }
-                    : { scale: 1 }
-                }
-                className={`w-3.5 h-3.5 rounded-full transition-all duration-300 ${
-                  isUnlocked
-                    ? 'bg-emerald-400 border border-emerald-300 shadow-[0_0_14px_rgba(16,185,129,0.8)]'
-                    : isError
-                    ? 'bg-red-400/90 border border-red-300 shadow-[0_0_12px_rgba(239,68,68,0.7)]'
-                    : isFilled
-                    ? 'bg-accent border border-accent/80 shadow-[0_0_14px_var(--color-accent)]'
-                    : 'bg-text/5 border border-text/30 shadow-inner'
-                }`}
-              />
-            );
-          })}
-        </motion.div>
-
-        {/* Error Message */}
-        <div className="h-5 mt-2 flex items-center justify-center">
-          <AnimatePresence>
-            {isError && (
-              <motion.span
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                className="text-xs text-red-400 font-medium tracking-wide flex items-center gap-1"
-              >
-                <span>⚠️</span>
-                <span>PIN belum sesuai, silakan coba lagi</span>
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
-
-      {/* Bottom Luxury Circular Keypad (Guaranteed Round & Centered) */}
-      <div className="relative z-10 w-full max-w-[260px] sm:max-w-[280px] mx-auto mb-2 shrink-0 flex flex-col items-center">
-        <div className="grid grid-cols-3 gap-x-5 gap-y-3.5 w-full place-items-center justify-center">
-          {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
-            <motion.button
-              key={digit}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.92 }}
-              onClick={() => handleDigitPress(digit)}
-              disabled={isUnlocked}
-              style={{ width: '60px', height: '60px' }}
-              className="rounded-full bg-text/5 hover:bg-text/15 active:bg-accent/30 border border-text/15 text-text font-serif font-light text-2xl flex items-center justify-center backdrop-blur-xl transition-all duration-200 shadow-md group relative overflow-hidden flex-none shrink-0 aspect-square"
+            <svg
+              className="w-7 h-7 sm:w-8 sm:h-8 transition-colors duration-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ color: isUnlocked ? '#10b981' : isError ? '#ef4444' : primaryColor }}
             >
-              <span className="relative z-10">{digit}</span>
-              <div className="absolute inset-0 bg-gradient-to-t from-accent/15 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            </motion.button>
+              {isUnlocked ? (
+                <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" fill="currentColor" fillOpacity="0.25" />
+              ) : (
+                <>
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0110 0v4" />
+                </>
+              )}
+            </svg>
+          </motion.div>
+
+          <div className="flex flex-col items-center gap-2.5">
+            <h2 className="text-3xl sm:text-4xl font-serif tracking-tight text-text/95">
+              {isUnlocked ? "Unlocked" : "Secret Code"}
+            </h2>
+          </div>
+
+          {pinHint && !isUnlocked && (
+            <motion.div 
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-3 inline-flex items-center gap-2 px-5 py-2 rounded-full bg-text/5 border border-text/10 text-[11px] sm:text-xs font-medium text-text-muted backdrop-blur-md"
+            >
+              <span className="opacity-70">💡</span>
+              <span className="opacity-90 font-light tracking-wider uppercase">Hint: {pinHint}</span>
+            </motion.div>
+          )}
+        </div>
+
+        {/* PIN Indicators */}
+        <div className="flex flex-col items-center justify-center min-h-[44px]">
+          <p className="text-[13px] sm:text-sm font-light text-text-muted/80 max-w-[260px] mx-auto leading-relaxed tracking-wide text-center mb-6">
+            {isUnlocked
+              ? "Opening the memories..."
+              : "Enter the secret code to unlock."}
+          </p>
+          <motion.div 
+            className="flex items-center gap-4 sm:gap-5"
+            animate={isError ? { x: [-8, 8, -6, 6, -3, 3, 0] } : {}}
+            transition={{ duration: 0.4 }}
+          >
+            {Array.from({ length: maxDigits }).map((_, idx) => {
+              const isFilled = idx < inputPin.length;
+              return (
+                <div key={idx} className="relative w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-text/5 border border-text/20">
+                  <AnimatePresence>
+                    {(isFilled || isUnlocked) && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.5 }}
+                        className="absolute inset-0 rounded-full"
+                        style={{ 
+                          backgroundColor: isUnlocked ? '#10b981' : isError ? '#ef4444' : primaryColor,
+                          boxShadow: `0 0 12px ${isUnlocked ? '#10b981' : isError ? '#ef4444' : primaryColor}`
+                        }}
+                      />
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
+          </motion.div>
+          
+          <div className="h-6 mt-1 flex items-center">
+            <AnimatePresence>
+              {isError && (
+                <motion.span
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="text-[11px] uppercase tracking-widest text-red-400 font-semibold"
+                >
+                  Incorrect Code
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Minimalist Keypad */}
+        <div className="w-full max-w-[260px] grid grid-cols-3 gap-x-6 gap-y-4">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((digit) => (
+            <KeypadButton 
+              key={digit} 
+              digit={digit} 
+              onClick={() => handleDigitPress(digit.toString())} 
+              disabled={isUnlocked}
+              primaryColor={primaryColor}
+            />
           ))}
-
-          {/* Bottom Row: Clear, 0, Backspace */}
-          <motion.button
-            whileTap={{ scale: 0.92 }}
-            onClick={handleClear}
-            disabled={isUnlocked || inputPin.length === 0}
-            style={{ width: '60px', height: '60px' }}
-            className="rounded-full bg-transparent hover:bg-text/10 text-text-muted font-sans text-[10px] font-medium uppercase tracking-wider flex items-center justify-center disabled:opacity-20 transition-all flex-none shrink-0 aspect-square"
-          >
-            CLEAR
-          </motion.button>
-
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.92 }}
-            onClick={() => handleDigitPress('0')}
+          <div /> {/* Empty space for bottom left */}
+          <KeypadButton 
+            digit={0} 
+            onClick={() => handleDigitPress('0')} 
             disabled={isUnlocked}
-            style={{ width: '60px', height: '60px' }}
-            className="rounded-full bg-text/5 hover:bg-text/15 active:bg-accent/30 border border-text/15 text-text font-serif font-light text-2xl flex items-center justify-center backdrop-blur-xl transition-all duration-200 shadow-md group relative overflow-hidden flex-none shrink-0 aspect-square"
-          >
-            <span className="relative z-10">0</span>
-            <div className="absolute inset-0 bg-gradient-to-t from-accent/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          </motion.button>
-
-          <motion.button
-            whileTap={{ scale: 0.92 }}
+            primaryColor={primaryColor}
+          />
+          <button
             onClick={handleBackspace}
             disabled={isUnlocked || inputPin.length === 0}
-            style={{ width: '60px', height: '60px' }}
-            className="rounded-full bg-transparent hover:bg-text/10 text-text-muted flex items-center justify-center disabled:opacity-20 transition-all flex-none shrink-0 aspect-square"
+            className="flex items-center justify-center w-16 h-16 sm:w-18 sm:h-18 mx-auto rounded-full text-text-muted/60 hover:text-text/90 hover:bg-white/5 active:bg-white/10 transition-colors disabled:opacity-30 disabled:hover:text-text-muted/60 active:scale-95 duration-200"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.75">
+            <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414-6.414A2 2 0 0110.828 5H19a2 2 0 012 2v10a2 2 0 01-2 2h-8.172a2 2 0 01-1.414-.586L3 12z" />
             </svg>
-          </motion.button>
+          </button>
         </div>
       </div>
     </motion.div>
+  );
+}
+
+function KeypadButton({ digit, onClick, disabled, primaryColor }) {
+  return (
+    <motion.button
+      whileTap={{ scale: 0.9 }}
+      onClick={onClick}
+      disabled={disabled}
+      className="relative flex items-center justify-center w-16 h-16 sm:w-18 sm:h-18 mx-auto rounded-full bg-transparent hover:bg-white/5 active:bg-white/10 transition-colors overflow-hidden group"
+    >
+      <span className="relative z-10 text-3xl sm:text-4xl font-light font-serif text-text/85 group-hover:text-text transition-colors">
+        {digit}
+      </span>
+      <div 
+        className="absolute inset-0 opacity-0 group-active:opacity-[0.15] transition-opacity"
+        style={{ backgroundColor: primaryColor }}
+      />
+    </motion.button>
   );
 }

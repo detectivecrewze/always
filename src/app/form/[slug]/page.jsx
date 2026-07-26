@@ -39,6 +39,9 @@ export default function OrderForm() {
     reasonChoice: 'qualities',
     customMoment: '',
     message: '',
+    pinEnabled: false,
+    pinCode: '',
+    pinHint: '',
   });
 
   // Load from localStorage OR online draft on mount
@@ -960,9 +963,92 @@ export default function OrderForm() {
                     padding: '0.5rem 0', fontSize: '0.95rem', outline: 'none',
                     transition: 'border-color 0.3s'
                   }}
-                  onFocus={e => e.target.style.borderColor = currentTheme.text}
                   onBlur={e => e.target.style.borderColor = `${currentTheme.text}40`}
                 />
+              </div>
+
+              {/* Secret PIN Protection */}
+              <div style={{ marginTop: '1rem', paddingTop: '1.5rem', borderTop: `1px solid ${currentTheme.text}15` }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <div>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.9rem', fontWeight: 600 }}>
+                      <Lock size={16} /> Aktifkan Security PIN
+                    </label>
+                    <p style={{ fontSize: '0.78rem', opacity: 0.55, marginTop: '0.3rem', lineHeight: 1.4 }}>
+                      Lindungi kado digitalmu dengan PIN rahasia.
+                    </p>
+                  </div>
+                  <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', flexShrink: 0 }}>
+                    <input
+                      type="checkbox"
+                      checked={data.pinEnabled || false}
+                      onChange={e => update('pinEnabled', e.target.checked)}
+                      style={{ opacity: 0, width: 0, height: 0, position: 'absolute' }}
+                    />
+                    <span style={{
+                      position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
+                      backgroundColor: data.pinEnabled ? currentTheme.text : 'rgba(0,0,0,0.1)',
+                      transition: '.3s', borderRadius: '24px',
+                      border: `1px solid ${data.pinEnabled ? 'transparent' : currentTheme.text + '25'}`
+                    }}>
+                      <span style={{
+                        position: 'absolute', content: '""', height: '18px', width: '18px',
+                        left: data.pinEnabled ? '22px' : '2px', bottom: '2px',
+                        backgroundColor: data.pinEnabled ? currentTheme.bg : currentTheme.text,
+                        transition: '.3s', borderRadius: '50%'
+                      }} />
+                    </span>
+                  </label>
+                </div>
+                
+                <AnimatePresence>
+                  {data.pinEnabled && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      style={{ overflow: 'hidden' }}
+                    >
+                      <div style={{ marginTop: '1.2rem', paddingLeft: '1rem', borderLeft: `2px solid ${currentTheme.text}20`, display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.2rem' }}>PIN Code (Maks 6 Angka)</label>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={data.pinCode || ''}
+                            onChange={e => update('pinCode', e.target.value.replace(/\D/g, '').slice(0, 6))}
+                            placeholder="Contoh: 123456"
+                            style={{
+                              width: '100%', background: 'transparent', border: 'none',
+                              borderBottom: `1px solid ${currentTheme.text}40`, color: 'inherit',
+                              padding: '0.5rem 0', fontSize: '0.95rem', outline: 'none',
+                              transition: 'border-color 0.3s'
+                            }}
+                            onFocus={e => e.target.style.borderColor = currentTheme.text}
+                            onBlur={e => e.target.style.borderColor = `${currentTheme.text}40`}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.2rem' }}>PIN Hint / Clue (Opsional)</label>
+                          <input
+                            type="text"
+                            value={data.pinHint || ''}
+                            onChange={e => update('pinHint', e.target.value)}
+                            placeholder="Contoh: Tanggal jadian kita"
+                            style={{
+                              width: '100%', background: 'transparent', border: 'none',
+                              borderBottom: `1px solid ${currentTheme.text}40`, color: 'inherit',
+                              padding: '0.5rem 0', fontSize: '0.95rem', outline: 'none',
+                              transition: 'border-color 0.3s'
+                            }}
+                            onFocus={e => e.target.style.borderColor = currentTheme.text}
+                            onBlur={e => e.target.style.borderColor = `${currentTheme.text}40`}
+                          />
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
             </div>
