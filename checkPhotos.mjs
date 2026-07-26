@@ -24,7 +24,7 @@ async function cfGet(key) {
 }
 
 async function main() {
-  const orderId = 'ORD-MRYODO2U';
+  const orderId = 'ORD-MS0M98QA';
   console.log(`Fetching order data for ${orderId}...`);
   const order = await cfGet(`order:${orderId}`);
   const orderPhotos = (order && order.photos) ? order.photos : [];
