@@ -1159,7 +1159,7 @@ export default function StudioEditor({ params: paramsPromise }) {
 
   const copyWaTemplate = () => {
     const recipientName = data?.recipient || 'kak';
-    const template = `Halo kak ${recipientName}! ✨\nBoleh minta tolong di-preview dulu yaa hasilnya (ini belum final):\n👉 ${publicGiftUrl}\n\nNanti kalau ada bagian yang mau direvisi, tolong di-list aja ya kak. Kalau dirasa sudah oke semua, kabarin aku biar langsung aku buatin barcode-nya! 🙏`;
+    const template = `Halo kak ${recipientName}! ✨\nBoleh minta tolong di-preview dulu yaa hasilnya (ini belum final):\n👉 ${publicGiftUrl}\n\nOiya kak, kalau kakak mau request nama link kado khusus (custom URL), bisa banget yaa (misal: for-you-always.my.id/nama-pilihan) hanya ada biaya tambahan +5k aja kak! 💖\n\nNanti kalau ada bagian yang mau direvisi, tolong di-list aja ya kak. Kalau dirasa sudah oke semua, kabarin aku biar langsung aku buatin barcode-nya! 🙏`;
     navigator.clipboard.writeText(template);
     setCopiedWaTemplate(true);
     setTimeout(() => setCopiedWaTemplate(false), 2500);
