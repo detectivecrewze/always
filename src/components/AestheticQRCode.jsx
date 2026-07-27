@@ -59,9 +59,9 @@ export default function AestheticQRCode({ url, themeConfig, size = 300 }) {
   const N = qrData.size;
   // Make the grid large enough to form a beautiful heart around the QR code
   const G = Math.floor(N * 2.5); 
-  // Perfectly center the QR code inside the grid
+  // Perfectly center the QR code inside the heart grid with optical vertical alignment
   const offsetX = Math.floor((G - N) / 2);
-  const offsetY = Math.floor((G - N) / 2);
+  const offsetY = Math.floor((G - N) / 2) - 2;
 
   const cells = [];
   const decorativeCells = [];
