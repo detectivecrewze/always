@@ -272,7 +272,7 @@ Biar hasil generate tidak monoton, selalu variasikan judul-judul di bawah ini (j
      Boleh minta tolong di-preview dulu yaa hasilnya (ini belum final):
      👉 https://anniv.for-you-always.my.id/{KV_ID}
 
-     Oiya kak, kalau kakak mau request nama link kado khusus (custom URL), bisa banget yaa (misal: for-you-always.my.id/nama-pilihan) hanya ada biaya tambahan +5k aja kak! 💖
+     Oiya kak, kalau kakak mau request nama link kado khusus (custom URL), bisa banget yaa (misal: for-you-always.my.id/kado-untuk-hazel) hanya ada biaya tambahan +5k aja kak! 💖
 
      Nanti kalau ada bagian yang mau direvisi, tolong di-list aja ya kak. Kalau dirasa sudah oke semua, kabarin aku biar langsung aku buatin barcode-nya! 🙏
      ```
