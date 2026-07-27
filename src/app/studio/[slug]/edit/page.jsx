@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback, use } from 'react';
 import { useRouter } from 'next/navigation';
 import playlistData from '../../playlist.json';
+import AestheticQRCode from '@/components/AestheticQRCode';
+import { themes } from '@/lib/themes';
 
 const TABS = ['Theme', 'Opening', 'Hero', 'Time', 'Letter', 'Reasons', 'Seasons', 'Gallery', 'Music', 'Closing'];
 
@@ -1051,6 +1053,10 @@ export default function StudioEditor({ params: paramsPromise }) {
   const [editKey, setEditKey] = useState(null);
   const [accessDenied, setAccessDenied] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [showPublishModal, setShowPublishModal] = useState(false);
+  const [qrTheme, setQrTheme] = useState('');
+  const [copiedGiftLink, setCopiedGiftLink] = useState(false);
+  const [copiedWaTemplate, setCopiedWaTemplate] = useState(false);
 
   useEffect(() => {
     const keyFromUrl = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('key') : null;
@@ -1115,6 +1121,50 @@ export default function StudioEditor({ params: paramsPromise }) {
     setTimeout(() => setCopiedLink(false), 2500);
   };
 
+  const handlePublish = async () => {
+    await save();
+    setQrTheme(data?.theme || 'blush-pink');
+    setShowPublishModal(true);
+  };
+
+  const handleDownloadQRInModal = () => {
+    const svg = document.getElementById('aesthetic-qr-svg');
+    if (!svg) return;
+    const canvas = document.createElement('canvas');
+    const size = 1000;
+    canvas.width = size; canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const img = new Image();
+    img.onload = () => {
+      const activeTheme = themes[qrTheme] || themes[data?.theme] || themes['blush-pink'];
+      ctx.fillStyle = activeTheme?.bg || '#0d0d0d';
+      ctx.fillRect(0, 0, size, size);
+      ctx.drawImage(img, 0, 0, size, size);
+      const a = document.createElement('a');
+      a.download = `${slug}-qr.png`;
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    };
+    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+  };
+
+  const publicGiftUrl = typeof window !== 'undefined' ? `${window.location.origin}/${slug}` : `https://anniv.for-you-always.my.id/${slug}`;
+
+  const copyGiftLink = () => {
+    navigator.clipboard.writeText(publicGiftUrl);
+    setCopiedGiftLink(true);
+    setTimeout(() => setCopiedGiftLink(false), 2500);
+  };
+
+  const copyWaTemplate = () => {
+    const recipientName = data?.recipient || 'kak';
+    const template = `Halo kak ${recipientName}! ✨\nBoleh minta tolong di-preview dulu yaa hasilnya (ini belum final):\n👉 ${publicGiftUrl}\n\nNanti kalau ada bagian yang mau direvisi, tolong di-list aja ya kak. Kalau dirasa sudah oke semua, kabarin aku biar langsung aku buatin barcode-nya! 🙏`;
+    navigator.clipboard.writeText(template);
+    setCopiedWaTemplate(true);
+    setTimeout(() => setCopiedWaTemplate(false), 2500);
+  };
+
   if (accessDenied) {
     return (
       <div className="flex flex-col items-center justify-center h-[100dvh] bg-[#050505] text-[#f5f5f5] p-6 text-center font-sans">
@@ -1168,13 +1218,20 @@ export default function StudioEditor({ params: paramsPromise }) {
           })}
         </div>
 
-        <div className="hidden md:block p-4 border-t border-[#1a1a1a]">
+        <div className="hidden md:block p-4 border-t border-[#1a1a1a] space-y-2">
           {saveStatus === 'saved' && (
-            <div style={{ ...S.statusPill('#22C55E'), textAlign: 'center', marginBottom: '0.5rem' }}>✓ Saved</div>
+            <div style={{ ...S.statusPill('#22C55E'), textAlign: 'center', marginBottom: '0.25rem' }}>✓ Saved</div>
           )}
           {saveStatus === 'error' && (
-            <div style={{ ...S.statusPill('#EF4444'), textAlign: 'center', marginBottom: '0.5rem' }}>Save failed</div>
+            <div style={{ ...S.statusPill('#EF4444'), textAlign: 'center', marginBottom: '0.25rem' }}>Save failed</div>
           )}
+          <button 
+            onClick={handlePublish}
+            disabled={saving}
+            className="w-full py-2.5 px-4 rounded-lg text-xs md:text-sm font-semibold text-white bg-gradient-to-r from-[#E11D48] via-[#EC4899] to-[#F472B6] hover:opacity-90 active:scale-[0.98] transition-all shadow-[0_4px_16px_rgba(225,29,72,0.35)] flex items-center justify-center gap-1.5"
+          >
+            <span>🚀</span> Publish & Barcode ✨
+          </button>
           <button style={S.saveBtn(saving)} onClick={save} disabled={saving}>
             {saving ? 'Saving...' : 'Save Changes'}
           </button>
@@ -1220,7 +1277,14 @@ export default function StudioEditor({ params: paramsPromise }) {
         </div>
 
         {/* Mobile Save Button */}
-        <div className="md:hidden absolute bottom-0 left-0 right-0 p-3 border-t border-[#1a1a1a] bg-[#0a0a0a] z-20 flex gap-3 items-center shadow-[0_-10px_20px_rgba(0,0,0,0.5)]">
+        <div className="md:hidden absolute bottom-0 left-0 right-0 p-3 border-t border-[#1a1a1a] bg-[#0a0a0a] z-20 flex gap-2 items-center shadow-[0_-10px_20px_rgba(0,0,0,0.5)]">
+          <button 
+            onClick={handlePublish}
+            disabled={saving}
+            className="py-2 px-3 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-[#E11D48] to-[#F472B6] active:scale-95 transition-all shadow-[0_2px_10px_rgba(225,29,72,0.3)] shrink-0 flex items-center gap-1"
+          >
+            <span>🚀</span> Publish
+          </button>
           <div className="flex-1">
             <button style={S.saveBtn(saving)} onClick={save} disabled={saving}>
               {saving ? 'Saving...' : 'Save Changes'}
@@ -1230,6 +1294,99 @@ export default function StudioEditor({ params: paramsPromise }) {
           {saveStatus === 'error' && <span className="text-[#EF4444] text-xs font-medium">Failed</span>}
         </div>
       </div>
+
+      {/* ── PUBLISH & BARCODE POPUP MODAL ───────────────────────── */}
+      {showPublishModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+          <div className="relative w-full max-w-lg bg-[#0e0e11] border border-white/10 rounded-2xl p-6 md:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.8)] text-[#f5f5f5] max-h-[90vh] overflow-y-auto font-sans">
+            {/* Close Button */}
+            <button 
+              onClick={() => setShowPublishModal(false)}
+              className="absolute top-4 right-4 text-[#888] hover:text-white bg-white/5 hover:bg-white/10 rounded-full w-8 h-8 flex items-center justify-center transition-all"
+            >
+              ✕
+            </button>
+
+            {/* Header */}
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-semibold uppercase tracking-wider mb-3">
+                ✨ Kado Live & Ready
+              </div>
+              <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-white via-rose-100 to-rose-300 bg-clip-text text-transparent">
+                Publish & Barcode Kado 🎉
+              </h2>
+              <p className="text-xs text-[#888] mt-1">
+                Kado telah tersimpan dan siap dibagikan ke penerima.
+              </p>
+            </div>
+
+            {/* QR Code Container */}
+            <div className="flex flex-col items-center justify-center bg-[#050505] p-5 rounded-xl border border-white/5 mb-6">
+              <AestheticQRCode 
+                url={publicGiftUrl} 
+                themeConfig={themes[qrTheme] || themes[data?.theme] || themes['blush-pink']} 
+                size={220} 
+              />
+              
+              {/* Theme Selector for QR */}
+              <div className="mt-4 flex items-center gap-2 w-full max-w-xs">
+                <span className="text-[0.7rem] text-[#888] whitespace-nowrap">Tema Barcode:</span>
+                <select 
+                  value={qrTheme} 
+                  onChange={(e) => setQrTheme(e.target.value)}
+                  className="flex-1 bg-[#16161a] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-[#eee] focus:outline-none focus:border-rose-500"
+                >
+                  {Object.entries(themes).map(([key, t]) => (
+                    <option key={key} value={key}>{t.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Link Details */}
+            <div className="bg-[#141418] border border-white/5 rounded-xl p-3.5 mb-6">
+              <div className="text-[0.7rem] text-[#888] uppercase tracking-wider mb-1 font-mono">Link Kado Public</div>
+              <div className="text-xs font-mono text-rose-300 break-all select-all">
+                {publicGiftUrl}
+              </div>
+            </div>
+
+            {/* Action Buttons Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <button
+                onClick={handleDownloadQRInModal}
+                className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-rose-900/20"
+              >
+                <span>📥</span> Download QR (PNG)
+              </button>
+
+              <button
+                onClick={copyGiftLink}
+                className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-purple-900/20"
+              >
+                <span>📋</span> {copiedGiftLink ? '✓ Link Tersalin!' : 'Copy Link Kado'}
+              </button>
+
+              <button
+                onClick={copyWaTemplate}
+                className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/20 sm:col-span-2"
+              >
+                <span>💬</span> {copiedWaTemplate ? '✓ Template WA Tersalin!' : 'Copy Template Preview WhatsApp'}
+              </button>
+            </div>
+
+            {/* Bottom Open Live Button */}
+            <div className="mt-4 text-center">
+              <button
+                onClick={() => window.open(publicGiftUrl, '_blank')}
+                className="text-xs text-[#aaa] hover:text-white underline underline-offset-4 transition-all inline-flex items-center gap-1"
+              >
+                Buka Link Kado di Tab Baru ↗
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
