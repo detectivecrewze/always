@@ -172,7 +172,7 @@ export default function PinGateScreen({
           {/* Title + subtitle */}
           <div className="text-center flex flex-col items-center gap-1">
             <h2 className="text-xl sm:text-2xl font-serif tracking-tight text-text/95">
-              {isUnlocked ? 'Unlocked ✨' : 'Secret Code'}
+              {isUnlocked ? 'Unlocked' : 'Secret Code'}
             </h2>
             <p className="text-[11.5px] sm:text-[12.5px] font-light text-text/45 tracking-wide">
               {isUnlocked ? 'Opening the memories...' : 'Enter the secret code to unlock.'}
