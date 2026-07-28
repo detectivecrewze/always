@@ -72,7 +72,7 @@ export default function PinGateScreen({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.6 }}
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-bg/90 backdrop-blur-2xl overflow-hidden select-none p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-bg/90 backdrop-blur-2xl overflow-hidden select-none p-3 sm:p-6"
     >
       {/* Ambient background orbs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
@@ -92,11 +92,16 @@ export default function PinGateScreen({
 
       {/* ── THE CARD ─────────────────────────────────────────── */}
       <motion.div
-        initial={{ opacity: 0, y: 24, scale: 0.96 }}
+        initial={{ opacity: 0, y: 20, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-10 w-full max-w-[360px] rounded-3xl overflow-hidden"
+        className="relative z-10 w-full max-w-[340px]"
         style={{
+          /* Card must never exceed viewport height */
+          maxHeight: 'calc(100dvh - 24px)',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          borderRadius: '1.5rem',
           background: 'rgba(255,255,255,0.045)',
           border: '1px solid rgba(255,255,255,0.10)',
           boxShadow: `0 32px 80px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.04), inset 0 1px 0 rgba(255,255,255,0.10)`,
@@ -104,17 +109,14 @@ export default function PinGateScreen({
           WebkitBackdropFilter: 'blur(32px)',
         }}
       >
-        {/* Subtle gradient stripe at top */}
-        <div
-          className="absolute top-0 left-0 right-0 h-px"
-          style={{
-            background: `linear-gradient(90deg, transparent, ${primaryColor}80, transparent)`,
-          }}
+        {/* Top shimmer */}
+        <div className="sticky top-0 left-0 right-0 h-px z-20"
+          style={{ background: `linear-gradient(90deg, transparent, ${primaryColor}80, transparent)` }}
         />
 
-        <div className="px-7 py-8 flex flex-col items-center gap-6">
+        <div className="px-5 py-5 sm:px-7 sm:py-7 flex flex-col items-center gap-4 sm:gap-5">
 
-          {/* Lock Icon — Premium aesthetic */}
+          {/* Lock Icon */}
           <motion.div
             animate={
               isUnlocked
@@ -132,27 +134,19 @@ export default function PinGateScreen({
             }
           >
             <div
-              className="relative w-[72px] h-[72px] rounded-2xl flex items-center justify-center"
+              className="relative w-[58px] h-[58px] sm:w-[68px] sm:h-[68px] rounded-2xl flex items-center justify-center"
               style={{
                 background: `linear-gradient(135deg, ${primaryColor}22 0%, ${primaryColor}0a 100%)`,
                 border: `1.5px solid ${primaryColor}35`,
                 boxShadow: `0 8px 32px ${primaryColor}25, inset 0 1px 0 ${primaryColor}20`,
               }}
             >
-              {/* Inner glow */}
               <div
                 className="absolute inset-0 rounded-2xl opacity-50"
-                style={{
-                  background: `radial-gradient(circle at 50% 0%, ${primaryColor}30, transparent 70%)`,
-                }}
+                style={{ background: `radial-gradient(circle at 50% 0%, ${primaryColor}30, transparent 70%)` }}
               />
               {isUnlocked ? (
-                /* Unlock = Heart */
-                <svg
-                  className="relative z-10 w-8 h-8"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                >
+                <svg className="relative z-10 w-7 h-7" viewBox="0 0 24 24" fill="none">
                   <motion.path
                     initial={{ pathLength: 0 }}
                     animate={{ pathLength: 1 }}
@@ -165,55 +159,22 @@ export default function PinGateScreen({
                   />
                 </svg>
               ) : (
-                /* Locked = Elegant padlock */
-                <svg
-                  className="relative z-10 w-8 h-8"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  style={{ color: primaryColor }}
-                >
-                  {/* Shackle */}
-                  <path
-                    d="M8 11V7.5a4 4 0 118 0V11"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  {/* Body */}
-                  <rect
-                    x="4.5"
-                    y="11"
-                    width="15"
-                    height="10"
-                    rx="2.5"
-                    fill="currentColor"
-                    fillOpacity="0.15"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                  />
-                  {/* Keyhole dot */}
+                <svg className="relative z-10 w-7 h-7" viewBox="0 0 24 24" fill="none" style={{ color: primaryColor }}>
+                  <path d="M8 11V7.5a4 4 0 118 0V11" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  <rect x="4.5" y="11" width="15" height="10" rx="2.5" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.8" />
                   <circle cx="12" cy="16" r="1.5" fill="currentColor" />
-                  {/* Keyhole stem */}
-                  <rect
-                    x="11.4"
-                    y="16"
-                    width="1.2"
-                    height="2"
-                    rx="0.6"
-                    fill="currentColor"
-                  />
+                  <rect x="11.4" y="16" width="1.2" height="2" rx="0.6" fill="currentColor" />
                 </svg>
               )}
             </div>
           </motion.div>
 
-          {/* Title */}
-          <div className="text-center flex flex-col items-center gap-2">
-            <h2 className="text-2xl font-serif tracking-tight text-text/95">
+          {/* Title + subtitle */}
+          <div className="text-center flex flex-col items-center gap-1">
+            <h2 className="text-xl sm:text-2xl font-serif tracking-tight text-text/95">
               {isUnlocked ? 'Unlocked ✨' : 'Secret Code'}
             </h2>
-            <p className="text-[12.5px] font-light text-text/45 tracking-wide">
+            <p className="text-[11.5px] sm:text-[12.5px] font-light text-text/45 tracking-wide">
               {isUnlocked ? 'Opening the memories...' : 'Enter the secret code to unlock.'}
             </p>
           </div>
@@ -223,7 +184,7 @@ export default function PinGateScreen({
             <motion.div
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-medium tracking-wider uppercase"
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[10.5px] sm:text-[11px] font-medium tracking-wider uppercase"
               style={{
                 background: `${primaryColor}12`,
                 border: `1px solid ${primaryColor}25`,
@@ -236,15 +197,12 @@ export default function PinGateScreen({
           )}
 
           {/* Divider */}
-          <div
-            className="w-full h-px"
-            style={{ background: 'rgba(255,255,255,0.06)' }}
-          />
+          <div className="w-full h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
 
           {/* PIN Dots */}
-          <div className="flex flex-col items-center gap-3 w-full">
+          <div className="flex flex-col items-center gap-2 w-full">
             <motion.div
-              className="flex items-center gap-3.5"
+              className="flex items-center gap-3"
               animate={isError ? { x: [-7, 7, -5, 5, -2, 2, 0] } : {}}
               transition={{ duration: 0.4 }}
             >
@@ -253,7 +211,7 @@ export default function PinGateScreen({
                 return (
                   <div
                     key={idx}
-                    className="relative w-3 h-3 rounded-full"
+                    className="relative w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full"
                     style={{
                       background: 'rgba(255,255,255,0.08)',
                       border: '1px solid rgba(255,255,255,0.14)',
@@ -269,7 +227,7 @@ export default function PinGateScreen({
                           className="absolute inset-0 rounded-full"
                           style={{
                             backgroundColor: isUnlocked ? '#10b981' : isError ? '#f87171' : primaryColor,
-                            boxShadow: `0 0 10px ${isUnlocked ? '#10b981' : isError ? '#f87171' : primaryColor}88`,
+                            boxShadow: `0 0 8px ${isUnlocked ? '#10b981' : isError ? '#f87171' : primaryColor}88`,
                           }}
                         />
                       )}
@@ -280,7 +238,7 @@ export default function PinGateScreen({
             </motion.div>
 
             {/* Error message */}
-            <div className="h-4 flex items-center">
+            <div className="h-3.5 flex items-center">
               <AnimatePresence>
                 {isError && (
                   <motion.span
@@ -320,7 +278,7 @@ export default function PinGateScreen({
               whileTap={{ scale: 0.88 }}
               onClick={handleBackspace}
               disabled={isUnlocked || inputPin.length === 0}
-              className="flex items-center justify-center h-14 rounded-2xl transition-colors disabled:opacity-25"
+              className="flex items-center justify-center h-11 sm:h-12 rounded-2xl transition-colors disabled:opacity-25"
               style={{
                 background: 'rgba(255,255,255,0.04)',
                 border: '1px solid rgba(255,255,255,0.07)',
@@ -335,10 +293,8 @@ export default function PinGateScreen({
 
         {/* Bottom shimmer */}
         <div
-          className="absolute bottom-0 left-0 right-0 h-px"
-          style={{
-            background: `linear-gradient(90deg, transparent, ${secondaryColor}40, transparent)`,
-          }}
+          className="sticky bottom-0 left-0 right-0 h-px"
+          style={{ background: `linear-gradient(90deg, transparent, ${secondaryColor}40, transparent)` }}
         />
       </motion.div>
     </motion.div>
@@ -351,21 +307,18 @@ function KeypadButton({ digit, onClick, disabled, primaryColor }) {
       whileTap={{ scale: 0.88 }}
       onClick={onClick}
       disabled={disabled}
-      className="relative flex items-center justify-center h-14 rounded-2xl transition-all duration-150 overflow-hidden group"
+      className="relative flex items-center justify-center h-11 sm:h-12 rounded-2xl transition-all duration-150 overflow-hidden group"
       style={{
         background: 'rgba(255,255,255,0.045)',
         border: '1px solid rgba(255,255,255,0.08)',
       }}
     >
-      {/* Hover tint */}
       <div
         className="absolute inset-0 opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-150"
-        style={{
-          background: `${primaryColor}18`,
-        }}
+        style={{ background: `${primaryColor}18` }}
       />
       <span
-        className="relative z-10 text-2xl font-serif font-light transition-colors duration-150"
+        className="relative z-10 text-xl sm:text-2xl font-serif font-light transition-colors duration-150"
         style={{ color: 'var(--color-text, #f0ece4)' }}
       >
         {digit}
