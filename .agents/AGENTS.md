@@ -298,3 +298,9 @@ Biar hasil generate tidak monoton, selalu variasikan judul-judul di bawah ini (j
     - **Tiru Gaya Asli Customer**: Jika pesan dari customer cukup panjang, perhatikan dan **TIRU** pilihan kosakata mereka. Jika mereka memakai kata "nggak", "udah", "banget", "bikin", "capek", maka gunakan kata-kata yang sama. 
     - **Puitis yang Natural**: Sekalipun customer memilih *writing tone* "Puitis", JANGAN otomatis berubah menggunakan bahasa sastra kuno atau terlalu berat (contoh hindari: "niscaya", "senantiasa", "dikau", "kalbu") KECUALI customer memang menulis dengan gaya seperti itu. Gunakan "Puitis Santai/Modern".
     - Prioritas utama dari setiap surat adalah membuatnya terasa 100% ditulis oleh manusia yang sedang berbicara langsung ke pasangannya.
+
+13. **Larangan Emoji di Hero Section**:
+    - Di bagian *Hero Section* (seperti `heroPreTitle`, `heroLine1`, `heroLine2`, `heroSubtitle`), **TIDAK BOLEH** ada emoji hati atau emoji bentuk apapun. Biarkan teks bersih dan elegan.
+
+14. **Aturan Emoji Ulang Tahun di Closing Section**:
+    - Khusus untuk momen Ulang Tahun, emoji yang digunakan pada teks di *Closing Section* (seperti `closingTitle1`, `closingTitle2`, atau `celebrateBtnText`) **WAJIB** menggunakan emoji kue ulang tahun `🎂` (hindari menggunakan emoji *sparkles* `✨` atau hati untuk momen ini).

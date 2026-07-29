@@ -622,7 +622,21 @@ export default function StudioDashboard() {
 
                     <div style={S.cardName}>From: {o.sender}</div>
                     <div style={{ fontSize: '0.85rem', color: '#aaa', marginBottom: '0.2rem' }}>To: {o.recipient} (/{o.slug})</div>
-                    <div style={{ fontSize: '0.8rem', color: '#888', marginBottom: '1rem' }}>Theme: {o.theme} | Moment: {o.moment}</div>
+                    <div style={{ fontSize: '0.8rem', color: '#888', marginBottom: '0.5rem' }}>Theme: {o.theme} | Moment: {o.moment}</div>
+                    {/* PIN Badge */}
+                    {o.pinEnabled || o.pinCode ? (
+                      <div style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+                        background: '#7C3AED18', border: '1px solid #7C3AED55',
+                        borderRadius: '6px', padding: '0.25rem 0.6rem', marginBottom: '0.75rem',
+                        fontSize: '0.72rem', color: '#A78BFA', fontWeight: 600,
+                      }}>
+                        🔒 PIN: <span style={{ fontFamily: 'monospace', letterSpacing: '0.1em' }}>{o.pinCode || '????'}</span>
+                        {o.pinHint && <span style={{ opacity: 0.75, fontWeight: 400 }}>· Hint: {o.pinHint}</span>}
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: '0.7rem', color: '#444', marginBottom: '0.75rem' }}>🔓 Tanpa PIN</div>
+                    )}
                     <div style={S.actions}>
                       <button style={S.actionBtn('#8B5CF6')} onClick={() => setSelectedOrder(o)}>View Details</button>
                       <button style={{ ...S.actionBtn('#22C55E'), background: '#22C55E20' }} onClick={() => handleApplyOrder(o)} disabled={processingOrder === o.orderId}>
@@ -815,8 +829,25 @@ export default function StudioDashboard() {
                 </button>
               )}
             </div>
-            <div style={{ fontSize: '0.8rem', color: selectedOrder.isDraft ? '#EAB308' : '#888', fontFamily: 'monospace', marginBottom: '1.5rem' }}>
-              {selectedOrder.isDraft ? 'DRAFT IN PROGRESS' : selectedOrder.orderId}
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', fontSize: '0.8rem', fontFamily: 'monospace', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+              <span style={{ color: selectedOrder.isDraft ? '#EAB308' : '#888' }}>
+                {selectedOrder.isDraft ? 'DRAFT IN PROGRESS' : `ORDER ID: ${selectedOrder.orderId}`}
+              </span>
+              {selectedOrder.slug && (
+                <span style={{ background: '#222', border: '1px solid #333', padding: '2px 8px', borderRadius: '4px', color: '#3B82F6', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <span>KV ID: <strong>{selectedOrder.slug}</strong></span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(selectedOrder.slug);
+                      alert(`KV ID tersalin: ${selectedOrder.slug}`);
+                    }}
+                    style={{ background: 'none', border: 'none', color: '#60A5FA', cursor: 'pointer', fontSize: '0.75rem', padding: 0 }}
+                    title="Copy KV ID"
+                  >
+                    📋
+                  </button>
+                </span>
+              )}
             </div>
 
             {/* ── Order info grid ── */}
@@ -852,6 +883,31 @@ export default function StudioDashboard() {
                    selectedOrder.musicChoice === 'playlist' ? `Playlist: ${selectedOrder.music || 'None'}` :
                    `Request: ${selectedOrder.music || 'None'}`}
                 </div>
+              </div>
+
+              {/* PIN Protection Info */}
+              <div style={{ gridColumn: 'span 2', background: selectedOrder.pinEnabled || selectedOrder.pinCode ? '#7C3AED12' : '#ffffff08', border: `1px solid ${selectedOrder.pinEnabled || selectedOrder.pinCode ? '#7C3AED40' : '#ffffff10'}`, borderRadius: '8px', padding: '0.75rem 1rem' }}>
+                <div style={{ ...S.label, marginBottom: '0.5rem', color: selectedOrder.pinEnabled || selectedOrder.pinCode ? '#A78BFA' : '#555' }}>
+                  {selectedOrder.pinEnabled || selectedOrder.pinCode ? '🔒 PIN Protection — AKTIF' : '🔓 PIN Protection — Tidak Aktif'}
+                </div>
+                {(selectedOrder.pinEnabled || selectedOrder.pinCode) ? (
+                  <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+                    <div>
+                      <div style={{ fontSize: '0.65rem', color: '#888', marginBottom: '2px' }}>PIN CODE</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#A78BFA', fontFamily: 'monospace', letterSpacing: '0.2em' }}>
+                        {selectedOrder.pinCode || '(tidak diisi)'}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.65rem', color: '#888', marginBottom: '2px' }}>HINT / CLUE</div>
+                      <div style={{ fontSize: '0.9rem', color: '#f5f5f5', fontStyle: selectedOrder.pinHint ? 'normal' : 'italic' }}>
+                        {selectedOrder.pinHint || '(tidak ada hint)'}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: '0.8rem', color: '#555' }}>Customer tidak menggunakan PIN untuk kado ini.</div>
+                )}
               </div>
             </div>
 
