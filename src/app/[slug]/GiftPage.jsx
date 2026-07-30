@@ -14,6 +14,7 @@ import SeasonsSection from '@/components/SeasonsSection';
 import MusicPlayer from '@/components/MusicPlayer';
 import Gallery from '@/components/Gallery';
 import ClosingSection from '@/components/ClosingSection';
+import PreviewOnlyBadge from '@/components/PreviewOnlyBadge';
 import { themes, defaultTheme } from '@/lib/themes';
 
 export default function GiftPage({ data }) {
@@ -199,6 +200,11 @@ export default function GiftPage({ data }) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Preview Only Badge — shown when payment is not complete */}
+      {gateOpen && data.paymentStatus === 'partial' && (
+        <PreviewOnlyBadge />
+      )}
     </main>
   );
 }

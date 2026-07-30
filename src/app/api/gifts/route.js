@@ -28,7 +28,7 @@ export async function GET(request) {
     const slugs = await listGifts();
     const gifts = await Promise.all(slugs.map(async (slug) => {
       const g = await getGift(slug);
-      return g ? { slug, recipient: g.recipient, sender: g.sender, createdAt: g.createdAt, theme: g.theme } : null;
+      return g ? { slug, recipient: g.recipient, sender: g.sender, createdAt: g.createdAt, theme: g.theme, paymentStatus: g.paymentStatus || 'paid' } : null;
     }));
     return NextResponse.json(gifts.filter(Boolean));
   }
@@ -41,6 +41,7 @@ export async function GET(request) {
     sender: g.sender,
     createdAt: g.createdAt,
     theme: g.theme,
+    paymentStatus: g.paymentStatus || 'paid',
   })));
 }
 
