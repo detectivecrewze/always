@@ -26,6 +26,7 @@ export default function StudioDashboard() {
   const [renameData, setRenameData] = useState(null);
   const [renaming, setRenaming] = useState(false);
   const [cleaningUp, setCleaningUp] = useState(false);
+  const [togglingPayment, setTogglingPayment] = useState(null); // slug being toggled
 
   // Order editing state
   const [editingOrder, setEditingOrder] = useState(null); // { orderId, photos: [...], message: '', secretPhoto: '' }
@@ -230,6 +231,24 @@ export default function StudioDashboard() {
     await fetch(`/api/gifts/${slug}`, { method: 'DELETE' });
     await fetchGifts();
     setDeleting(null);
+  };
+
+  const handleTogglePayment = async (slug, currentStatus) => {
+    setTogglingPayment(slug);
+    const newStatus = currentStatus === 'partial' ? 'paid' : 'partial';
+    try {
+      const res = await fetch(`/api/gifts/${slug}/payment`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentStatus: newStatus }),
+      });
+      if (res.ok) {
+        setGifts(prev => prev.map(g =>
+          g.slug === slug ? { ...g, paymentStatus: newStatus } : g
+        ));
+      }
+    } catch { /* ignore */ }
+    setTogglingPayment(null);
   };
 
   const handleApplyOrder = async (order) => {
@@ -505,7 +524,42 @@ export default function StudioDashboard() {
             <div style={S.grid}>
               {filteredGifts.map((g) => (
                 <div key={g.slug} style={S.card} onMouseEnter={e => e.currentTarget.style.borderColor = '#333'} onMouseLeave={e => e.currentTarget.style.borderColor = '#1a1a1a'}>
-                  <div style={S.cardSlug}>/{g.slug}</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.25rem' }}>
+                    <div style={S.cardSlug}>/{g.slug}</div>
+                    {/* Payment Status Badge */}
+                    <div
+                      onClick={() => handleTogglePayment(g.slug, g.paymentStatus)}
+                      title={g.paymentStatus === 'partial' ? 'Klik untuk tandai LUNAS' : 'Klik untuk tandai BELUM LUNAS'}
+                      style={{
+                        cursor: togglingPayment === g.slug ? 'wait' : 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        padding: '2px 8px',
+                        borderRadius: '999px',
+                        fontSize: '0.65rem',
+                        fontWeight: 700,
+                        letterSpacing: '0.03em',
+                        border: g.paymentStatus === 'partial'
+                          ? '1px solid rgba(245,158,11,0.5)'
+                          : '1px solid rgba(34,197,94,0.3)',
+                        background: g.paymentStatus === 'partial'
+                          ? 'rgba(245,158,11,0.12)'
+                          : 'rgba(34,197,94,0.08)',
+                        color: g.paymentStatus === 'partial' ? '#F59E0B' : '#22C55E',
+                        transition: 'opacity 0.2s',
+                        opacity: togglingPayment === g.slug ? 0.5 : 1,
+                        userSelect: 'none',
+                      }}
+                    >
+                      {togglingPayment === g.slug
+                        ? '...'
+                        : g.paymentStatus === 'partial'
+                          ? '⚠ Belum Lunas'
+                          : '✓ Lunas'
+                      }
+                    </div>
+                  </div>
                   <div style={S.cardName}>{g.recipient || g.slug}</div>
                   <div style={S.cardDate}>{g.createdAt || 'Unknown date'}</div>
                   <div style={S.actions}>
@@ -899,8 +953,8 @@ export default function StudioDashboard() {
                       </div>
                     </div>
                     <div>
-                      <div style={{ fontSize: '0.65rem', color: '#888', marginBottom: '2px' }}>HINT / CLUE</div>
-                      <div style={{ fontSize: '0.9rem', color: '#f5f5f5', fontStyle: selectedOrder.pinHint ? 'normal' : 'italic' }}>
+                      <div style={{ fontSize: '0.65rem', color: '#bbb', marginBottom: '5px', letterSpacing: '0.06em' }}>HINT / CLUE</div>
+                      <div style={{ display: 'inline-block', fontSize: '1rem', fontWeight: 800, color: '#fff', fontStyle: selectedOrder.pinHint ? 'normal' : 'italic', background: 'rgba(167,139,250,0.2)', border: '1.5px solid rgba(167,139,250,0.6)', borderRadius: '6px', padding: '4px 14px', textShadow: '0 0 12px rgba(167,139,250,0.8)', letterSpacing: '0.04em' }}>
                         {selectedOrder.pinHint || '(tidak ada hint)'}
                       </div>
                     </div>
