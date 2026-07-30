@@ -184,14 +184,18 @@ export default function PinGateScreen({
             <motion.div
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[10.5px] sm:text-[11px] font-medium tracking-wider uppercase"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[12px] sm:text-[13px] tracking-wide uppercase"
               style={{
-                background: `${primaryColor}12`,
-                border: `1px solid ${primaryColor}25`,
-                color: `${primaryColor}dd`,
+                background: `${primaryColor}33`,
+                border: `1.5px solid ${primaryColor}99`,
+                color: '#ffffff',
+                fontWeight: 700,
+                letterSpacing: '0.08em',
+                textShadow: '0 1px 4px rgba(0,0,0,0.5)',
+                backdropFilter: 'blur(8px)',
               }}
             >
-              <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z" />
                 <path d="M9 21h6" />
               </svg>
