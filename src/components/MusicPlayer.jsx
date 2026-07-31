@@ -15,7 +15,7 @@ export default function MusicPlayer({ music, isPlaying, onToggle, audioRef }) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(true);
+  const [isMinimized, setIsMinimized] = useState(false);
   const progressBarRef = useRef(null);
 
   useEffect(() => {
