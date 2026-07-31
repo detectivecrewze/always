@@ -58,156 +58,118 @@ function GlowHeart() {
           <filter id="closingGlow" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="5" result="blur1"/>
             <feGaussianBlur stdDeviation="12" result="blur2"/>
-            <feMerge><feMergeNode in="blur2"/><feMergeNode in="blur1"/><feMergeNode in="SourceGraphic"/></feMerge>
+            <feMerge>
+              <feMergeNode in="blur2"/>
+              <feMergeNode in="blur1"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
           </filter>
-          <linearGradient id="closingGrad" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
-            <stop stopColor="var(--color-particle)"/><stop offset="0.5" stopColor="var(--color-accent)"/><stop offset="1" stopColor="var(--color-text-muted)"/>
+          <linearGradient id="heartGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="var(--color-accent)"/>
+            <stop offset="100%" stopColor="color-mix(in srgb, var(--color-accent) 60%, #000)"/>
           </linearGradient>
         </defs>
-        <g filter="url(#closingGlow)">
-          <path d="M60 85 C60 85, 25 55, 25 35 C25 20, 45 15, 60 30 C75 15, 95 20, 95 35 C95 55, 60 85, 60 85 Z"
-            stroke="var(--color-particle)" strokeWidth="2.5" fill="var(--color-accent)" fillOpacity="0.15" strokeLinecap="round"/>
-        </g>
+        <path
+          d="M60 102.7L52.75 96.1C26.9 72.64 10 57.24 10 38.35C10 22.95 22.1 10.85 37.5 10.85C46.2 10.85 54.55 14.9 60 21.3C65.45 14.9 73.8 10.85 82.5 10.85C97.9 10.85 110 22.95 110 38.35C110 57.24 93.1 72.64 67.25 96.15L60 102.7Z"
+          fill="url(#heartGrad)"
+          filter="url(#closingGlow)"
+        />
       </svg>
     </motion.div>
   );
 }
 
-// ── Floating Flowers ──────────────────────────────────────────────
-const flowerColors = ['var(--color-accent)', 'var(--color-particle)', 'var(--color-text-muted)', 'var(--color-accent)', 'var(--color-particle)'];
+// ── Floating Flowers Effect ───────────────────────────────────────
 function FloatingFlowers() {
+  const items = [
+    { x: -140, y: -20, delay: 0, size: 28, rotate: 15 },
+    { x: 140, y: -10, delay: 0.4, size: 24, rotate: -20 },
+    { x: -180, y: 40, delay: 0.8, size: 20, rotate: 40 },
+    { x: 180, y: 50, delay: 1.2, size: 22, rotate: -35 },
+  ];
   return (
-    <div className="flex gap-3 justify-center mb-4">
-      {flowerColors.map((color, i) => (
-        <motion.svg key={i} width="28" height="28" viewBox="0 0 24 24" fill={color}
-          animate={{ y: [0, -5, 0], rotate: [-5, 5, -5] }}
-          transition={{ duration: 2.5, delay: i * 0.15, repeat: Infinity, ease: 'easeInOut' }}>
-          <circle cx="12" cy="6" r="3.5"/><circle cx="17.6" cy="9.5" r="3.5"/>
-          <circle cx="15.5" cy="16" r="3.5"/><circle cx="8.5" cy="16" r="3.5"/>
-          <circle cx="6.4" cy="9.5" r="3.5"/><circle cx="12" cy="12" r="3" fill="#FFF8"/>
-        </motion.svg>
+    <div className="absolute inset-0 pointer-events-none overflow-visible flex items-center justify-center">
+      {items.map((it, idx) => (
+        <motion.div
+          key={idx}
+          className="absolute text-accent/20"
+          style={{ x: it.x, y: it.y }}
+          animate={{ y: [it.y - 6, it.y + 6, it.y - 6], rotate: [it.rotate - 5, it.rotate + 5, it.rotate - 5] }}
+          transition={{ duration: 4 + idx, repeat: Infinity, ease: 'easeInOut', delay: it.delay }}
+        >
+          <svg width={it.size} height={it.size} viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C10.5 2 9.5 4.5 9.5 7C9.5 9.5 10.5 11 12 11C13.5 11 14.5 9.5 14.5 7C14.5 4.5 13.5 2 12 2ZM2 12C2 10.5 4.5 9.5 7 9.5C9.5 9.5 11 10.5 11 12C11 13.5 9.5 14.5 7 14.5C4.5 14.5 2 13.5 2 12ZM17 12C17 10.5 19.5 9.5 22 9.5C24.5 9.5 24.5 10.5 24.5 12C24.5 13.5 22 14.5 19.5 14.5C17 14.5 17 13.5 17 12ZM12 13C10.5 13 9.5 14.5 9.5 17C9.5 19.5 10.5 22 12 22C13.5 22 14.5 19.5 14.5 17C14.5 14.5 13.5 13 12 13Z"/>
+            <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
+          </svg>
+        </motion.div>
       ))}
     </div>
   );
 }
 
-// ── Cinema Film Strip decoration ──────────────────────────────────
-function FilmStrip({ side }) {
-  const holes = Array.from({ length: 8 });
-  return (
-    <div className={`absolute top-0 bottom-0 ${side === 'left' ? 'left-0' : 'right-0'} w-7 flex flex-col justify-around items-center py-2`}
-      style={{ background: '#0a0a0a', borderRight: side === 'left' ? '1px solid #222' : 'none', borderLeft: side === 'right' ? '1px solid #222' : 'none' }}>
-      {holes.map((_, i) => (
-        <div key={i} className="w-3 h-2.5 rounded-[2px]" style={{ background: '#1a1a1a', border: '1px solid #333' }} />
-      ))}
-    </div>
-  );
-}
-
-// ── Cinema Modal ──────────────────────────────────────────────────
+// ── Fullscreen Cinema Modal ───────────────────────────────────────
 function CinemaModal({ secretPhoto, secretCaption, secretVideoMuted, onClose }) {
-  const isVideo = secretPhoto && (secretPhoto.endsWith('.mp4') || secretPhoto.endsWith('.webm') || secretPhoto.endsWith('.mov'));
+  const isVideo = secretPhoto && /\.(mp4|webm|mov)$/i.test(secretPhoto);
 
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-[100] flex items-center justify-center px-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.4 }}
-        onClick={onClose}
+        transition={{ duration: 0.8 }}
+        className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/95 px-4 overflow-hidden"
       >
-        {/* Backdrop */}
-        <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(8px)' }} />
-
-        {/* Cinema frame */}
-        <motion.div
-          className="relative z-10 w-full max-w-[380px]"
-          initial={{ scale: 0.7, opacity: 0, y: 60 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.85, opacity: 0, y: 40 }}
-          transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-          onClick={(e) => e.stopPropagation()}
+        {/* Close Button */}
+        <motion.button
+          onClick={onClose}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.5 }}
+          className="absolute top-6 right-6 z-20 text-white/60 hover:text-white transition-colors p-2 rounded-full bg-white/10 backdrop-blur-md"
         >
-          {/* Top label — like a cinema reel */}
-          <div className="text-center mb-3">
-            <span className="font-sans text-[10px] tracking-[0.3em] uppercase text-white/30">✦ a secret just for you ✦</span>
-          </div>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </motion.button>
 
-          {/* Main screen */}
-          <div className="relative rounded-sm overflow-hidden" style={{ border: '2px solid #222', boxShadow: '0 0 60px rgba(0,0,0,0.9), 0 0 0 8px #111, 0 0 0 9px #222' }}>
-            {/* Film strips on sides */}
-            <FilmStrip side="left" />
-            <FilmStrip side="right" />
-
-            {/* Content area */}
-            <div className="mx-7">
-              {/* Projector light glow at top */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-16 pointer-events-none"
-                style={{ background: 'radial-gradient(ellipse, rgba(255,220,100,0.08) 0%, transparent 70%)' }} />
-
-              {/* Photo or Video or Link */}
-              {secretPhoto && (
-                isVideo ? (
-                  <video
-                    src={secretPhoto}
-                    className="w-full aspect-[3/4] object-cover"
-                    autoPlay
-                    loop
-                    controls
-                    playsInline
-                    muted={secretVideoMuted}
-                  />
-                ) : (secretPhoto.match(/\.(jpeg|jpg|gif|png|webp)$/i) || secretPhoto.includes('for-you-always') || secretPhoto.includes('cloudinary')) ? (
-                  <img
-                    src={secretPhoto}
-                    alt="secret"
-                    className="w-full aspect-[3/4] object-cover"
-                    onError={(e) => { e.target.style.display = 'none'; }}
-                  />
-                ) : (
-                  <div className="w-full aspect-[3/4] bg-[#111] flex flex-col items-center justify-center text-center p-6">
-                    <span className="text-3xl mb-4">🔗</span>
-                    <h3 className="font-serif text-[18px] text-[#e5e5e5] mb-2">Sebuah Tautan Rahasia</h3>
-                    <p className="font-sans text-[12px] text-white/60 mb-6">Seseorang meninggalkan pesan atau kenangan untukmu di tautan ini.</p>
-                    <a href={secretPhoto} target="_blank" rel="noopener noreferrer" className="px-5 py-2 rounded-full border border-white/20 text-white/80 font-sans text-[11px] uppercase tracking-widest hover:bg-white/10 transition-colors">
-                      Buka Tautan
-                    </a>
-                  </div>
-                )
-              )}
-
-              {/* Vignette overlay */}
-              <div className="absolute inset-0 mx-7 pointer-events-none"
-                style={{ background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.5) 100%)' }} />
-            </div>
-          </div>
-
-          {/* Caption below like a movie card */}
-          {secretCaption && (
-            <motion.div
-              className="text-center mt-5 px-4"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              <p className="font-serif italic text-sm md:text-base text-white/70 leading-relaxed">
-                "{secretCaption}"
-              </p>
-            </motion.div>
+        {/* Secret Media Container */}
+        <motion.div
+          initial={{ scale: 0.85, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.85, opacity: 0 }}
+          transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
+          className="relative max-w-2xl max-h-[75vh] rounded-3xl overflow-hidden shadow-2xl border border-white/15"
+        >
+          {isVideo ? (
+            <video
+              src={secretPhoto}
+              className="w-full h-full max-h-[75vh] object-contain"
+              autoPlay
+              controls
+              playsInline
+              muted={secretVideoMuted}
+            />
+          ) : (
+            <img
+              src={secretPhoto}
+              alt="Secret Memory"
+              className="w-full h-full max-h-[75vh] object-contain"
+            />
           )}
-
-          {/* Close button */}
-          <div className="flex justify-center mt-6">
-            <button
-              onClick={onClose}
-              className="font-sans text-xs tracking-[0.2em] uppercase text-white/30 hover:text-white/60 transition-colors"
-            >
-              close ✕
-            </button>
-          </div>
         </motion.div>
+
+        {/* Secret Caption */}
+        {secretCaption && (
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 0.8 }}
+            className="font-serif italic text-lg md:text-xl text-white/80 text-center max-w-md mt-6"
+          >
+            {secretCaption}
+          </motion.p>
+        )}
       </motion.div>
     </AnimatePresence>
   );
@@ -215,35 +177,37 @@ function CinemaModal({ secretPhoto, secretCaption, secretVideoMuted, onClose }) 
 
 const containerVariants = {
   hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.3,
-      delayChildren: 0.2,
-    },
-  },
+  visible: { opacity: 1, transition: { staggerChildren: 0.3, delayChildren: 0.2 } },
 };
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20, filter: 'blur(8px)' },
-  visible: {
-    opacity: 1,
-    y: 0,
-    filter: 'blur(0px)',
-    transition: { duration: 1.2, ease: [0.25, 0.1, 0.25, 1] },
-  },
+  visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 1.2, ease: [0.25, 0.1, 0.25, 1] } },
 };
 
 // ── Main Component ────────────────────────────────────────────────
-export default function ClosingSection({ closingLine, sender, secretPhoto, secretCaption, secretVideoMuted, closingPreTitle, closingTitle1, closingTitle2, closingParagraph, celebrateBtnText, onCinemaToggle }) {
+export default function ClosingSection({
+  closingLine,
+  sender,
+  secretPhoto,
+  secretCaption,
+  secretVideoMuted,
+  closingPreTitle,
+  closingTitle1,
+  closingTitle2,
+  closingParagraph,
+  celebrateBtnText,
+  onCinemaToggle,
+  isLocked
+}) {
   const [celebrating, setCelebrating] = useState(false);
   const [celebrateCount, setCelebrateCount] = useState(0);
   const [showCinema, setShowCinema] = useState(false);
 
   const handleCelebrate = useCallback(() => {
+    if (isLocked) return;
     setCelebrating(true);
     setCelebrateCount((n) => n + 1);
-    // After confetti, stop celebrating and open cinema IF photo exists
     setTimeout(() => {
       setCelebrating(false);
       if (secretPhoto) {
@@ -251,13 +215,13 @@ export default function ClosingSection({ closingLine, sender, secretPhoto, secre
         if (onCinemaToggle) onCinemaToggle(true);
       }
     }, 1800);
-  }, [secretPhoto]);
+  }, [secretPhoto, isLocked, onCinemaToggle]);
 
   return (
     <>
       <section className="relative z-10 flex flex-col items-center justify-center min-h-[90vh] px-6 py-24 text-center overflow-hidden">
         <motion.div
-          className="relative flex flex-col items-center gap-6"
+          className="relative flex flex-col items-center gap-6 w-full max-w-[560px]"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
@@ -265,6 +229,7 @@ export default function ClosingSection({ closingLine, sender, secretPhoto, secre
         >
           <motion.div variants={itemVariants}><FloatingFlowers /></motion.div>
 
+          {/* PreTitle & Main Titles — ALWAYS UNBLURRED & FULLY VISIBLE */}
           <motion.span variants={itemVariants} className="font-serif italic text-sm md:text-base tracking-widest text-text-muted lowercase">
             {closingPreTitle || 'always & forever'}
           </motion.span>
@@ -274,37 +239,120 @@ export default function ClosingSection({ closingLine, sender, secretPhoto, secre
             <span className="block font-serif italic text-5xl md:text-6xl lg:text-7xl text-accent leading-tight">{closingTitle2 || 'Beyond Words'}</span>
           </motion.h2>
 
-          <motion.p variants={itemVariants} className="font-sans font-light text-sm md:text-base text-text-muted max-w-[400px] leading-relaxed mt-2 whitespace-pre-line">
-            {closingParagraph || 'No matter where life takes us, know that somewhere in the universe, there is a garden blooming with every feeling I have ever held for you. You deserve the world. You deserve all the flowers. You deserve everything.'}
-          </motion.p>
-
-          <motion.p variants={itemVariants} className="font-serif italic text-base md:text-lg text-text-muted mt-2">— {sender}</motion.p>
-
-          <motion.div variants={itemVariants}><GlowHeart /></motion.div>
-
-          {/* Celebrate button */}
-          <motion.div variants={itemVariants} className="relative mt-4">
-            <Confetti active={celebrating} key={celebrateCount} />
-            <motion.button
-              onClick={handleCelebrate}
-              disabled={celebrating}
-              className="relative font-serif italic text-base md:text-lg px-8 py-3 rounded-full border border-accent/40 text-text overflow-hidden disabled:opacity-60"
-              style={{ background: 'rgba(225, 29, 72, 0.1)', boxShadow: '0 0 24px rgba(225,29,72,0.2)' }}
-              whileHover={{ scale: 1.05, boxShadow: '0 0 40px rgba(225,29,72,0.45)' }}
-              whileTap={{ scale: 0.97 }}
+          {/* Locked Container for Sender Signature + Paragraph + GlowHeart + Celebrate Button */}
+          <div className="relative w-full flex flex-col items-center gap-6 mt-2">
+            {/* Blurred content wrapper */}
+            <div
+              className="flex flex-col items-center gap-6 w-full"
+              style={{
+                filter: isLocked ? 'blur(8px)' : 'none',
+                opacity: isLocked ? 0.35 : 1,
+                userSelect: isLocked ? 'none' : 'auto',
+                pointerEvents: isLocked ? 'none' : 'auto',
+                transition: 'filter 0.4s ease, opacity 0.4s ease',
+              }}
             >
+              {sender && (
+                <motion.p variants={itemVariants} className="font-serif italic text-base md:text-lg text-text-muted">
+                  — {sender}
+                </motion.p>
+              )}
+
+              <motion.p variants={itemVariants} className="font-sans font-light text-sm md:text-base text-text-muted max-w-[400px] leading-relaxed whitespace-pre-line">
+                {closingParagraph || 'No matter where life takes us, know that somewhere in the universe, there is a garden blooming with every feeling I have ever held for you. You deserve the world. You deserve all the flowers. You deserve everything.'}
+              </motion.p>
+
+              <motion.div variants={itemVariants}><GlowHeart /></motion.div>
+
+              {/* Celebrate button */}
+              <motion.div variants={itemVariants} className="relative mt-2">
+                <Confetti active={celebrating} key={celebrateCount} />
+                <motion.button
+                  onClick={handleCelebrate}
+                  disabled={celebrating || isLocked}
+                  className="relative font-serif italic text-base md:text-lg px-8 py-3 rounded-full border border-accent/40 text-text overflow-hidden disabled:opacity-60"
+                  style={{ background: 'rgba(225, 29, 72, 0.1)', boxShadow: '0 0 24px rgba(225,29,72,0.2)' }}
+                  whileHover={isLocked ? {} : { scale: 1.05, boxShadow: '0 0 40px rgba(225,29,72,0.45)' }}
+                  whileTap={isLocked ? {} : { scale: 0.97 }}
+                >
+                  <motion.div
+                    className="absolute inset-0"
+                    style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.08) 50%, transparent 60%)' }}
+                    animate={{ x: ['-100%', '200%'] }}
+                    transition={{ duration: 1.8, repeat: Infinity, ease: 'linear' }}
+                  />
+                  <span className="relative z-10">{celebrating ? 'celebrating...' : (celebrateBtnText || 'celebrate our love ✨')}</span>
+                </motion.button>
+              </motion.div>
+            </div>
+
+            {/* Lock Overlay */}
+            {isLocked && (
               <motion.div
-                className="absolute inset-0"
-                style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.08) 50%, transparent 60%)' }}
-                animate={{ x: ['-100%', '200%'] }}
-                transition={{ duration: 1.8, repeat: Infinity, ease: 'linear' }}
-              />
-              {celebrating ? 'celebrating...' : (celebrateBtnText || 'celebrate ✨')}
-            </motion.button>
-          </motion.div>
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="absolute inset-0 z-20 flex flex-col items-center justify-center pointer-events-none p-4"
+              >
+                <div
+                  style={{
+                    background: 'rgba(10, 6, 12, 0.75)',
+                    backdropFilter: 'blur(16px)',
+                    WebkitBackdropFilter: 'blur(16px)',
+                    border: '1px solid rgba(225, 29, 72, 0.25)',
+                    borderRadius: '16px',
+                    padding: '18px 24px',
+                    maxWidth: '270px',
+                    textAlign: 'center',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                  }}
+                >
+                  <motion.div
+                    animate={{ y: [0, -3, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                    className="flex justify-center mb-2"
+                  >
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="rgba(225,29,72,0.85)"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                  </motion.div>
+                  <p
+                    style={{
+                      fontFamily: 'var(--font-serif, Georgia, serif)',
+                      fontStyle: 'italic',
+                      fontSize: '0.8rem',
+                      color: 'rgba(255,255,255,0.75)',
+                      lineHeight: 1.4,
+                      marginBottom: '4px',
+                    }}
+                  >
+                    Kejutan akhir tersembunyi
+                  </p>
+                  <p
+                    style={{
+                      fontFamily: 'var(--font-sans, sans-serif)',
+                      fontSize: '0.68rem',
+                      color: 'rgba(225, 29, 72, 0.8)',
+                    }}
+                  >
+                    Hubungi admin untuk unlock kado
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </div>
 
           {/* Re-open cinema hint after first view */}
-          {secretPhoto && celebrateCount > 0 && !celebrating && (
+          {!isLocked && secretPhoto && celebrateCount > 0 && !celebrating && (
             <motion.button
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -322,7 +370,7 @@ export default function ClosingSection({ closingLine, sender, secretPhoto, secre
       </section>
 
       {/* Cinema Modal — rendered outside the section for full-screen */}
-      {showCinema && (
+      {showCinema && !isLocked && (
         <CinemaModal
           secretPhoto={secretPhoto}
           secretCaption={secretCaption}

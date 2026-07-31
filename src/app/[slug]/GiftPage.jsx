@@ -16,11 +16,14 @@ import MusicPlayer from '@/components/MusicPlayer';
 import Gallery from '@/components/Gallery';
 import ClosingSection from '@/components/ClosingSection';
 import PreviewOnlyBadge from '@/components/PreviewOnlyBadge';
+import LockedSection from '@/components/LockedSection';
 import { themes, defaultTheme } from '@/lib/themes';
 
 export default function GiftPage({ data }) {
   const searchParams = useSearchParams();
   const isStudioMode = searchParams.get('studio') === '1';
+  // Preview mode: partial payment — some sections are locked
+  const isPreview = !isStudioMode && data.paymentStatus === 'partial';
 
   const [pinUnlocked, setPinUnlocked] = useState(!data.pinEnabled || isStudioMode);
   const [gateOpen, setGateOpen] = useState(isStudioMode);
@@ -139,8 +142,10 @@ export default function GiftPage({ data }) {
               introHeadline2={data.introHeadline2}
               introHeadline3={data.introHeadline3}
               introText={data.introText} 
-              introSignOff={data.introSignOff} 
+              introSignOff={data.introSignOff}
+              isLocked={isPreview}
             />
+
 
             <ReasonCards 
               reasons={data.reasons} 
@@ -148,6 +153,7 @@ export default function GiftPage({ data }) {
               reasonsTitle2={data.reasonsTitle2}
               reasonsHintTap={data.reasonsHintTap}
               reasonsHintAll={data.reasonsHintAll}
+              freeCount={isPreview ? 2 : undefined}
             />
 
             {data.seasons && (
@@ -164,13 +170,14 @@ export default function GiftPage({ data }) {
                 photos={data.photos} 
                 galleryTitle1={data.galleryTitle1}
                 galleryTitle2={data.galleryTitle2}
+                freeCount={isPreview ? 2 : undefined}
               />
             )}
 
             <ClosingSection
               closingLine={data.closingLine}
               sender={data.sender}
-              secretPhoto={data.secretPhoto}
+              secretPhoto={isPreview ? null : data.secretPhoto}
               secretCaption={data.secretCaption}
               secretVideoMuted={data.secretVideoMuted ?? false}
               closingPreTitle={data.closingPreTitle}
@@ -178,12 +185,11 @@ export default function GiftPage({ data }) {
               closingTitle2={data.closingTitle2}
               closingParagraph={data.closingParagraph}
               celebrateBtnText={data.celebrateBtnText}
+              isLocked={isPreview}
               onCinemaToggle={(isOpen) => {
                 if (!audioRef.current) return;
                 const isVideo = data.secretPhoto && /\.(mp4|webm|mov)$/i.test(data.secretPhoto);
-                // If video is muted, music stays playing — no need to pause
                 if (!isVideo || data.secretVideoMuted) return;
-
                 if (isOpen) {
                   audioRef.current.pause();
                 } else if (isPlaying) {

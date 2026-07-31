@@ -66,7 +66,7 @@ function extractLeadingEmoji(str) {
 }
 
 
-// ── Locked placeholder card ───────────────────────────────────────
+// ── Locked placeholder card (tap-to-reveal) ─────────────────────
 function LockedCard({ index, onReveal }) {
   return (
     <motion.div
@@ -92,6 +92,37 @@ function LockedCard({ index, onReveal }) {
         </svg>
       </motion.div>
       <p className="font-serif italic text-xs text-accent/50 tracking-wide">tap to reveal</p>
+    </motion.div>
+  );
+}
+
+// ── Premium Locked card (static — no tap-to-reveal) ───────────────
+function PremiumLockedCard({ index }) {
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
+      className="rounded-2xl p-5 md:p-6 flex flex-col items-center justify-center select-none min-h-[140px]"
+      style={{
+        background: 'rgba(225,29,72,0.04)',
+        border: '1px dashed rgba(225,29,72,0.2)',
+        backdropFilter: 'blur(4px)',
+      }}
+    >
+      <motion.div
+        animate={{ y: [0, -3, 0], opacity: [0.4, 0.7, 0.4] }}
+        transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: index * 0.3 }}
+        className="mb-2"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(225,29,72,0.5)"
+          strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </motion.div>
+      <p className="font-serif italic text-xs tracking-wide" style={{ color: 'rgba(225,29,72,0.45)' }}>premium only</p>
     </motion.div>
   );
 }
@@ -152,12 +183,17 @@ const itemVariants = {
 };
 
 // ── Main Component ────────────────────────────────────────────────
-export default function ReasonCards({ reasons, reasonsTitle1, reasonsTitle2, reasonsHintTap, reasonsHintAll }) {
-  const [revealedCount, setRevealedCount] = useState(0);
+export default function ReasonCards({ reasons, reasonsTitle1, reasonsTitle2, reasonsHintTap, reasonsHintAll, freeCount }) {
+  // If freeCount is set (preview mode), pre-reveal exactly freeCount cards
+  const initialRevealed = freeCount != null ? Math.min(freeCount, reasons.length) : 0;
+  const [revealedCount, setRevealedCount] = useState(initialRevealed);
+  // In preview mode, cards beyond freeCount are permanently premium-locked (no tap)
+  const isPremiumPreview = freeCount != null;
   const allRevealed = revealedCount >= reasons.length;
 
   const revealNext = () => {
-    if (revealedCount < reasons.length) {
+    const maxAllowed = isPremiumPreview ? initialRevealed : reasons.length;
+    if (revealedCount < maxAllowed) {
       setRevealedCount((n) => n + 1);
     }
   };
@@ -194,18 +230,21 @@ export default function ReasonCards({ reasons, reasonsTitle1, reasonsTitle2, rea
         className="grid grid-cols-2 gap-3 md:gap-4 max-w-[480px] w-full"
         layout
       >
-        {reasons.map((reason, i) =>
-          i < revealedCount ? (
-            <RevealedCard key={i} reason={reason} index={i} />
-          ) : (
-            <LockedCard key={i} index={i} onReveal={revealNext} />
-          )
-        )}
+        {reasons.map((reason, i) => {
+          if (i < revealedCount) {
+            return <RevealedCard key={i} reason={reason} index={i} />;
+          }
+          if (isPremiumPreview) {
+            // Premium mode: permanently locked, no tap-to-reveal
+            return <PremiumLockedCard key={i} index={i} />;
+          }
+          return <LockedCard key={i} index={i} onReveal={revealNext} />;
+        })}
       </motion.div>
 
-      {/* "Reveal all" shortcut after first reveal */}
+      {/* "Reveal all" shortcut after first reveal — hidden in premium preview mode */}
       <AnimatePresence>
-        {revealedCount > 0 && !allRevealed && (
+        {!isPremiumPreview && revealedCount > 0 && !allRevealed && (
           <motion.button
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
