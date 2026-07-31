@@ -236,7 +236,7 @@ export default function ClosingSection({
             <span className="block font-serif italic text-5xl md:text-6xl lg:text-7xl text-accent leading-tight">{closingTitle2 || 'Beyond Words'}</span>
           </motion.h2>
 
-          {/* Container for Sender, Paragraph, GlowHeart & Celebrate Button */}
+          {/* Container for Paragraph, Sender Signature (- Daffa), GlowHeart & Celebrate Button */}
           <div className="relative w-full flex flex-col items-center gap-6 mt-2">
             {/* Blurred content wrapper when isLocked */}
             <div
@@ -249,15 +249,17 @@ export default function ClosingSection({
                 transition: 'filter 0.4s ease, opacity 0.4s ease',
               }}
             >
-              {sender && (
-                <motion.p variants={itemVariants} className="font-serif italic text-base md:text-lg text-text-muted">
-                  — {sender}
-                </motion.p>
-              )}
-
+              {/* Closing Description Paragraph */}
               <motion.p variants={itemVariants} className="font-sans font-light text-sm md:text-base text-text-muted max-w-[400px] leading-relaxed whitespace-pre-line">
                 {closingParagraph || 'No matter where life takes us, know that somewhere in the universe, there is a garden blooming with every feeling I have ever held for you. You deserve the world. You deserve all the flowers. You deserve everything.'}
               </motion.p>
+
+              {/* Sender Signature — BELOW Paragraph (Correct Order!) */}
+              {sender && (
+                <motion.p variants={itemVariants} className="font-serif italic text-base md:text-lg text-text-muted mt-1">
+                  — {sender}
+                </motion.p>
+              )}
 
               <motion.div variants={itemVariants}><GlowHeart /></motion.div>
 
