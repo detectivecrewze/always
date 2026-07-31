@@ -304,3 +304,21 @@ Biar hasil generate tidak monoton, selalu variasikan judul-judul di bawah ini (j
 
 14. **Aturan Emoji Ulang Tahun di Closing Section**:
     - Khusus untuk momen Ulang Tahun, emoji yang digunakan pada teks di *Closing Section* (seperti `closingTitle1`, `closingTitle2`, atau `celebrateBtnText`) **WAJIB** menggunakan emoji kue ulang tahun `🎂` (hindari menggunakan emoji *sparkles* `✨` atau hati untuk momen ini).
+
+15. **Hero Section Title & Pre-title Anti-Repetisi**:
+    - **SANGAT KRITIKAL**: `heroPreTitle` dan `heroLine1` **TIDAK BOLEH** mengulang frasa yang persis sama.
+    - Jika `heroLine1` diisi dengan `"Happy Girlfriend Day,"`, maka `heroPreTitle` **TIDAK BOLEH** diisi dengan `"happy girlfriend day, my favorite girl"`.
+    - Gunakan variasi frasa pembuka yang manis dan berbeda pada `heroPreTitle`, seperti `"to my prettiest girl"`, `"to my favorite person"`, `"a special gift for u"`, `"for my dearest one"`.
+
+16. **Aturan Bahasa Hero & Time Section (Bahasa Indonesia vs English)**:
+    - Jika customer memilih **Full Indonesia**, maka deskripsi/subtitle pada Hero Section (`heroSubtitle`) dan Time Section (`timeSubtitle`) **WAJIB** ditulis dalam **Bahasa Indonesia santai & bucin** (BUKAN Bahasa Inggris baku/generik).
+    - Contoh `heroSubtitle` Full Indonesia: `"Makasih udah jadi wanita paling cantik, hebat, dan berharga di hidup aku."` atau `"Jarak jauh nggak ada artinya apa-apa selama ada kamu di hatiku."`
+    - Judul pendek seperti `heroPreTitle`, `heroLine1`, `timeTitle`, `galleryTitle` boleh tetap menggunakan variasi frasa Bahasa Inggris pendek yang manis/aesthetic jika terlihat lebih serasi.
+
+17. **Reason Cards Title - Anti-Baku & Anti-Kaku**:
+    - Judul kartu alasan (`reasons[].title`) **TIDAK BOLEH** menggunakan frasa Bahasa Indonesia yang kaku/formal seperti *"Teman Setiap Malam"*, *"Ketenangan Jiwa"*, *"Kehadiranmu"*, *"Impian Bersama"*.
+    - Gunakan frasa Bahasa Inggris aesthetic & manis (contoh: *"Your Midnight Calls"*, *"My Safe Space"*, *"Warmest Feeling"*, *"Someday Soon"*, *"Forever Yours"*) ATAU kata-kata santai yang tidak formal (contoh: *"Penenang Hariku"*, *"Bisa Meluk Beneran"*).
+
+18. **Pembersihan File Script Temporary (No Garbage Files)**:
+    - Jangan pernah meng-commit file script pemroses orderan sementara (`tempProcessOrder.mjs`, `processNama.mjs`, `updateNama.mjs`, dll) ke Git.
+    - Script hanya boleh dibuat secara insidental/sementara untuk mem-push data ke Cloudflare KV, dan **WAJIB langsung dihapus** sebelum selesai bekerja.
