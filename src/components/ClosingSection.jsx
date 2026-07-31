@@ -79,37 +79,9 @@ function GlowHeart() {
   );
 }
 
-// ── Floating Flowers Effect ───────────────────────────────────────
-function FloatingFlowers() {
-  const items = [
-    { x: -140, y: -20, delay: 0, size: 28, rotate: 15 },
-    { x: 140, y: -10, delay: 0.4, size: 24, rotate: -20 },
-    { x: -180, y: 40, delay: 0.8, size: 20, rotate: 40 },
-    { x: 180, y: 50, delay: 1.2, size: 22, rotate: -35 },
-  ];
-  return (
-    <div className="absolute inset-0 pointer-events-none overflow-visible flex items-center justify-center">
-      {items.map((it, idx) => (
-        <motion.div
-          key={idx}
-          className="absolute text-accent/20"
-          style={{ x: it.x, y: it.y }}
-          animate={{ y: [it.y - 6, it.y + 6, it.y - 6], rotate: [it.rotate - 5, it.rotate + 5, it.rotate - 5] }}
-          transition={{ duration: 4 + idx, repeat: Infinity, ease: 'easeInOut', delay: it.delay }}
-        >
-          <svg width={it.size} height={it.size} viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2C10.5 2 9.5 4.5 9.5 7C9.5 9.5 10.5 11 12 11C13.5 11 14.5 9.5 14.5 7C14.5 4.5 13.5 2 12 2ZM2 12C2 10.5 4.5 9.5 7 9.5C9.5 9.5 11 10.5 11 12C11 13.5 9.5 14.5 7 14.5C4.5 14.5 2 13.5 2 12ZM17 12C17 10.5 19.5 9.5 22 9.5C24.5 9.5 24.5 10.5 24.5 12C24.5 13.5 22 14.5 19.5 14.5C17 14.5 17 13.5 17 12ZM12 13C10.5 13 9.5 14.5 9.5 17C9.5 19.5 10.5 22 12 22C13.5 22 14.5 19.5 14.5 17C14.5 14.5 13.5 13 12 13Z"/>
-            <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
-          </svg>
-        </motion.div>
-      ))}
-    </div>
-  );
-}
-
 // ── Fullscreen Cinema Modal ───────────────────────────────────────
 function CinemaModal({ secretPhoto, secretCaption, secretVideoMuted, onClose }) {
-  const isVideo = secretPhoto && /\.(mp4|webm|mov)$/i.test(secretPhoto);
+  const isVideo = secretPhoto && (secretPhoto.endsWith('.mp4') || secretPhoto.endsWith('.webm') || secretPhoto.endsWith('.mov'));
 
   return (
     <AnimatePresence>
@@ -141,21 +113,33 @@ function CinemaModal({ secretPhoto, secretCaption, secretVideoMuted, onClose }) 
           transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
           className="relative max-w-2xl max-h-[75vh] rounded-3xl overflow-hidden shadow-2xl border border-white/15"
         >
-          {isVideo ? (
-            <video
-              src={secretPhoto}
-              className="w-full h-full max-h-[75vh] object-contain"
-              autoPlay
-              controls
-              playsInline
-              muted={secretVideoMuted}
-            />
-          ) : (
-            <img
-              src={secretPhoto}
-              alt="Secret Memory"
-              className="w-full h-full max-h-[75vh] object-contain"
-            />
+          {secretPhoto && (
+            isVideo ? (
+              <video
+                src={secretPhoto}
+                className="w-full h-full max-h-[75vh] object-contain"
+                autoPlay
+                controls
+                playsInline
+                muted={secretVideoMuted}
+              />
+            ) : (secretPhoto.match(/\.(jpeg|jpg|gif|png|webp)$/i) || secretPhoto.includes('for-you-always') || secretPhoto.includes('cloudinary')) ? (
+              <img
+                src={secretPhoto}
+                alt="Secret Memory"
+                className="w-full h-full max-h-[75vh] object-contain"
+                onError={(e) => { e.target.style.display = 'none'; }}
+              />
+            ) : (
+              <div className="w-full aspect-[3/4] bg-[#111] flex flex-col items-center justify-center text-center p-6">
+                <span className="text-3xl mb-4">🔗</span>
+                <h3 className="font-serif text-[18px] text-[#e5e5e5] mb-2">Sebuah Tautan Rahasia</h3>
+                <p className="font-sans text-[12px] text-white/60 mb-6">Seseorang meninggalkan pesan atau kenangan untukmu di tautan ini.</p>
+                <a href={secretPhoto} target="_blank" rel="noopener noreferrer" className="px-5 py-2 rounded-full border border-white/20 text-white/80 font-sans text-[11px] uppercase tracking-widest hover:bg-white/10 transition-colors">
+                  Buka Tautan
+                </a>
+              </div>
+            )
           )}
         </motion.div>
 
@@ -227,9 +211,7 @@ export default function ClosingSection({
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
         >
-          <motion.div variants={itemVariants}><FloatingFlowers /></motion.div>
-
-          {/* PreTitle & Main Titles — ALWAYS UNBLURRED & FULLY VISIBLE */}
+          {/* PreTitle & Main Titles — ALWAYS UNBLURRED & CLEAN */}
           <motion.span variants={itemVariants} className="font-serif italic text-sm md:text-base tracking-widest text-text-muted lowercase">
             {closingPreTitle || 'always & forever'}
           </motion.span>
@@ -239,9 +221,9 @@ export default function ClosingSection({
             <span className="block font-serif italic text-5xl md:text-6xl lg:text-7xl text-accent leading-tight">{closingTitle2 || 'Beyond Words'}</span>
           </motion.h2>
 
-          {/* Locked Container for Sender Signature + Paragraph + GlowHeart + Celebrate Button */}
+          {/* Container for Sender, Paragraph, GlowHeart & Celebrate Button */}
           <div className="relative w-full flex flex-col items-center gap-6 mt-2">
-            {/* Blurred content wrapper */}
+            {/* Blurred content wrapper when isLocked */}
             <div
               className="flex flex-col items-center gap-6 w-full"
               style={{
