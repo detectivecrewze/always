@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import GateScreen from '@/components/GateScreen';
 import PinGateScreen from '@/components/PinGateScreen';
@@ -18,8 +19,11 @@ import PreviewOnlyBadge from '@/components/PreviewOnlyBadge';
 import { themes, defaultTheme } from '@/lib/themes';
 
 export default function GiftPage({ data }) {
-  const [pinUnlocked, setPinUnlocked] = useState(!data.pinEnabled);
-  const [gateOpen, setGateOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const isStudioMode = searchParams.get('studio') === '1';
+
+  const [pinUnlocked, setPinUnlocked] = useState(!data.pinEnabled || isStudioMode);
+  const [gateOpen, setGateOpen] = useState(isStudioMode);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef(null);
 

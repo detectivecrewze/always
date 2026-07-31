@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { getGiftBySlug } from '@/lib/getData';
 import { notFound } from 'next/navigation';
 import GiftPage from './GiftPage';
@@ -18,5 +19,9 @@ export default async function SlugPage({ params }) {
   const { slug } = await params;
   const gift = await getGiftBySlug(slug);
   if (!gift) notFound();
-  return <GiftPage data={gift} />;
+  return (
+    <Suspense>
+      <GiftPage data={gift} />
+    </Suspense>
+  );
 }

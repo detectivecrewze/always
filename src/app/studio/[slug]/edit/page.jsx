@@ -1273,7 +1273,7 @@ export default function StudioEditor({ params: paramsPromise }) {
               <span style={S.previewLabel}>Live Preview</span>
               <button style={S.smallBtn('#888')} onClick={() => setPreviewKey((k) => k + 1)}>Refresh</button>
             </div>
-            <iframe key={previewKey} src={`/${slug}`} style={S.iframe} title="Preview" />
+            <iframe key={previewKey} src={`/${slug}?studio=1`} style={S.iframe} title="Preview" />
           </div>
         </div>
 
