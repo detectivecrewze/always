@@ -58,24 +58,36 @@ function GlowHeart() {
           <filter id="closingGlow" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="5" result="blur1"/>
             <feGaussianBlur stdDeviation="12" result="blur2"/>
-            <feMerge>
-              <feMergeNode in="blur2"/>
-              <feMergeNode in="blur1"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
+            <feMerge><feMergeNode in="blur2"/><feMergeNode in="blur1"/><feMergeNode in="SourceGraphic"/></feMerge>
           </filter>
-          <linearGradient id="heartGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="var(--color-accent)"/>
-            <stop offset="100%" stopColor="color-mix(in srgb, var(--color-accent) 60%, #000)"/>
+          <linearGradient id="closingGrad" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
+            <stop stopColor="var(--color-particle)"/><stop offset="0.5" stopColor="var(--color-accent)"/><stop offset="1" stopColor="var(--color-text-muted)"/>
           </linearGradient>
         </defs>
-        <path
-          d="M60 102.7L52.75 96.1C26.9 72.64 10 57.24 10 38.35C10 22.95 22.1 10.85 37.5 10.85C46.2 10.85 54.55 14.9 60 21.3C65.45 14.9 73.8 10.85 82.5 10.85C97.9 10.85 110 22.95 110 38.35C110 57.24 93.1 72.64 67.25 96.15L60 102.7Z"
-          fill="url(#heartGrad)"
-          filter="url(#closingGlow)"
-        />
+        <g filter="url(#closingGlow)">
+          <path d="M60 85 C60 85, 25 55, 25 35 C25 20, 45 15, 60 30 C75 15, 95 20, 95 35 C95 55, 60 85, 60 85 Z"
+            stroke="var(--color-particle)" strokeWidth="2.5" fill="var(--color-accent)" fillOpacity="0.15" strokeLinecap="round"/>
+        </g>
       </svg>
     </motion.div>
+  );
+}
+
+// ── Floating Flowers (Exact 5 Animated Flower Icons from Commit 7b5fe30) ──
+const flowerColors = ['var(--color-accent)', 'var(--color-particle)', 'var(--color-text-muted)', 'var(--color-accent)', 'var(--color-particle)'];
+function FloatingFlowers() {
+  return (
+    <div className="flex gap-3 justify-center mb-4">
+      {flowerColors.map((color, i) => (
+        <motion.svg key={i} width="28" height="28" viewBox="0 0 24 24" fill={color}
+          animate={{ y: [0, -5, 0], rotate: [-5, 5, -5] }}
+          transition={{ duration: 2.5, delay: i * 0.15, repeat: Infinity, ease: 'easeInOut' }}>
+          <circle cx="12" cy="6" r="3.5"/><circle cx="17.6" cy="9.5" r="3.5"/>
+          <circle cx="15.5" cy="16" r="3.5"/><circle cx="8.5" cy="16" r="3.5"/>
+          <circle cx="6.4" cy="9.5" r="3.5"/><circle cx="12" cy="12" r="3" fill="#FFF8"/>
+        </motion.svg>
+      ))}
+    </div>
   );
 }
 
@@ -211,7 +223,10 @@ export default function ClosingSection({
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
         >
-          {/* PreTitle & Main Titles — ALWAYS UNBLURRED & CLEAN */}
+          {/* Animated 5-Flower Icons from commit 7b5fe30 */}
+          <motion.div variants={itemVariants}><FloatingFlowers /></motion.div>
+
+          {/* PreTitle & Main Titles — ALWAYS UNBLURRED & CLEAR */}
           <motion.span variants={itemVariants} className="font-serif italic text-sm md:text-base tracking-widest text-text-muted lowercase">
             {closingPreTitle || 'always & forever'}
           </motion.span>
