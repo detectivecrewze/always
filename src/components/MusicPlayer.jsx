@@ -14,6 +14,8 @@ export default function MusicPlayer({ music, isPlaying, onToggle, audioRef }) {
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(0.5);
+  const prevVolume = useRef(0.5);
   const [isVisible, setIsVisible] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const progressBarRef = useRef(null);
@@ -22,6 +24,13 @@ export default function MusicPlayer({ music, isPlaying, onToggle, audioRef }) {
     const timer = setTimeout(() => setIsVisible(true), 800);
     return () => clearTimeout(timer);
   }, []);
+
+  // Sync volume state with audio element
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+    }
+  }, [audioRef, volume]);
 
   const updateProgress = useCallback(() => {
     if (audioRef.current) {
@@ -50,6 +59,21 @@ export default function MusicPlayer({ music, isPlaying, onToggle, audioRef }) {
     audioRef.current.currentTime = ratio * audioRef.current.duration;
   };
 
+  const handleVolumeChange = (newVol) => {
+    setVolume(newVol);
+    if (audioRef.current) {
+      audioRef.current.volume = newVol;
+    }
+  };
+
+  const toggleMute = () => {
+    if (volume > 0) {
+      prevVolume.current = volume;
+      handleVolumeChange(0);
+    } else {
+      handleVolumeChange(prevVolume.current || 0.5);
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -115,7 +139,7 @@ export default function MusicPlayer({ music, isPlaying, onToggle, audioRef }) {
                 <div className="flex justify-end gap-1.5 px-3 pt-3">
                   <button
                     onClick={() => setIsMinimized(true)}
-                    className="w-4 h-4 rounded-full transition-colors flex items-center justify-center"
+                    className="w-4 h-4 rounded-full transition-colors flex items-center justify-center hover:opacity-80"
                     style={{ background: 'color-mix(in srgb, var(--color-text) 20%, transparent)' }}
                     aria-label="Minimize"
                   >
@@ -180,8 +204,8 @@ export default function MusicPlayer({ music, isPlaying, onToggle, audioRef }) {
                   </div>
                 </div>
 
-                {/* Controls */}
-                <div className="px-4 pb-4 pt-2 flex items-center justify-between">
+                {/* Main Controls (Rewind, Play/Pause, Loop) */}
+                <div className="px-4 pt-1 flex items-center justify-between">
                   {/* Prev (rewind) */}
                   <button
                     onClick={() => { if (audioRef.current) audioRef.current.currentTime = 0; }}
@@ -227,6 +251,52 @@ export default function MusicPlayer({ music, isPlaying, onToggle, audioRef }) {
                       <path d="M21 13v2a4 4 0 01-4 4H3"/>
                     </svg>
                   </button>
+                </div>
+
+                {/* Volume Slider Bar */}
+                <div className="px-4 pb-4 pt-2.5 flex items-center gap-2">
+                  <button
+                    onClick={toggleMute}
+                    className="text-text-muted hover:text-accent transition-colors shrink-0"
+                    aria-label="Mute / Unmute"
+                  >
+                    {volume === 0 ? (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                        <line x1="23" y1="9" x2="17" y2="15"/>
+                        <line x1="17" y1="9" x2="23" y2="15"/>
+                      </svg>
+                    ) : volume < 0.5 ? (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                      </svg>
+                    ) : (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                      </svg>
+                    )}
+                  </button>
+
+                  <div className="relative flex-1 flex items-center">
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.01"
+                      value={volume}
+                      onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                      className="w-full h-1 appearance-none bg-white/10 rounded-full outline-none cursor-pointer accent-accent"
+                      style={{
+                        background: `linear-gradient(to right, var(--color-accent) ${volume * 100}%, rgba(255, 255, 255, 0.15) ${volume * 100}%)`,
+                      }}
+                    />
+                  </div>
+
+                  <span className="font-sans text-[10px] text-text-muted shrink-0 w-6 text-right select-none">
+                    {Math.round(volume * 100)}%
+                  </span>
                 </div>
               </motion.div>
             )}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import GateScreen from '@/components/GateScreen';
@@ -30,8 +30,15 @@ export default function GiftPage({ data }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef(null);
 
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = 0.5;
+    }
+  }, []);
+
   const handleInteraction = useCallback(() => {
     if (audioRef.current && !isPlaying) {
+      audioRef.current.volume = 0.5;
       audioRef.current.play().then(() => {
         setIsPlaying(true);
       }).catch(() => {
@@ -43,6 +50,7 @@ export default function GiftPage({ data }) {
   const handleGateFinish = useCallback(() => {
     setGateOpen(true);
     if (audioRef.current && !isPlaying) {
+      audioRef.current.volume = 0.5;
       audioRef.current.play().then(() => {
         setIsPlaying(true);
       }).catch(() => {
@@ -57,6 +65,7 @@ export default function GiftPage({ data }) {
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
+      audioRef.current.volume = 0.5;
       audioRef.current.play().then(() => {
         setIsPlaying(true);
       }).catch(() => {});
@@ -77,8 +86,18 @@ export default function GiftPage({ data }) {
 
   return (
     <main className="relative min-h-screen bg-bg text-text selection:bg-accent/30 font-sans overflow-hidden" style={themeStyles}>
-      {/* Audio element — always mounted if music exists */}
-      {data.music?.file && <audio ref={audioRef} src={data.music.file} loop preload="auto" />}
+      {/* Audio element — always mounted if music exists with default 50% volume */}
+      {data.music?.file && (
+        <audio
+          ref={(el) => {
+            audioRef.current = el;
+            if (el) el.volume = 0.5;
+          }}
+          src={data.music.file}
+          loop
+          preload="auto"
+        />
+      )}
 
       {/* PIN Gate Screen (Optional) */}
       <AnimatePresence mode="wait">
