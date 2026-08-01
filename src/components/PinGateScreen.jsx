@@ -74,18 +74,14 @@ export default function PinGateScreen({
       transition={{ duration: 0.6 }}
       className="fixed inset-0 z-[100] flex items-center justify-center bg-bg/90 backdrop-blur-2xl overflow-hidden select-none p-3 sm:p-6"
     >
-      {/* Ambient background orbs */}
+      {/* Ambient background — static gradients (no infinite GPU animation) */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <motion.div
-          animate={{ scale: [1, 1.2, 1], rotate: [0, 60, 0], x: ['-5%', '5%', '-5%'] }}
-          transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute -top-[20%] -left-[10%] w-[50vw] h-[50vw] rounded-full blur-[120px] opacity-20"
+        <div
+          className="absolute -top-[20%] -left-[10%] w-[55vw] h-[55vw] rounded-full blur-[80px] opacity-20"
           style={{ backgroundColor: primaryColor }}
         />
-        <motion.div
-          animate={{ scale: [1, 1.3, 1], rotate: [0, -60, 0], x: ['5%', '-5%', '5%'] }}
-          transition={{ duration: 25, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute -bottom-[20%] -right-[10%] w-[55vw] h-[55vw] rounded-full blur-[140px] opacity-15"
+        <div
+          className="absolute -bottom-[20%] -right-[10%] w-[60vw] h-[60vw] rounded-full blur-[80px] opacity-15"
           style={{ backgroundColor: secondaryColor }}
         />
       </div>
@@ -105,8 +101,8 @@ export default function PinGateScreen({
           background: 'rgba(255,255,255,0.045)',
           border: '1px solid rgba(255,255,255,0.10)',
           boxShadow: `0 32px 80px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.04), inset 0 1px 0 rgba(255,255,255,0.10)`,
-          backdropFilter: 'blur(32px)',
-          WebkitBackdropFilter: 'blur(32px)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
         }}
       >
         {/* Top shimmer */}
