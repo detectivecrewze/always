@@ -62,6 +62,7 @@ When the user asks to process a new order, ALWAYS follow these steps:
 | `closingTitle1/2` | Sesuaikan dengan momen (Ultah → "Happy Birthday", LDR → "See You Soon", dsb) |
 | `celebrateBtnText` | Kreatif & sesuai momen: "celebrate ✨", "miss you ✨", "goodbye ✨", dll |
 | `sender` | **WAJIB ADA** di `giftData`. Nama pengirim (from) agar muncul sebagai tanda tangan di bagian akhir Closing Section. |
+| `disableFountain` | Set `true` jika customer minta **tanpa animasi kelopak bunga di awal**. `GateScreen.jsx` akan otomatis melompati animasi letupan 300 bunga saat amplop dipencet dan langsung menampilkan isi kado. |
 
 ---
 
@@ -287,11 +288,17 @@ Biar hasil generate tidak monoton, selalu variasikan judul-judul di bawah ini (j
     - Sesuaikan gaya bahasa penutup ini dengan *writing tone* dari customer.
     - Jangan terlalu panjang, cukup 1-2 kalimat yang pas untuk memberikan konklusi surat yang manis sebelum masuk ke *Reason Cards*.
 
-11. **Penggunaan Emoji sebagai Ikon (Reason & Season Cards)**:
-    - Jika konteks cerita dari customer cocok menggunakan emoji, pertimbangkan untuk menggunakan emoji sebagai ikon di *Reason Cards* dan *Season Cards*. Ini tidak terbatas pada *tone* santai/menyenangkan saja; cerita yang romantis, sedih (*bittersweet*), atau *wholesome* pun bisa dipakaikan emoji yang sesuai (karena emoji sangat beragam).
-    - Untuk *Reason Cards*, tambahkan properti `icon` berisi **1 emoji** (contoh: `icon: "😂"` atau `icon: "🥀"`) pada setiap objek di array `reasons`. Jangan gabungkan emoji di dalam `title`.
-    - Untuk *Season Cards*, ubah properti `icon` dari yang sebelumnya teks string standar (`spring`, `summer`, dll) menjadi **1 emoji** (contoh: `icon: "🚦"` atau `icon: "🌧️"`) pada setiap objek di array `seasons`. Jangan gabungkan emoji di dalam `name`.
-    - Sistem website sudah mendukung *render* otomatis emoji menjadi ikon besar yang mempercantik tampilan kartu jika diset melalui *field* `icon`.
+11. **Penggunaan Ikon pada Season Cards (WAJIB Gunakan SVG Preset Bawaan)**:
+    - **SANGAT PENTING**: Untuk `SeasonsSection` (array `seasons`), **JANGAN PERNAH** menggunakan emoji manual pada `season.icon`.
+    - `SeasonsSection` merender ikon SVG bawaan dari `SeasonIcons.jsx` berdasarkan string key `icon`.
+    - Gunakan string key preset SVG yang valid sesuai konteks preset:
+      - **Seasons**: `"spring"`, `"summer"`, `"autumn"`, `"winter"`
+      - **Flowers**: `"rose"`, `"tulip"`, `"lily"`, `"sunflower"`
+      - **Time of Day**: `"sunrise"`, `"noon"`, `"dusk"`, `"midnight"`
+      - **Landscape**: `"ocean"`, `"mountain"`, `"forest"`, `"desert"`
+      - **Keepsakes**: `"candle"`, `"letter"`, `"ring"`, `"key"`
+      - **General**: `"sun"`, `"moon"`, `"star"`, `"heart"`, `"coffee"`, `"music"`, `"sparkles"`, `"clock"`
+    - Untuk *Reason Cards* (array `reasons`), penggunaan 1 emoji karakter sebagai `icon` (contoh: `icon: "😂"`) tetap diperbolehkan.
 
 12. **Naturalisasi Bahasa Indonesia (Anti-Kaku)**:
     - **SANGAT KRITIKAL**: Hindari menghasilkan teks Bahasa Indonesia yang baku, kaku, dan terlalu formal layaknya robot atau buku cetak.
@@ -310,9 +317,9 @@ Biar hasil generate tidak monoton, selalu variasikan judul-judul di bawah ini (j
     - Jika `heroLine1` diisi dengan `"Happy Girlfriend Day,"`, maka `heroPreTitle` **TIDAK BOLEH** diisi dengan `"happy girlfriend day, my favorite girl"`.
     - Gunakan variasi frasa pembuka yang manis dan berbeda pada `heroPreTitle`, seperti `"to my prettiest girl"`, `"to my favorite person"`, `"a special gift for u"`, `"for my dearest one"`.
 
-16. **Aturan Bahasa Hero & Time Section (Bahasa Indonesia vs English)**:
-    - Jika customer memilih **Full Indonesia**, maka deskripsi/subtitle pada Hero Section (`heroSubtitle`) dan Time Section (`timeSubtitle`) **WAJIB** ditulis dalam **Bahasa Indonesia santai & bucin** (BUKAN Bahasa Inggris baku/generik).
-    - Contoh `heroSubtitle` Full Indonesia: `"Makasih udah jadi wanita paling cantik, hebat, dan berharga di hidup aku."` atau `"Jarak jauh nggak ada artinya apa-apa selama ada kamu di hatiku."`
+16. **Aturan Bahasa Hero & Time Section (Bahasa Indonesia vs English vs Indoglish)**:
+    - Jika order memilih **Full Indonesia**, maka deskripsi/subtitle pada Hero Section (`heroSubtitle`) dan Time Section (`timeSubtitle`) **WAJIB** ditulis dalam **Bahasa Indonesia santai & bucin** (BUKAN Bahasa Inggris baku/generik).
+    - Jika order memilih **Indoglish** atau **Full English**, maka judul (`timeTitle`) dan deskripsi/subtitle pada Time Section (`timeSubtitle`) **WAJIB** ditulis dalam **Bahasa Inggris** aesthetic (contoh `timeSubtitle`: *"20 years of your journey through life, always bringing happiness and warmth"*).
     - Judul pendek seperti `heroPreTitle`, `heroLine1`, `timeTitle`, `galleryTitle` boleh tetap menggunakan variasi frasa Bahasa Inggris pendek yang manis/aesthetic jika terlihat lebih serasi.
 
 17. **Reason Cards Title - Anti-Baku & Anti-Kaku**:
@@ -322,3 +329,17 @@ Biar hasil generate tidak monoton, selalu variasikan judul-judul di bawah ini (j
 18. **Pembersihan File Script Temporary (No Garbage Files)**:
     - Jangan pernah meng-commit file script pemroses orderan sementara (`tempProcessOrder.mjs`, `processNama.mjs`, `updateNama.mjs`, dll) ke Git.
     - Script hanya boleh dibuat secara insidental/sementara untuk mem-push data ke Cloudflare KV, dan **WAJIB langsung dihapus** sebelum selesai bekerja.
+
+19. **Sign-Off Surat (introSignOff) - Aturan Bahasa Full Indonesia**:
+    - Jika order memilih **Full Indonesia**, pada bagian penutup/tanda tangan surat (`introSignOff`), **JANGAN PERNAH** menambahkan frasa regard formal (seperti *"Dengan segenap cintaku"*, *"Salam hangat dari"*, *"Dengan cinta"*).
+    - Cukup tuliskan **nama pendek pengirim** (contoh: `"- Julya"` atau `"- Julya 🤍"`).
+    - Jika order memilih **Full English** atau **Indoglish**, penggunaan frasa regard Bahasa Inggris (contoh: `"- With all my love, Julya 🤍"` atau `"- Yours, Julya"`) tetap diperbolehkan.
+
+20. **Visual Inspection & Photo Handling Workflow (Teknik Visual AI Grid)**:
+    - Ketika customer meminta revisi foto yang spesifik (seperti *"urutkan foto berdasarkan warna background"*, *"pilih foto yang memakai masker wajah"*, *"pastikan 2 orang terlihat jelas dalam crop"*), **JANGAN ditebak** dari URL atau nama file semata.
+    - **Langkah-langkah Eksekusi**:
+      1. Download seluruh foto galeri dari Cloudflare CDN ke folder temporary lokal (`temp_photos/`).
+      2. Buat script Python (menggunakan PIL/Pillow) untuk menggabungkan seluruh thumbnail foto ke dalam **satu gambar grid komposit** (`temp_grid.jpg`) dengan label nomor indeks tertera di setiap thumbnail.
+      3. Jalankan `view_file` pada `temp_grid.jpg` untuk **melihat langsung secara visual** seluruh foto (menguji warna background, objek spesifik seperti masker wajah, serta framing wajah pasangan).
+      4. Petakan urutan URL foto secara presisi sesuai pengamatan visual (misal: 8 foto background biru ➔ 4 foto background coklat ➔ 3 foto sisa).
+      5. **Hapus seluruh file temporary** (`temp_grid.jpg`, folder `temp_photos/`, dan script python) setelah selesai mem-push KV agar working tree tetap clean.

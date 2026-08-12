@@ -263,6 +263,14 @@ function TabOpening({ data, set }) {
     <div style={S.sectionTitle}>Gate Screen</div>
     <div style={S.sectionDesc}>The first thing visitors see before entering.</div>
     <Field label="Gate Subtitle" value={data.gateSubtitle} onChange={(v) => set('gateSubtitle', v)} placeholder="a gift for someone special" />
+    <div className="mt-3">
+      <Toggle
+        label="🌸 Matikan Animasi Kelopak Bunga (Opening Fountain)"
+        desc="Lewati animasi letupan 300 kelopak bunga saat amplop dibuka, langsung masuk ke isi kado."
+        value={data.disableFountain ?? false}
+        onChange={(v) => set('disableFountain', v)}
+      />
+    </div>
     <div className="w-full h-px bg-[#1a1a1a] my-4" />
     <div style={S.sectionTitle}>🔒 Secret PIN Protection (Optional)</div>
     <div style={S.sectionDesc}>Lindungi gift dengan 4 - 6 digit PIN rahasia sebelum penerima bisa membukanya.</div>
