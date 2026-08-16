@@ -251,14 +251,14 @@ export default function OrderForm() {
     { id: 'Full Indonesia', label: 'Full Indonesia', hint: 'Surat ditulis 100% dalam Bahasa Indonesia.' },
     { id: 'Full English', label: 'Full English', hint: 'Surat ditulis 100% dalam Bahasa Inggris.' },
     { id: 'Indoglish', label: 'Indoglish', hint: 'Campuran Bahasa Indonesia dan Inggris secara natural.' },
-    { id: 'Lainnya / Custom', label: 'Lainnya / Custom ✏️', hint: 'Ketik preferensi bahasamu sendiri di bawah ini.' },
+    { id: 'Lainnya / Custom', label: 'Lainnya / Custom', hint: 'Ketik preferensi bahasamu sendiri di bawah ini.' },
   ];
   const VIBES = [
-    { id: 'Santai', label: 'Santai 😊', hint: 'Kasual, seperti ngobrol biasa, pakai kata-kata sehari-hari.' },
-    { id: 'Puitis', label: 'Puitis ✨', hint: 'Bermakna dan mengalir, tapi tetap natural, bukan kaku seperti sajak.' },
-    { id: 'Romantis', label: 'Romantis 🌹', hint: 'Hangat, intim, dan penuh rasa sayang yang tulus.' },
-    { id: 'Mengharukan', label: 'Mengharukan 🥺', hint: 'Dalam, emosional, cocok untuk perasaan yang sulit diungkapkan.' },
-    { id: 'Bucin / ABG', label: 'Bucin / ABG 💕', hint: 'Manja, lebay (sedikit!), pakai repetisi kata dan banyak emoji 🥰' },
+    { id: 'Santai', label: 'Santai', hint: 'Kasual, seperti ngobrol biasa, pakai kata-kata sehari-hari.' },
+    { id: 'Puitis', label: 'Puitis', hint: 'Bermakna dan mengalir, tapi tetap natural, bukan kaku seperti sajak.' },
+    { id: 'Romantis', label: 'Romantis', hint: 'Hangat, intim, dan penuh rasa sayang yang tulus.' },
+    { id: 'Mengharukan', label: 'Mengharukan', hint: 'Dalam, emosional, cocok untuk perasaan yang sulit diungkapkan.' },
+    { id: 'Bucin / ABG', label: 'Bucin / ABG', hint: 'Manja, santai, dengan repetisi kata yang akrab.' },
   ];
   const MOMENTS = ['Ultah', 'Anniversary', 'LDR', 'Wisuda', 'Friendship', 'Just Because', 'Lainnya'];
   const RELATIONSHIPS = ['Pasangan', 'Sahabat', 'Teman', 'Keluarga', 'Lainnya'];
@@ -631,7 +631,7 @@ export default function OrderForm() {
                   const selected = LANGUAGES.find(l => l.id === data.language);
                   return selected ? (
                     <p style={{ fontSize: '0.72rem', opacity: 0.55, lineHeight: 1.5, padding: '0.5rem 0.75rem', borderLeft: `2px solid ${currentTheme.text}40`, marginTop: '0.25rem' }}>
-                      💬 {selected.hint}
+                      {selected.hint}
                     </p>
                   ) : null;
                 })()}
@@ -694,7 +694,7 @@ export default function OrderForm() {
                       const v = VIBES.find(vb => vb.id === t);
                       return v ? (
                         <p key={t} style={{ fontSize: '0.72rem', opacity: 0.55, lineHeight: 1.5, padding: '0.4rem 0.75rem', borderLeft: `2px solid ${currentTheme.text}40` }}>
-                          💬 <strong>{v.label.split(' ')[0]}</strong>: {v.hint}
+                          <strong>{v.label.split(' ')[0]}</strong>: {v.hint}
                         </p>
                       ) : null;
                     })}
@@ -712,7 +712,7 @@ export default function OrderForm() {
             <p style={{ fontSize: '0.85rem', opacity: 0.7, marginBottom: '2rem', lineHeight: 1.6 }}>
               Ceritakan saja intinya secara santai. Tim *copywriter* kami yang akan mengubahnya menjadi kalimat yang sangat puitis dan indah.
               <br /><br />
-              <strong>Hint:</strong> Semakin banyak pesan / cerita yang kamu bagikan, maka akan semakin personal dan istimewa hasil gift-nya nanti ✨
+              <strong>Hint:</strong> Semakin banyak pesan / cerita yang kamu bagikan, maka akan semakin personal dan istimewa hasil gift-nya nanti.
             </p>
             
             <textarea 
@@ -949,7 +949,7 @@ export default function OrderForm() {
 
               {/* Deadline — di sini sebelum submit */}
               <div style={{ marginTop: '1rem', paddingTop: '1.5rem', borderTop: `1px solid ${currentTheme.text}15` }}>
-                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 500, marginBottom: '0.4rem' }}>⏰ Kapan gift harus jadi? (Opsional)</label>
+                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 500, marginBottom: '0.4rem' }}>Kapan gift harus jadi? (Opsional)</label>
                 <p style={{ fontSize: '0.78rem', opacity: 0.55, marginBottom: '0.75rem', lineHeight: 1.5 }}>
                   Beri tahu kami jika ada deadline agar kami bisa memprioritaskan pesananmu.
                 </p>
@@ -1065,7 +1065,7 @@ export default function OrderForm() {
                 borderRadius: '10px', padding: '0.6rem 1rem', marginBottom: '1rem',
                 fontSize: '0.82rem', color: '#f87171', textAlign: 'center'
               }}>
-                ⚠️ {validationError}
+                {validationError}
               </div>
             )}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1113,73 +1113,94 @@ export default function OrderForm() {
         )}
 
         {/* --- STEP 5: SUCCESS --- */}
-        {step === 5 && (
-          <div style={{ textAlign: 'center', padding: '2rem 0', animation: 'fadeIn 0.8s ease-out' }}>
-            <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
-              <Sparkles size={64} strokeWidth={1} opacity={0.8} />
-            </div>
-            <h2 style={{ fontSize: '1.75rem', marginBottom: '0.75rem', fontFamily: 'var(--font-serif)', fontStyle: 'italic' }}>
-              Sempurna!
-            </h2>
-            <p style={{ fontSize: '0.9rem', opacity: 0.8, marginBottom: '1.5rem', lineHeight: 1.6 }}>
-              Data kamu sudah kami terima dengan sepenuh hati.<br/>
-              Satu langkah lagi — beritahu kami lewat WhatsApp agar<br/>
-              kado untuk <strong>{data.recipient}</strong> segera kami proses. 🌸
-            </p>
+        {step === 5 && (() => {
+          const isUnbox = String(slug || '').toLowerCase().includes('unbox');
+          const waNumber = '6281381543981';
 
-            <div style={{ background: 'rgba(0,0,0,0.1)', padding: '1.25rem 1.5rem', borderRadius: '16px', display: 'inline-block', minWidth: '200px', marginBottom: '1.75rem' }}>
-              <div style={{ fontSize: '0.7rem', opacity: 0.6, marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>ID Pesanan Anda</div>
-              <div style={{ fontSize: '1.4rem', fontFamily: 'monospace', fontWeight: 'bold', letterSpacing: '0.05em' }}>{orderId}</div>
-            </div>
+          const waMessage = isUnbox
+            ? encodeURIComponent(
+                `Halo Digital Atelier!\n\n` +
+                `Saya sudah selesai mengisi form untuk paket *Unbox the Memory (Gift Box Fisik)*.\n\n` +
+                `*Detail Pesanan:*\n` +
+                `• Order ID: ${orderId || slug}\n` +
+                `• Paket: Unbox the Memory (Hampers Box Fisik)\n` +
+                `• Dari: ${data.sender}${data.relationship ? ` (${data.relationship})` : ''}\n` +
+                `• Untuk: ${data.recipient}${data.nickname ? ` (Panggilan: ${data.nickname})` : ''}\n` +
+                `• Momen: ${data.moment}${data.milestoneNumber ? ` (ke-${data.milestoneNumber})` : ''}\n` +
+                (data.recipientBirthdate ? `• Tgl Lahir Penerima: ${data.recipientBirthdate}\n` : '') +
+                (data.deadline ? `• Deadline: ${new Date(data.deadline).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}\n` : '') +
+                `\nMohon kado digitalnya segera diramu dan hampers box fisik saya segera dirakitkan yaa. Terima kasih!`
+              )
+            : encodeURIComponent(
+                `Halo Digital Atelier!\n\n` +
+                `Saya sudah selesai mengisi form kado digital Memoria.\n\n` +
+                `*Detail Pesanan:*\n` +
+                `• Order ID: ${orderId || slug}\n` +
+                `• Dari: ${data.sender}${data.relationship ? ` (${data.relationship})` : ''}\n` +
+                `• Untuk: ${data.recipient}${data.nickname ? ` (Panggilan: ${data.nickname})` : ''}\n` +
+                `• Momen: ${data.moment}${data.milestoneNumber ? ` (ke-${data.milestoneNumber})` : ''}\n` +
+                (data.recipientBirthdate ? `• Tgl Lahir Penerima: ${data.recipientBirthdate}\n` : '') +
+                (data.deadline ? `• Deadline: ${new Date(data.deadline).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}\n` : '') +
+                `\nMohon kado digital saya segera diproses ya. Terima kasih!`
+              );
 
-            {/* WhatsApp CTA Button */}
-            <div style={{ marginBottom: '1rem' }}>
-              <a
-                href={`https://wa.me/6281936109076?text=${encodeURIComponent(
-                  `Halo Digital Atelier! 🎁\n\nSaya sudah selesai mengisi form Memoria.\n\n` +
-                  `📋 *Detail Pesanan:*\n` +
-                  `• Order ID: ${orderId}\n` +
-                  `• Dari: ${data.sender}${data.relationship ? ` (${data.relationship})` : ''}\n` +
-                  `• Untuk: ${data.recipient}${data.nickname ? ` (Panggilan: ${data.nickname})` : ''}\n` +
-                  `• Momen: ${data.moment}${data.milestoneNumber ? ` (ke-${data.milestoneNumber})` : ''}\n` +
-                  (data.recipientBirthdate ? `• Tgl Lahir Penerima: ${data.recipientBirthdate}\n` : '') +
-                  (data.deadline ? `• ⏰ Deadline: ${new Date(data.deadline).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}\n` : '') +
-                  `\nMohon segera diproses ya. Terima kasih! 🌸`
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  padding: '14px 28px',
-                  background: '#25D366',
-                  color: '#fff',
-                  borderRadius: '50px',
-                  textDecoration: 'none',
-                  fontSize: '0.95rem',
-                  fontWeight: 600,
-                  boxShadow: '0 8px 24px rgba(37,211,102,0.35)',
-                  transition: 'all 0.25s ease',
-                  letterSpacing: '0.01em',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 28px rgba(37,211,102,0.45)'; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(37,211,102,0.35)'; }}
-              >
-                {/* WhatsApp Icon */}
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-                  <path d="M12 2C6.477 2 2 6.477 2 12c0 1.821.486 3.53 1.337 5.006L2.001 22l5.13-1.322A9.956 9.956 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm0 18a7.96 7.96 0 01-4.065-1.112l-.292-.174-3.046.784.813-2.934-.19-.302A7.965 7.965 0 014 12c0-4.418 3.582-8 8-8s8 3.582 8 8-3.582 8-8 8z"/>
-                </svg>
-                Beritahu Kami Lewat WhatsApp
-              </a>
-            </div>
+          return (
+            <div style={{ textAlign: 'center', padding: '2rem 0', animation: 'fadeIn 0.8s ease-out' }}>
+              <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
+                <Sparkles size={64} strokeWidth={1} opacity={0.8} />
+              </div>
+              <h2 style={{ fontSize: '1.85rem', marginBottom: '0.75rem', fontFamily: 'var(--font-serif)', fontStyle: 'italic' }}>
+                Data Kado Diterima
+              </h2>
+              <p style={{ fontSize: '0.9rem', opacity: 0.8, marginBottom: '1.5rem', lineHeight: 1.6, maxWidth: '420px', margin: '0 auto 1.5rem' }}>
+                Data kamu sudah kami simpan dengan sepenuh hati. Silakan beritahu kami lewat WhatsApp agar kado untuk <strong>{data.recipient}</strong> segera diramu oleh atelier.
+              </p>
 
-            <p style={{ fontSize: '0.78rem', opacity: 0.55, lineHeight: 1.5, marginTop: '0.5rem' }}>
-              Tekan tombol di atas agar kami segera memproses<br/>kado digital kamu. ✨
-            </p>
-          </div>
-        )}
+              {/* Order ID Badge */}
+              <div style={{ background: 'rgba(0,0,0,0.06)', border: `1px solid ${currentTheme.text}20`, padding: '1rem 1.5rem', borderRadius: '16px', display: 'inline-block', minWidth: '220px', marginBottom: '1.5rem' }}>
+                <div style={{ fontSize: '0.7rem', opacity: 0.6, marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>ID Pesanan Anda</div>
+                <div style={{ fontSize: '1.3rem', fontFamily: 'monospace', fontWeight: 'bold', letterSpacing: '0.05em' }}>{orderId || slug}</div>
+              </div>
+
+              {/* WhatsApp CTA Button */}
+              <div style={{ marginBottom: '1rem' }}>
+                <a
+                  href={`https://wa.me/${waNumber}?text=${waMessage}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '14px 32px',
+                    background: '#25D366',
+                    color: '#fff',
+                    borderRadius: '50px',
+                    textDecoration: 'none',
+                    fontSize: '0.95rem',
+                    fontWeight: 700,
+                    boxShadow: '0 8px 24px rgba(37,211,102,0.35)',
+                    transition: 'all 0.25s ease',
+                    letterSpacing: '0.01em',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 28px rgba(37,211,102,0.45)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(37,211,102,0.35)'; }}
+                >
+                  {/* WhatsApp Icon */}
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                    <path d="M12 2C6.477 2 2 6.477 2 12c0 1.821.486 3.53 1.337 5.006L2.001 22l5.13-1.322A9.956 9.956 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm0 18a7.96 7.96 0 01-4.065-1.112l-.292-.174-3.046.784.813-2.934-.19-.302A7.965 7.965 0 014 12c0-4.418 3.582-8 8-8s8 3.582 8 8-3.582 8-8 8z"/>
+                  </svg>
+                  Beritahu Kami Lewat WhatsApp
+                </a>
+              </div>
+
+              <p style={{ fontSize: '0.78rem', opacity: 0.55, lineHeight: 1.5, marginTop: '0.5rem' }}>
+                Tekan tombol di atas agar kami segera memproses kado kamu.
+              </p>
+            </div>
+          );
+        })()}
 
 
       </div>
