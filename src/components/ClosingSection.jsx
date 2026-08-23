@@ -144,9 +144,9 @@ function CinemaModal({ secretPhoto, secretCaption, secretVideoMuted, onClose }) 
               />
             ) : (
               <div className="w-full aspect-[3/4] bg-[#111] flex flex-col items-center justify-center text-center p-6">
-                <span className="text-3xl mb-4">🔗</span>
-                <h3 className="font-serif text-[18px] text-[#e5e5e5] mb-2">Sebuah Tautan Rahasia</h3>
-                <p className="font-sans text-[12px] text-white/60 mb-6">Seseorang meninggalkan pesan atau kenangan untukmu di tautan ini.</p>
+                <span className="text-3xl mb-4">✨</span>
+                <h3 className="font-serif text-[18px] text-[#e5e5e5] mb-2">Tautan Spesial Untukmu</h3>
+                <p className="font-sans text-[12px] text-white/60 mb-6">Ada kejutan dan kenangan manis yang disiapkan khusus untukmu di tautan ini.</p>
                 <a href={secretPhoto} target="_blank" rel="noopener noreferrer" className="px-5 py-2 rounded-full border border-white/20 text-white/80 font-sans text-[11px] uppercase tracking-widest hover:bg-white/10 transition-colors">
                   Buka Tautan
                 </a>
