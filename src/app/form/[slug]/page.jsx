@@ -7,6 +7,52 @@ import { themes } from '@/lib/themes';
 import playlist from '@/app/studio/playlist.json';
 import { Flower2, Leaf, Clock, Heart, Music, Image as ImageIcon, Lock, CheckCircle2, Sparkles, Video, Star, Camera, Handshake, HeartHandshake } from 'lucide-react';
 
+const FORM_COPY = [
+  ['Order Form', 'Order Form'], ['Step', 'Step'], ['Tentang Kalian', 'About You'],
+  ['Dari (Nama Anda)', 'From (Your Name)'], ['Untuk (Nama Lengkap / Nama Pendek)', 'To (Full Name / Nickname)'],
+  ['Panggilan Sayang', 'Term of Endearment'], ['(Opsional)', '(Optional)'],
+  ['Panggilan spesial yang biasa kamu sebut (misal: sayang, cinta, beb, dll)', 'A special name you usually use (e.g. darling, love, babe).'],
+  ['Momen Spesial', 'Special Occasion'], ['Tulis momen spesialmu di sini... (cth: Hari pertama kenalan)', 'Write your special occasion here... (e.g. the day we first met)'],
+  ['Nama Momen / Acara (Opsional)', 'Occasion / Event Name (Optional)'], ['Kamu dan', 'You and'], ['adalah...', 'are...'],
+  ['Gaya & Suasana', 'Style & Mood'], ['Pilih Palet Warna', 'Choose a Color Palette'],
+  ['Tema Bagian Alasan Cinta', 'Love Reasons Section Theme'], ['Pilih tema untuk kartu-kartu alasan kenapa kamu mencintai dia.', 'Choose a theme for the cards that explain why you love them.'],
+  ['Bahasa Penulisan', 'Letter Language'], ['Pilih satu bahasa utama untuk surat kamu.', 'Choose one main language for your letter.'],
+  ['Lainnya / Custom', 'Other / Custom'], ['Tulis preferensi bahasa kamu sendiri di bawah ini.', 'Write your language preference below.'],
+  ['Gaya Penulisan (Vibe)', 'Writing Style (Vibe)'], ['Boleh pilih lebih dari satu untuk hasil yang lebih pas.', 'You can choose more than one for a better result.'],
+  ['Pesan Utama', 'Main Message'], ['Lagu Latar (Backsound)', 'Background Music'], ['Ganti', 'Change'],
+  ['Galeri Kenangan', 'Memory Gallery'], ['Video maks. 15MB. Foto akan dikompres otomatis.', 'Videos can be up to 15MB. Photos are compressed automatically.'],
+  ['Kapan gift harus jadi? (Opsional)', 'When should the gift be ready? (Optional)'], ['PIN Code (Maks 6 Angka)', 'PIN Code (Up to 6 Digits)'],
+  ['PIN Hint / Clue (Opsional)', 'PIN Hint / Clue (Optional)'], ['Pilih Lagu Latar', 'Choose Background Music'],
+  ['Sebelumnya', 'Back'], ['Lanjut', 'Next'], ['Kirim Pesanan', 'Submit Order'], ['Bahasa Tampilan', 'Interface Language'],
+  ['Misal: Budi', 'Example: Budi'], ['Misal: Nadia Aulia', 'Example: Nadia Aulia'], ['Misal: Sayang, Beb, Cinta...', 'Example: Darling, Babe, Love...'],
+  ['Cth: Hari pertama kenalan, Wisuda, dll...', 'E.g. The day we first met, graduation, etc...'],
+  ['Contoh: Bahasa Jawa, campuran Korea-Indonesia, dll...', 'Example: Javanese, a Korean-Indonesian mix, etc...'],
+  ['Contoh: Makasih ya udah sabar ngadepin aku yang kadang egois. Aku cuma mau bilang kalau aku beruntung banget punya kamu...', 'Example: Thank you for being patient with me when I am sometimes selfish. I just want to say how lucky I am to have you...'],
+  ['Misal: Sempurna - Andra & The Backbone', 'Example: Perfect - Ed Sheeran'], ['Contoh: 123456', 'Example: 123456'], ['Contoh: Tanggal jadian kita', 'Example: Our anniversary date'],
+  ['Mohon isi nama pengirim dan penerima.', 'Please fill in the sender and recipient names.'], ['Mohon isi pesan utama yang ingin disampaikan.', 'Please fill in the main message you want to share.']
+];
+const FORM_DICTIONARY = Object.fromEntries(FORM_COPY.flatMap(([id, en]) => [[id, { id, en }], [en, { id, en }]]));
+function translateFormCopy(root, locale) {
+  if (!root) return;
+  const translate = (value) => FORM_DICTIONARY[value]?.[locale] || value;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let node;
+  while ((node = walker.nextNode())) {
+    const parent = node.parentElement;
+    if (!parent || ['SCRIPT', 'STYLE', 'TEXTAREA'].includes(parent.tagName) || parent.isContentEditable) continue;
+    const source = node.nodeValue;
+    const key = source.replace(/\s+/g, ' ').trim();
+    const translated = translate(key);
+    if (translated !== key) node.nodeValue = source.replace(key, translated);
+  }
+  root.querySelectorAll('[placeholder], [title], [aria-label]').forEach((element) => {
+    ['placeholder', 'title', 'aria-label'].forEach((attribute) => {
+      const value = element.getAttribute(attribute);
+      if (value) element.setAttribute(attribute, translate(value));
+    });
+  });
+}
+
 export default function OrderForm() {
   const params = useParams();
   const slug = params?.slug || 'unknown';
@@ -16,6 +62,8 @@ export default function OrderForm() {
   const [orderId, setOrderId] = useState(null);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
   const [tempSelectedMusic, setTempSelectedMusic] = useState('');
+  const [interfaceLocale, setInterfaceLocale] = useState('id');
+  const formRootRef = useRef(null);
 
   const [data, setData] = useState({
     sender: '',
@@ -66,6 +114,15 @@ export default function OrderForm() {
       
     return () => { mounted = false; };
   }, [slug]);
+
+  useEffect(() => {
+    try { setInterfaceLocale(localStorage.getItem(`memoria-form-locale-${slug}`) || 'id'); } catch { /* ignore */ }
+  }, [slug]);
+
+  useEffect(() => {
+    document.documentElement.lang = interfaceLocale;
+    translateFormCopy(formRootRef.current, interfaceLocale);
+  });
 
   // Save to localStorage AND online when data changes (debounced)
   useEffect(() => {
@@ -264,7 +321,7 @@ export default function OrderForm() {
   const RELATIONSHIPS = ['Pasangan', 'Sahabat', 'Teman', 'Keluarga', 'Lainnya'];
 
   return (
-    <div style={{
+    <div ref={formRootRef} style={{
       backgroundColor: currentTheme.bg,
       color: currentTheme.text,
       minHeight: '100vh',
@@ -299,6 +356,22 @@ export default function OrderForm() {
             <p style={{ fontSize: '0.85rem', opacity: 0.7, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
               Order Form • Step {step} of 4
             </p>
+            <label style={{ position: 'absolute', top: '1rem', right: '1rem', display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.35rem 0.55rem', border: `1px solid ${currentTheme.text}25`, borderRadius: '999px', fontSize: '0.65rem', opacity: 0.8 }}>
+              <span>{interfaceLocale === 'id' ? 'Bahasa' : 'Language'}</span>
+              <select
+                value={interfaceLocale}
+                onChange={(event) => {
+                  const nextLocale = event.target.value;
+                  setInterfaceLocale(nextLocale);
+                  try { localStorage.setItem(`memoria-form-locale-${slug}`, nextLocale); } catch { /* ignore */ }
+                }}
+                aria-label="Interface language"
+                style={{ border: 'none', background: 'transparent', color: 'inherit', font: 'inherit', outline: 'none', cursor: 'pointer' }}
+              >
+                <option value="id">Indonesia</option>
+                <option value="en">English</option>
+              </select>
+            </label>
             <div style={{ display: 'flex', gap: '4px', marginTop: '1.5rem', justifyContent: 'center' }}>
               {[1, 2, 3, 4].map(i => (
                 <div key={i} style={{
