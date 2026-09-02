@@ -761,7 +761,7 @@ function TabGallery({ data, set, slug }) {
   };
   
   const addPhoto = () => {
-    if (photos.length >= 15) return;
+    if (photos.length >= 30) return;
     set('photos', [...photos, { url: '', caption: '' }]);
   };
   
@@ -789,7 +789,7 @@ function TabGallery({ data, set, slug }) {
     setUploadingBulk(true);
     let currentPhotos = [...(data.photos || [])];
     for (let i = 0; i < files.length; i++) {
-      if (currentPhotos.length >= 15) break;
+      if (currentPhotos.length >= 30) break;
       const file = files[i];
       const fd = new FormData();
       fd.append('file', file);
@@ -866,7 +866,7 @@ function TabGallery({ data, set, slug }) {
 
   return (<>
     <div style={S.sectionTitle}>Photo Gallery</div>
-    <div style={S.sectionDesc}>Upload photos with captions. You can add up to 15 photos.</div>
+    <div style={S.sectionDesc}>Upload photos with captions. You can add up to 30 photos.</div>
     <Field label="Section Title 1" value={data.galleryTitle1} onChange={(v) => set('galleryTitle1', v)} placeholder="Our Beautiful" />
     <Field label="Section Title 2" value={data.galleryTitle2} onChange={(v) => set('galleryTitle2', v)} placeholder="Memories" />
     {photos.map((p, i) => (
@@ -897,8 +897,8 @@ function TabGallery({ data, set, slug }) {
       </div>
     )}
     <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
-      {photos.length < 15 && (
-        <button style={S.smallBtn('#22C55E')} onClick={addPhoto}>+ Add Photo ({photos.length}/15)</button>
+      {photos.length < 30 && (
+        <button style={S.smallBtn('#22C55E')} onClick={addPhoto}>+ Add Photo ({photos.length}/30)</button>
       )}
       <label style={{ ...S.smallBtn('#3B82F6'), cursor: uploadingBulk ? 'wait' : 'pointer', opacity: uploadingBulk ? 0.7 : 1 }}>
         {uploadingBulk ? 'Uploading...' : '📁 Bulk Upload Photos'}
