@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { getGiftBySlug } from '@/lib/getData';
 import { notFound } from 'next/navigation';
 import GiftPage from './GiftPage';
+import playlistData from '@/app/studio/playlist.json';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,11 +15,34 @@ export async function generateMetadata({ params }) {
   const title = `For ${recipient} — A Special Gift`;
   const description = gift.gateSubtitle || 'Something Special For u';
 
-  const previewImage = gift.photos?.find(p => 
-    p && p.url && typeof p.url === 'string' && 
-    !p.url.toLowerCase().endsWith('.mp4') && 
-    !p.url.toLowerCase().endsWith('.heic')
-  )?.url || 'https://for-you-always.my.id/assets/opening_gate.png';
+  // Take preview image from music gallery (playlist) — never use customer's personal photos
+  let previewImage = '';
+
+  // 1. Try matching song from playlist by title
+  const songTitle = (gift.music?.title || gift.musicTitle || '').toLowerCase().trim();
+  if (songTitle) {
+    const matched = playlistData.find(s => 
+      s.title && (
+        s.title.toLowerCase() === songTitle ||
+        songTitle.includes(s.title.toLowerCase()) ||
+        s.title.toLowerCase().includes(songTitle)
+      )
+    );
+    if (matched?.coverUrl) {
+      previewImage = matched.coverUrl;
+    }
+  }
+
+  // 2. If gift.music has a cover from music gallery
+  if (!previewImage && gift.music?.cover && typeof gift.music.cover === 'string' && gift.music.cover.includes('arcade-edition.aldoramadhan16.workers.dev')) {
+    previewImage = gift.music.cover;
+  }
+
+  // 3. Fallback: default album cover from music gallery
+  if (!previewImage) {
+    const defaultSong = playlistData.find(s => s.title?.toLowerCase() === 'semua aku dirayakan') || playlistData[0];
+    previewImage = defaultSong?.coverUrl || 'https://arcade-edition.aldoramadhan16.workers.dev/files/1774553222239-jk1brr.jpg';
+  }
 
   return {
     title,
@@ -33,7 +57,7 @@ export async function generateMetadata({ params }) {
           url: previewImage,
           width: 1200,
           height: 630,
-          alt: `A special gift for ${recipient}`,
+          alt: `For ${recipient} — A Special Gift`,
         },
       ],
       locale: 'id_ID',
