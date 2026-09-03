@@ -6,7 +6,7 @@ import playlistData from '../../playlist.json';
 import AestheticQRCode from '@/components/AestheticQRCode';
 import { themes } from '@/lib/themes';
 
-const TABS = ['Theme', 'Opening', 'Hero', 'Time', 'Letter', 'Reasons', 'Seasons', 'Gallery', 'Music', 'Closing'];
+const TABS = ['Theme', 'Opening', 'Hero', 'Time', 'Letter', 'Reasons', 'Seasons', 'Circle Wishes', 'Gallery', 'Music', 'Closing'];
 
 // ── Styles ────────────────────────────────────────────────────────
 const S = {
@@ -752,6 +752,315 @@ function TabSeasons({ data, set }) {
   </>);
 }
 
+// ── Circle Wishes Tab ──────────────────────────────────────────────
+function TabCircleWishes({ data, set, slug }) {
+  const wishes = data.circleWishes || [];
+  const [syncing, setSyncing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState('');
+  const [copiedPortalLink, setCopiedPortalLink] = useState(false);
+
+  const updateWish = (idx, field, value) => {
+    const next = [...wishes];
+    next[idx] = { ...next[idx], [field]: value };
+    set('circleWishes', next);
+  };
+
+  const removeWish = (idx) => {
+    const target = wishes[idx];
+    const friendName = target?.name || `Ucapan #${idx + 1}`;
+    if (window.confirm(`Hapus ucapan dari ${friendName}?`)) {
+      set('circleWishes', wishes.filter((_, i) => i !== idx));
+    }
+  };
+
+  const moveWish = (idx, direction) => {
+    const next = [...wishes];
+    if (direction === 'up' && idx > 0) {
+      [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
+      set('circleWishes', next);
+    } else if (direction === 'down' && idx < next.length - 1) {
+      [next[idx + 1], next[idx]] = [next[idx], next[idx + 1]];
+      set('circleWishes', next);
+    }
+  };
+
+  const addManualWish = () => {
+    const newWish = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+      name: '',
+      message: '',
+      photoUrl: '',
+      createdAt: new Date().toISOString(),
+    };
+    set('circleWishes', [...wishes, newWish]);
+  };
+
+  const syncIncomingWishes = async () => {
+    setSyncing(true);
+    setSyncStatus('');
+    try {
+      const res = await fetch(`/api/circle-wishes/${slug}`);
+      if (!res.ok) throw new Error('Gagal mengambil data ucapan');
+      const resData = await res.json();
+      const incoming = resData.wishes || [];
+
+      const currentIds = new Set(wishes.map((w) => w.id));
+      const newlyAdded = incoming.filter((w) => !currentIds.has(w.id));
+
+      if (newlyAdded.length > 0) {
+        set('circleWishes', [...wishes, ...newlyAdded]);
+        setSyncStatus(`✓ Berhasil menambahkan ${newlyAdded.length} ucapan baru dari kontributor!`);
+      } else {
+        setSyncStatus('✓ Semua ucapan dari kontributor sudah tersinkronisasi.');
+      }
+    } catch (err) {
+      console.error('Error syncing circle wishes:', err);
+      setSyncStatus('⚠️ Gagal menyinkronkan ucapan. Silakan coba lagi.');
+    } finally {
+      setSyncing(false);
+      setTimeout(() => setSyncStatus(''), 5000);
+    }
+  };
+
+  const portalUrl = typeof window !== 'undefined' ? `${window.location.origin}/c/${slug}` : `/c/${slug}`;
+
+  const copyPortalLink = () => {
+    navigator.clipboard.writeText(portalUrl);
+    setCopiedPortalLink(true);
+    setTimeout(() => setCopiedPortalLink(false), 2500);
+  };
+
+  return (
+    <>
+      <div style={S.sectionTitle}>Circle Wishes (Kado Keroyokan)</div>
+      <div style={S.sectionDesc}>
+        Kumpulkan dan kurasi pesan ucapan serta foto kenangan dari sahabat dan kerabat.
+      </div>
+
+      {/* Contributor Portal Share Box */}
+      <div style={{ ...S.cardWrap, border: '1px solid rgba(225,29,72,0.3)', background: 'rgba(225,29,72,0.04)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+          <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#F472B6' }}>
+            💌 Link Contributor Portal
+          </span>
+          <button
+            style={S.smallBtn(copiedPortalLink ? '#22C55E' : '#EC4899')}
+            onClick={copyPortalLink}
+          >
+            {copiedPortalLink ? '✓ Tersalin!' : '📋 Salin Link Portal'}
+          </button>
+        </div>
+        <p style={{ fontSize: '0.7rem', color: '#888', marginBottom: '0.5rem' }}>
+          Bagikan tautan ini ke grup WhatsApp teman-teman agar mereka bisa mengisi ucapan dan mengunggah foto langsung dari HP:
+        </p>
+        <div
+          style={{
+            background: '#070707',
+            padding: '0.5rem 0.75rem',
+            borderRadius: '6px',
+            fontSize: '0.75rem',
+            fontFamily: 'monospace',
+            color: '#eee',
+            border: '1px solid #222',
+            wordBreak: 'break-all',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '8px',
+          }}
+        >
+          <span className="truncate">{portalUrl}</span>
+          <button
+            onClick={() => window.open(`/c/${slug}`, '_blank')}
+            style={{ ...S.smallBtn('#8B5CF6'), flexShrink: 0, padding: '0.2rem 0.5rem' }}
+          >
+            Buka ↗
+          </button>
+        </div>
+      </div>
+
+      {/* Actions Bar */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginBottom: '1.25rem', marginTop: '1rem' }}>
+        <button
+          style={{
+            ...S.smallBtn('#3B82F6'),
+            background: 'rgba(59,130,246,0.1)',
+            border: '1px solid rgba(59,130,246,0.3)',
+            fontWeight: 600,
+            padding: '0.45rem 0.9rem',
+          }}
+          onClick={syncIncomingWishes}
+          disabled={syncing}
+        >
+          {syncing ? 'Menyinkronkan...' : '🔄 Sync Incoming Wishes'}
+        </button>
+
+        <button
+          style={{
+            ...S.smallBtn('#22C55E'),
+            background: 'rgba(34,197,94,0.1)',
+            border: '1px solid rgba(34,197,94,0.3)',
+            fontWeight: 600,
+            padding: '0.45rem 0.9rem',
+          }}
+          onClick={addManualWish}
+        >
+          + Tambah Ucapan Manual
+        </button>
+
+        <span style={{ fontSize: '0.7rem', color: '#666', marginLeft: 'auto' }}>
+          Total ucapan: {wishes.length}
+        </span>
+      </div>
+
+      {syncStatus && (
+        <div
+          style={{
+            padding: '0.5rem 0.75rem',
+            borderRadius: '6px',
+            fontSize: '0.75rem',
+            marginBottom: '1rem',
+            background: syncStatus.startsWith('✓') ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
+            border: `1px solid ${syncStatus.startsWith('✓') ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
+            color: syncStatus.startsWith('✓') ? '#4ADE80' : '#FCA5A5',
+          }}
+        >
+          {syncStatus}
+        </div>
+      )}
+
+      {/* Wishes List */}
+      {wishes.length === 0 ? (
+        <div
+          style={{
+            ...S.cardWrap,
+            textAlign: 'center',
+            padding: '2.5rem 1.5rem',
+            border: '1px dashed #262626',
+          }}
+        >
+          <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>💌</div>
+          <div style={{ fontSize: '0.8rem', color: '#888', marginBottom: '0.25rem' }}>
+            Belum ada ucapan yang masuk
+          </div>
+          <p style={{ fontSize: '0.7rem', color: '#555', maxWidth: '360px', margin: '0 auto' }}>
+            Bagikan link portal di atas ke teman-teman, atau klik tombol <b>Sync Incoming Wishes</b> untuk memeriksa pengiriman baru.
+          </p>
+        </div>
+      ) : (
+        wishes.map((w, i) => (
+          <div key={w.id || i} style={S.cardWrap}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '0.75rem',
+                borderBottom: '1px solid #1a1a1a',
+                paddingBottom: '0.5rem',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span
+                  style={{
+                    fontSize: '0.7rem',
+                    fontWeight: 600,
+                    color: '#E11D48',
+                    background: 'rgba(225,29,72,0.1)',
+                    padding: '0.15rem 0.45rem',
+                    borderRadius: '4px',
+                  }}
+                >
+                  #{i + 1}
+                </span>
+                <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#ddd' }}>
+                  {w.name || 'Tanpa Nama'}
+                </span>
+              </div>
+
+              {/* Order Controls & Delete */}
+              <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                <button
+                  style={{ ...S.smallBtn('#888'), opacity: i === 0 ? 0.3 : 1, cursor: i === 0 ? 'not-allowed' : 'pointer' }}
+                  onClick={() => moveWish(i, 'up')}
+                  disabled={i === 0}
+                  title="Pindah ke Atas"
+                >
+                  ↑
+                </button>
+                <button
+                  style={{
+                    ...S.smallBtn('#888'),
+                    opacity: i === wishes.length - 1 ? 0.3 : 1,
+                    cursor: i === wishes.length - 1 ? 'not-allowed' : 'pointer',
+                  }}
+                  onClick={() => moveWish(i, 'down')}
+                  disabled={i === wishes.length - 1}
+                  title="Pindah ke Bawah"
+                >
+                  ↓
+                </button>
+                <button
+                  style={S.smallBtn('#EF4444')}
+                  onClick={() => removeWish(i)}
+                  title="Hapus Ucapan"
+                >
+                  🗑 Hapus
+                </button>
+              </div>
+            </div>
+
+            {/* Photo Thumbnail if present */}
+            {w.photoUrl && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '0.75rem' }}>
+                <img
+                  src={w.photoUrl}
+                  alt={w.name}
+                  style={{ width: '56px', height: '56px', borderRadius: '8px', objectFit: 'cover', border: '1px solid #333' }}
+                />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '0.7rem', color: '#888' }}>Foto Kenangan</div>
+                  <div style={{ fontSize: '0.65rem', color: '#555', wordBreak: 'break-all' }} className="truncate">
+                    {w.photoUrl}
+                  </div>
+                  <button
+                    style={{ ...S.smallBtn('#EF4444'), fontSize: '0.65rem', padding: '0.1rem 0.4rem', marginTop: '0.25rem' }}
+                    onClick={() => updateWish(i, 'photoUrl', '')}
+                  >
+                    Hapus Foto
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <Field
+              label="Nama Pengirim"
+              value={w.name}
+              onChange={(v) => updateWish(i, 'name', v)}
+              placeholder="Contoh: Sarah / Sahabat SMA"
+            />
+
+            <Field
+              label="Pesan Ucapan"
+              value={w.message}
+              onChange={(v) => updateWish(i, 'message', v)}
+              placeholder="Tuliskan ucapan..."
+              multiline
+            />
+
+            <Field
+              label="URL Foto (Opsional)"
+              value={w.photoUrl}
+              onChange={(v) => updateWish(i, 'photoUrl', v)}
+              placeholder="https://..."
+            />
+          </div>
+        ))
+      )}
+    </>
+  );
+}
+
 function TabGallery({ data, set, slug }) {
   const photos = data.photos || [];
   const setPhoto = (idx, key, val) => {
@@ -1046,7 +1355,7 @@ function TabClosing({ data, set, slug }) {
   </>);
 }
 
-const TAB_COMPONENTS = [TabTheme, TabOpening, TabHero, TabTime, TabLetter, TabReasons, TabSeasons, TabGallery, TabMusic, TabClosing];
+const TAB_COMPONENTS = [TabTheme, TabOpening, TabHero, TabTime, TabLetter, TabReasons, TabSeasons, TabCircleWishes, TabGallery, TabMusic, TabClosing];
 
 // ── Main Editor ───────────────────────────────────────────────────
 export default function StudioEditor({ params: paramsPromise }) {

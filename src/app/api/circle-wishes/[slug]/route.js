@@ -1,0 +1,100 @@
+import { NextResponse } from 'next/server';
+import { saveWish, getWishesBySlug, deleteWish } from '@/lib/wishes';
+import { getGiftBySlug } from '@/lib/getData';
+
+// POST /api/circle-wishes/[slug]
+export async function POST(request, { params }) {
+  try {
+    const { slug } = await params;
+
+    if (!slug || !/^[a-zA-Z0-9_-]+$/.test(slug)) {
+      return NextResponse.json({ error: 'Kado tidak ditemukan' }, { status: 404 });
+    }
+
+    const gift = await getGiftBySlug(slug);
+    if (!gift) {
+      return NextResponse.json({ error: 'Kado tidak ditemukan' }, { status: 404 });
+    }
+
+    const body = await request.json();
+    const name = (body.name || '').trim();
+    const message = (body.message || '').trim();
+    const photoUrl = (body.photoUrl || '').trim();
+    const createdAt = body.createdAt || new Date().toISOString();
+
+    if (!name) {
+      return NextResponse.json({ error: 'Nama pengirim wajib diisi' }, { status: 400 });
+    }
+    if (!message) {
+      return NextResponse.json({ error: 'Pesan ucapan wajib diisi' }, { status: 400 });
+    }
+    if (name.length > 80) {
+      return NextResponse.json({ error: 'Nama maksimal 80 karakter' }, { status: 400 });
+    }
+    if (message.length > 1000) {
+      return NextResponse.json({ error: 'Pesan maksimal 1000 karakter' }, { status: 400 });
+    }
+
+    const wish = await saveWish(slug, {
+      name,
+      message,
+      photoUrl,
+      createdAt,
+    });
+
+    return NextResponse.json({ success: true, wish }, { status: 201 });
+  } catch (error) {
+    console.error('Error submitting circle wish:', error);
+    return NextResponse.json({ error: 'Gagal mengirim ucapan' }, { status: 500 });
+  }
+}
+
+// GET /api/circle-wishes/[slug]
+export async function GET(request, { params }) {
+  try {
+    const { slug } = await params;
+
+    if (!slug || !/^[a-zA-Z0-9_-]+$/.test(slug)) {
+      return NextResponse.json({ error: 'Kado tidak ditemukan' }, { status: 404 });
+    }
+
+    const gift = await getGiftBySlug(slug);
+    if (!gift) {
+      return NextResponse.json({ error: 'Kado tidak ditemukan' }, { status: 404 });
+    }
+
+    const wishes = await getWishesBySlug(slug);
+    return NextResponse.json({ success: true, wishes });
+  } catch (error) {
+    console.error('Error retrieving circle wishes:', error);
+    return NextResponse.json({ error: 'Gagal mengambil daftar ucapan' }, { status: 500 });
+  }
+}
+
+// DELETE /api/circle-wishes/[slug]?wishId=...
+export async function DELETE(request, { params }) {
+  try {
+    const { slug } = await params;
+
+    if (!slug || !/^[a-zA-Z0-9_-]+$/.test(slug)) {
+      return NextResponse.json({ error: 'Kado tidak ditemukan' }, { status: 404 });
+    }
+
+    const gift = await getGiftBySlug(slug);
+    if (!gift) {
+      return NextResponse.json({ error: 'Kado tidak ditemukan' }, { status: 404 });
+    }
+
+    const wishId = request.nextUrl ? request.nextUrl.searchParams.get('wishId') : new URL(request.url).searchParams.get('wishId');
+
+    if (!wishId || !/^[a-zA-Z0-9_-]+$/.test(wishId)) {
+      return NextResponse.json({ error: 'ID ucapan tidak valid' }, { status: 400 });
+    }
+
+    await deleteWish(slug, wishId);
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting wish:', error);
+    return NextResponse.json({ error: 'Gagal menghapus ucapan' }, { status: 500 });
+  }
+}

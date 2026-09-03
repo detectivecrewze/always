@@ -12,6 +12,7 @@ import TimeSection from '@/components/TimeSection';
 import IntroSection from '@/components/IntroSection';
 import ReasonCards from '@/components/ReasonCards';
 import SeasonsSection from '@/components/SeasonsSection';
+import CircleWishesSection from '@/components/CircleWishesSection';
 import MusicPlayer from '@/components/MusicPlayer';
 import Gallery from '@/components/Gallery';
 import ClosingSection from '@/components/ClosingSection';
@@ -181,6 +182,14 @@ export default function GiftPage({ data }) {
                 seasonsTitle1={data.seasonsTitle1}
                 seasonsTitle2={data.seasonsTitle2}
                 seasonsHint={data.seasonsHint}
+              />
+            )}
+
+            {data.circleWishes && data.circleWishes.length > 0 && (
+              <CircleWishesSection
+                wishes={data.circleWishes}
+                recipient={data.recipient}
+                moment={data.moment}
               />
             )}
 
