@@ -657,11 +657,16 @@ function TabSeasons({ data, set }) {
     return null;
   };
 
+  const seasonsEnabled = data.seasonsEnabled !== undefined
+    ? Boolean(data.seasonsEnabled)
+    : Boolean(data.seasons && data.seasons.length > 0);
+
   const applyPreset = (preset) => {
     set('seasonsTitle1', preset.title1);
     set('seasonsTitle2', preset.title2);
     set('seasonsHint', preset.hint);
     set('seasons', preset.cards.map(c => ({ ...c })));
+    if (!seasonsEnabled) set('seasonsEnabled', true);
   };
 
   const currentPreset = detectPreset();
@@ -685,8 +690,44 @@ function TabSeasons({ data, set }) {
   ];
 
   return (<>
-    <div style={S.sectionTitle}>Choose a Preset</div>
-    <div style={S.sectionDesc}>Select a metaphor theme, or customize below.</div>
+    <div style={S.sectionTitle}>Seasons Metaphor</div>
+    <div style={S.sectionDesc}>An interactive 4-card metaphor section (Seasons, Flowers, Time, or Keepsakes).</div>
+
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem', background: '#111', padding: '1rem', borderRadius: '8px', border: '1px solid #333' }}>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: '0.9rem', color: '#fff', marginBottom: '0.25rem' }}>Enable Section</div>
+        <div style={{ fontSize: '0.75rem', color: '#888' }}>Show or hide this section on the live page</div>
+      </div>
+      <button 
+        type="button"
+        onClick={() => {
+          const next = !seasonsEnabled;
+          set('seasonsEnabled', next);
+          if (next && (!data.seasons || data.seasons.length === 0)) {
+            applyPreset(SEASON_PRESETS[0]);
+          }
+        }}
+        style={{
+          width: '48px', height: '24px', borderRadius: '12px',
+          background: seasonsEnabled ? '#22C55E' : '#333',
+          position: 'relative', transition: 'all 0.2s',
+          cursor: 'pointer', border: 'none', padding: 0
+        }}
+        aria-label="Toggle Seasons Section"
+      >
+        <div style={{
+          width: '20px', height: '20px', borderRadius: '50%', background: '#fff',
+          position: 'absolute', top: '2px', left: seasonsEnabled ? '26px' : '2px',
+          transition: 'all 0.2s'
+        }} />
+      </button>
+    </div>
+
+    <div className="w-full h-px bg-[#1a1a1a] mb-4" />
+
+    <div style={{ opacity: seasonsEnabled ? 1 : 0.5, pointerEvents: seasonsEnabled ? 'auto' : 'none' }}>
+      <div style={S.sectionTitle}>Choose a Preset</div>
+      <div style={S.sectionDesc}>Select a metaphor theme, or customize below.</div>
 
     <div className="grid grid-cols-2 gap-3 mb-6">
       {SEASON_PRESETS.map((preset) => {
@@ -750,6 +791,7 @@ function TabSeasons({ data, set }) {
         </div>
       );
     })}
+    </div>
   </>);
 }
 
@@ -795,6 +837,10 @@ function TabCircleWishes({ data, set, slug }) {
   const [syncStatus, setSyncStatus] = useState('');
   const [copiedPortalLink, setCopiedPortalLink] = useState(false);
 
+  const circleWishesEnabled = data.circleWishesEnabled !== undefined
+    ? Boolean(data.circleWishesEnabled)
+    : Boolean(data.circleWishes && data.circleWishes.length > 0);
+
   const currentPreset = CIRCLE_WISHES_PRESETS.find(
     p => p.title1 === data.circleTitle1 && p.title2 === data.circleTitle2
   )?.id || null;
@@ -803,6 +849,7 @@ function TabCircleWishes({ data, set, slug }) {
     set('circleTitle1', preset.title1);
     set('circleTitle2', preset.title2);
     set('circleSubtitle', preset.subtitle);
+    if (!circleWishesEnabled) set('circleWishesEnabled', true);
   };
 
   const updateWish = (idx, field, value) => {
@@ -841,6 +888,7 @@ function TabCircleWishes({ data, set, slug }) {
       createdAt: new Date().toISOString(),
     };
     set('circleWishes', [...wishes, newWish]);
+    if (!circleWishesEnabled) set('circleWishesEnabled', true);
   };
 
   const syncIncomingWishes = async () => {
@@ -900,8 +948,35 @@ function TabCircleWishes({ data, set, slug }) {
         Kumpulkan dan kurasi pesan ucapan serta foto kenangan dari sahabat dan kerabat.
       </div>
 
-      <div style={S.sectionTitle}>Choose a Preset</div>
-      <div style={S.sectionDesc}>Pilih tema judul dan deskripsi koleksi ucapan Circle Edition.</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem', background: '#111', padding: '1rem', borderRadius: '8px', border: '1px solid #333' }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: '0.9rem', color: '#fff', marginBottom: '0.25rem' }}>Enable Section</div>
+          <div style={{ fontSize: '0.75rem', color: '#888' }}>Show or hide this section on the live page</div>
+        </div>
+        <button 
+          type="button"
+          onClick={() => set('circleWishesEnabled', !circleWishesEnabled)}
+          style={{
+            width: '48px', height: '24px', borderRadius: '12px',
+            background: circleWishesEnabled ? '#22C55E' : '#333',
+            position: 'relative', transition: 'all 0.2s',
+            cursor: 'pointer', border: 'none', padding: 0
+          }}
+          aria-label="Toggle Circle Wishes Section"
+        >
+          <div style={{
+            width: '20px', height: '20px', borderRadius: '50%', background: '#fff',
+            position: 'absolute', top: '2px', left: circleWishesEnabled ? '26px' : '2px',
+            transition: 'all 0.2s'
+          }} />
+        </button>
+      </div>
+
+      <div className="w-full h-px bg-[#1a1a1a] mb-4" />
+
+      <div style={{ opacity: circleWishesEnabled ? 1 : 0.5, pointerEvents: circleWishesEnabled ? 'auto' : 'none' }}>
+        <div style={S.sectionTitle}>Choose a Preset</div>
+        <div style={S.sectionDesc}>Pilih tema judul dan deskripsi koleksi ucapan Circle Edition.</div>
       <PresetGrid presets={CIRCLE_WISHES_PRESETS} currentId={currentPreset} onApply={applyPreset} />
       <div className="w-full h-px bg-[#1a1a1a] mb-4" />
 
@@ -1230,12 +1305,17 @@ function TabCircleWishes({ data, set, slug }) {
           </div>
         ))
       )}
+      </div>
     </>
   );
 }
 
 function TabGallery({ data, set, slug }) {
   const photos = data.photos || [];
+  const galleryEnabled = data.galleryEnabled !== undefined
+    ? Boolean(data.galleryEnabled)
+    : Boolean(data.photos && data.photos.length > 0);
+
   const setPhoto = (idx, key, val) => {
     const next = [...photos];
     next[idx] = { ...next[idx], [key]: val };
@@ -1245,6 +1325,7 @@ function TabGallery({ data, set, slug }) {
   const addPhoto = () => {
     if (photos.length >= 30) return;
     set('photos', [...photos, { url: '', caption: '' }]);
+    if (!galleryEnabled) set('galleryEnabled', true);
   };
   
   const removePhoto = (idx) => {
@@ -1282,6 +1363,7 @@ function TabGallery({ data, set, slug }) {
         if (resData.url) {
           currentPhotos.push({ url: resData.url, caption: '' });
           set('photos', [...currentPhotos]);
+          if (!galleryEnabled) set('galleryEnabled', true);
         }
       } catch { /* ignore */ }
     }
@@ -1349,8 +1431,36 @@ function TabGallery({ data, set, slug }) {
   return (<>
     <div style={S.sectionTitle}>Photo Gallery</div>
     <div style={S.sectionDesc}>Upload photos with captions. You can add up to 30 photos.</div>
-    <Field label="Section Title 1" value={data.galleryTitle1} onChange={(v) => set('galleryTitle1', v)} placeholder="Our Beautiful" />
-    <Field label="Section Title 2" value={data.galleryTitle2} onChange={(v) => set('galleryTitle2', v)} placeholder="Memories" />
+
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem', background: '#111', padding: '1rem', borderRadius: '8px', border: '1px solid #333' }}>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: '0.9rem', color: '#fff', marginBottom: '0.25rem' }}>Enable Section</div>
+        <div style={{ fontSize: '0.75rem', color: '#888' }}>Show or hide this section on the live page</div>
+      </div>
+      <button 
+        type="button"
+        onClick={() => set('galleryEnabled', !galleryEnabled)}
+        style={{
+          width: '48px', height: '24px', borderRadius: '12px',
+          background: galleryEnabled ? '#22C55E' : '#333',
+          position: 'relative', transition: 'all 0.2s',
+          cursor: 'pointer', border: 'none', padding: 0
+        }}
+        aria-label="Toggle Photo Gallery Section"
+      >
+        <div style={{
+          width: '20px', height: '20px', borderRadius: '50%', background: '#fff',
+          position: 'absolute', top: '2px', left: galleryEnabled ? '26px' : '2px',
+          transition: 'all 0.2s'
+        }} />
+      </button>
+    </div>
+
+    <div className="w-full h-px bg-[#1a1a1a] mb-4" />
+
+    <div style={{ opacity: galleryEnabled ? 1 : 0.5, pointerEvents: galleryEnabled ? 'auto' : 'none' }}>
+      <Field label="Section Title 1" value={data.galleryTitle1} onChange={(v) => set('galleryTitle1', v)} placeholder="Our Beautiful" />
+      <Field label="Section Title 2" value={data.galleryTitle2} onChange={(v) => set('galleryTitle2', v)} placeholder="Memories" />
     {photos.map((p, i) => (
       <div key={i} style={S.cardWrap}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
@@ -1405,6 +1515,7 @@ function TabGallery({ data, set, slug }) {
       >
         {mixFlash ? '✓ Gallery re-mixed!' : isMixed ? '🔀 Mix Photos & Videos' : '🔀 Shuffle Photos'}
       </button>
+    </div>
     </div>
   </>);
 }

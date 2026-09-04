@@ -214,7 +214,7 @@ export default function GiftPage({ data }) {
               freeCount={isPreview ? 2 : undefined}
             />
 
-            {data.seasons && (
+            {(data.seasonsEnabled !== undefined ? data.seasonsEnabled : Boolean(data.seasons && data.seasons.length > 0)) && data.seasons && data.seasons.length > 0 && (
               <SeasonsSection 
                 seasons={data.seasons} 
                 seasonsTitle1={data.seasonsTitle1}
@@ -223,7 +223,7 @@ export default function GiftPage({ data }) {
               />
             )}
 
-            {data.circleWishes && data.circleWishes.length > 0 && (
+            {(data.circleWishesEnabled !== undefined ? data.circleWishesEnabled : Boolean(data.circleWishes && data.circleWishes.length > 0)) && data.circleWishes && data.circleWishes.length > 0 && (
               <CircleWishesSection
                 wishes={normalizeCircleWishes(data.circleWishes)}
                 recipient={data.recipient}
@@ -235,7 +235,7 @@ export default function GiftPage({ data }) {
               />
             )}
 
-            {data.photos && data.photos.length > 0 && (
+            {(data.galleryEnabled !== undefined ? data.galleryEnabled : Boolean(data.photos && data.photos.length > 0)) && data.photos && data.photos.length > 0 && (
               <Gallery 
                 photos={data.photos} 
                 galleryTitle1={data.galleryTitle1}
