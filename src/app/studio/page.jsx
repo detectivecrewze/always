@@ -38,6 +38,21 @@ export default function StudioDashboard() {
   const [activeTab, setActiveTab] = useState('gifts');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Filter for orders and history tabs ('all' | 'personal' | 'circle')
+  const [ordersFilter, setOrdersFilter] = useState('all');
+  const [historyFilter, setHistoryFilter] = useState('all');
+
+  // Modal Circle Management state
+  const [modalWishes, setModalWishes] = useState([]);
+  const [loadingWishes, setLoadingWishes] = useState(false);
+  const [editingWishId, setEditingWishId] = useState(null);
+  const [editWishName, setEditWishName] = useState('');
+  const [editWishMessage, setEditWishMessage] = useState('');
+  const [savingWish, setSavingWish] = useState(false);
+  const [copiedSlotNotice, setCopiedSlotNotice] = useState(null);
+  const [modalAddingSlot, setModalAddingSlot] = useState(false);
+  const [modalResettingSlotId, setModalResettingSlotId] = useState(null);
+
   // Pagination for history
   const [historyPage, setHistoryPage] = useState(1);
 
@@ -71,20 +86,31 @@ export default function StudioDashboard() {
     return liveDrafts.filter(d => new Date(d.updatedAt).getTime() < cutoff).length;
   }, [liveDrafts]);
 
-  // ── Search filtering ─────────────────────────────────────────────
+  // ── Search & type filtering ─────────────────────────────────────────────
   const q = searchQuery.toLowerCase().trim();
   const filteredGifts = useMemo(() =>
     q ? gifts.filter(g => (g.slug + g.recipient).toLowerCase().includes(q)) : gifts
   , [gifts, q]);
-  const filteredPending = useMemo(() =>
-    q ? pendingOrders.filter(o => (o.sender + o.recipient + o.slug + o.orderId).toLowerCase().includes(q)) : pendingOrders
-  , [pendingOrders, q]);
+
+  const filteredPending = useMemo(() => {
+    let list = pendingOrders;
+    if (ordersFilter === 'personal') list = list.filter(o => !o.isCircle);
+    if (ordersFilter === 'circle') list = list.filter(o => Boolean(o.isCircle));
+    if (q) list = list.filter(o => (o.sender + o.recipient + o.slug + o.orderId).toLowerCase().includes(q));
+    return list;
+  }, [pendingOrders, ordersFilter, q]);
+
   const filteredDrafts = useMemo(() =>
     q ? liveDrafts.filter(d => (d.sender + d.recipient + d.slug).toLowerCase().includes(q)) : liveDrafts
   , [liveDrafts, q]);
-  const filteredDone = useMemo(() =>
-    q ? doneOrders.filter(o => (o.sender + o.recipient + o.slug + o.orderId).toLowerCase().includes(q)) : doneOrders
-  , [doneOrders, q]);
+
+  const filteredDone = useMemo(() => {
+    let list = doneOrders;
+    if (historyFilter === 'personal') list = list.filter(o => !o.isCircle);
+    if (historyFilter === 'circle') list = list.filter(o => Boolean(o.isCircle));
+    if (q) list = list.filter(o => (o.sender + o.recipient + o.slug + o.orderId).toLowerCase().includes(q));
+    return list;
+  }, [doneOrders, historyFilter, q]);
 
   // History pagination
   const paginatedHistory = useMemo(() => filteredDone.slice(0, historyPage * HISTORY_PAGE_SIZE), [filteredDone, historyPage]);
@@ -439,6 +465,217 @@ export default function StudioDashboard() {
     setSavingOrder(false);
   };
 
+  // ── Circle Modal Sync & Handlers ──────────────────────────────────
+  useEffect(() => {
+    if (selectedOrder?.isCircle && selectedOrder?.slug) {
+      let isMounted = true;
+      setLoadingWishes(true);
+      fetch(`/api/circle-wishes/${encodeURIComponent(selectedOrder.slug)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (!isMounted) return;
+          if (Array.isArray(data.wishes)) {
+            setModalWishes(data.wishes);
+          }
+        })
+        .catch(err => console.error('Failed to load circle wishes in modal:', err))
+        .finally(() => {
+          if (isMounted) setLoadingWishes(false);
+        });
+
+      if (selectedOrder.orderId) {
+        fetch(`/api/track/${encodeURIComponent(selectedOrder.orderId)}`)
+          .then(res => res.json())
+          .then(data => {
+            if (!isMounted) return;
+            if (data.success && data.order) {
+              setSelectedOrder(prev => prev && prev.orderId === selectedOrder.orderId ? {
+                ...prev,
+                slots: data.order.slots,
+                circleQuota: data.order.circleQuota,
+                circleWishesCount: data.order.wishesCount,
+                usedSlots: data.order.slots ? data.order.slots.filter(s => s.status === 'used').length : data.order.wishesCount,
+                totalSlots: data.order.slots ? data.order.slots.length : data.order.circleQuota,
+              } : prev);
+            }
+          })
+          .catch(err => console.error('Failed to sync order tracking in modal:', err));
+      }
+
+      return () => { isMounted = false; };
+    } else {
+      setModalWishes([]);
+      setEditingWishId(null);
+    }
+  }, [selectedOrder?.orderId, selectedOrder?.slug]);
+
+  const handleModalAddSlot = async () => {
+    if (!selectedOrder) return;
+    const currentSlots = Array.isArray(selectedOrder.slots) ? selectedOrder.slots : [];
+    if (currentSlots.length >= 20) {
+      alert('Maksimal kuota kado keroyokan adalah 20 slot.');
+      return;
+    }
+    setModalAddingSlot(true);
+    try {
+      const res = await fetch(`/api/orders/${encodeURIComponent(selectedOrder.orderId)}/slots`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'add' }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setSelectedOrder(prev => prev ? {
+          ...prev,
+          slots: data.slots,
+          circleQuota: data.slots.length,
+          totalSlots: data.slots.length,
+        } : prev);
+        setOrders(prev => prev.map(o => o.orderId === selectedOrder.orderId ? {
+          ...o,
+          slots: data.slots,
+          circleQuota: data.slots.length,
+          totalSlots: data.slots.length,
+        } : o));
+      } else {
+        alert(data.error || 'Gagal menambah slot.');
+      }
+    } catch {
+      alert('Terjadi kesalahan jaringan saat menambah slot.');
+    } finally {
+      setModalAddingSlot(false);
+    }
+  };
+
+  const handleModalResetSlot = async (slot) => {
+    if (!selectedOrder) return;
+    if (slot.status === 'used') {
+      alert('Slot yang sudah terisi tidak dapat di-reset.');
+      return;
+    }
+    if (!confirm(`Reset tautan Slot #${slot.index}? Tautan lama akan hangus dan dibuatkan token baru.`)) {
+      return;
+    }
+    setModalResettingSlotId(slot.id);
+    try {
+      const res = await fetch(`/api/orders/${encodeURIComponent(selectedOrder.orderId)}/slots`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reset', slotId: slot.id }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setSelectedOrder(prev => prev ? { ...prev, slots: data.slots } : prev);
+        setOrders(prev => prev.map(o => o.orderId === selectedOrder.orderId ? { ...o, slots: data.slots } : o));
+        alert(`Tautan Slot #${slot.index} berhasil di-reset dengan token baru.`);
+      } else {
+        alert(data.error || 'Gagal mereset slot.');
+      }
+    } catch {
+      alert('Terjadi kesalahan jaringan saat mereset slot.');
+    } finally {
+      setModalResettingSlotId(null);
+    }
+  };
+
+  const handleCopyAllPendingLinks = () => {
+    if (!selectedOrder) return;
+    const slots = Array.isArray(selectedOrder.slots) ? selectedOrder.slots : [];
+    const pendingSlots = slots.filter(s => s.status === 'pending');
+    if (pendingSlots.length === 0) {
+      alert('Semua slot sudah terisi! Tidak ada tautan pending tersisa.');
+      return;
+    }
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const textLines = [
+      `Daftar Tautan Slot Kado Keroyokan untuk ${selectedOrder.recipient}:`,
+      ...pendingSlots.map(s => `Slot #${s.index}: ${origin}/c/${selectedOrder.slug}?token=${s.token}`),
+      `\nCatatan: Tiap tautan hanya berlaku untuk 1 orang (one-time use).`
+    ];
+    navigator.clipboard.writeText(textLines.join('\n'));
+    setCopiedSlotNotice('all');
+    setTimeout(() => setCopiedSlotNotice(null), 3000);
+  };
+
+  const handleCopySingleSlotLink = (slot) => {
+    if (!selectedOrder) return;
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const url = `${origin}/c/${selectedOrder.slug}?token=${slot.token}`;
+    navigator.clipboard.writeText(url);
+    setCopiedSlotNotice(slot.id);
+    setTimeout(() => setCopiedSlotNotice(null), 2500);
+  };
+
+  const handleStartEditWish = (wish) => {
+    setEditingWishId(wish.id);
+    setEditWishName(wish.name || '');
+    setEditWishMessage(wish.message || '');
+  };
+
+  const handleSaveEditedWish = async (wishId) => {
+    if (!selectedOrder || !wishId) return;
+    if (!editWishName.trim() || !editWishMessage.trim()) {
+      alert('Nama dan pesan ucapan tidak boleh kosong');
+      return;
+    }
+    setSavingWish(true);
+    try {
+      const res = await fetch(`/api/circle-wishes/${encodeURIComponent(selectedOrder.slug)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: wishId,
+          name: editWishName.trim(),
+          message: editWishMessage.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setModalWishes(prev => prev.map(w => w.id === wishId ? { ...w, name: editWishName.trim(), message: editWishMessage.trim() } : w));
+        setEditingWishId(null);
+      } else {
+        alert(data.error || 'Gagal menyimpan perubahan ucapan');
+      }
+    } catch {
+      alert('Terjadi kesalahan saat menyimpan ucapan');
+    } finally {
+      setSavingWish(false);
+    }
+  };
+
+  const handleDeleteWishInModal = async (wishId) => {
+    if (!selectedOrder || !wishId) return;
+    if (!confirm('Yakin ingin menghapus ucapan ini dari kado?')) return;
+    try {
+      const res = await fetch(`/api/circle-wishes/${encodeURIComponent(selectedOrder.slug)}?wishId=${encodeURIComponent(wishId)}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        setModalWishes(prev => prev.filter(w => w.id !== wishId));
+      } else {
+        alert('Gagal menghapus ucapan');
+      }
+    } catch {
+      alert('Terjadi kesalahan jaringan saat menghapus ucapan');
+    }
+  };
+
+  const handleRefreshModalWishes = async () => {
+    if (!selectedOrder?.slug) return;
+    setLoadingWishes(true);
+    try {
+      const res = await fetch(`/api/circle-wishes/${encodeURIComponent(selectedOrder.slug)}`);
+      const data = await res.json();
+      if (Array.isArray(data.wishes)) {
+        setModalWishes(data.wishes);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingWishes(false);
+    }
+  };
+
   // ── Styles ────────────────────────────────────────────────────────
   const S = {
     page: { minHeight: '100vh', background: '#050505', fontFamily: 'Inter, system-ui, sans-serif', color: '#f5f5f5' },
@@ -614,17 +851,52 @@ export default function StudioDashboard() {
 
         {/* ── TAB: INCOMING ORDERS ──────────────────────────────── */}
         {activeTab === 'orders' && (
-          loading ? (
-            <div style={S.grid}>{[1,2,3].map(i => <div key={i} style={S.skeleton} />)}</div>
-          ) : filteredPending.length === 0 ? (
-            <div style={S.empty}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>📭</div>
-              <p style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>{q ? 'Tidak ada pesanan yang cocok.' : 'Belum ada pesanan masuk.'}</p>
-              <p style={{ fontSize: '0.8rem' }}>Bagikan link form ke pelanggan Anda untuk mulai menerima pesanan.</p>
+          <>
+            {/* Filter Pills */}
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.75rem', color: '#666', marginRight: '0.25rem' }}>Filter Tipe:</span>
+              {[
+                { id: 'all', label: 'Semua Pesanan', count: pendingOrders.length },
+                { id: 'personal', label: 'Personal / Couple', count: pendingOrders.filter(o => !o.isCircle).length },
+                { id: 'circle', label: 'Circle Keroyokan', count: pendingOrders.filter(o => Boolean(o.isCircle)).length },
+              ].map(f => (
+                <button
+                  key={f.id}
+                  onClick={() => setOrdersFilter(f.id)}
+                  style={{
+                    padding: '0.35rem 0.8rem',
+                    borderRadius: '7px',
+                    border: ordersFilter === f.id ? '1px solid #3B82F6' : '1px solid #222',
+                    background: ordersFilter === f.id ? 'rgba(59,130,246,0.18)' : '#111',
+                    color: ordersFilter === f.id ? '#93C5FD' : '#888',
+                    fontSize: '0.75rem',
+                    fontWeight: ordersFilter === f.id ? 600 : 400,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  <span>{f.label}</span>
+                  <span style={{ background: ordersFilter === f.id ? '#3B82F6' : '#222', color: '#fff', fontSize: '0.65rem', padding: '1px 5px', borderRadius: '10px', fontWeight: 700 }}>
+                    {f.count}
+                  </span>
+                </button>
+              ))}
             </div>
-          ) : (
-            <div style={{ ...S.grid, gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
-              {filteredPending.map((o) => {
+
+            {loading ? (
+              <div style={S.grid}>{[1,2,3].map(i => <div key={i} style={S.skeleton} />)}</div>
+            ) : filteredPending.length === 0 ? (
+              <div style={S.empty}>
+                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>📭</div>
+                <p style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>{q ? 'Tidak ada pesanan yang cocok.' : 'Belum ada pesanan pada filter ini.'}</p>
+                <p style={{ fontSize: '0.8rem' }}>Bagikan link form ke pelanggan Anda untuk mulai menerima pesanan.</p>
+              </div>
+            ) : (
+              <div style={{ ...S.grid, gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
+                {filteredPending.map((o) => {
                 const submittedAt = o.createdAt ? new Date(o.createdAt) : null;
                 const isValidDate = submittedAt && !isNaN(submittedAt.getTime());
                 const dateStr = isValidDate
@@ -770,8 +1042,9 @@ export default function StudioDashboard() {
               })}
 
             </div>
-          )
-        )}
+          )}
+        </>
+      )}
 
         {/* ── TAB: LIVE DRAFTS ──────────────────────────────────── */}
         {activeTab === 'drafts' && (
@@ -828,35 +1101,95 @@ export default function StudioDashboard() {
 
         {/* ── TAB: ORDER HISTORY ────────────────────────────────── */}
         {activeTab === 'history' && (
-          loading ? (
-            <div style={S.grid}>{[1,2,3].map(i => <div key={i} style={S.skeleton} />)}</div>
-          ) : filteredDone.length === 0 ? (
-            <div style={S.empty}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>📜</div>
-              <p style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>{q ? 'Tidak ada riwayat yang cocok.' : 'Belum ada riwayat pesanan selesai.'}</p>
-              <p style={{ fontSize: '0.8rem' }}>Pesanan yang sudah di-apply atau di-mark done akan muncul di sini.</p>
+          <>
+            {/* History Filter Pills */}
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.75rem', color: '#666', marginRight: '0.25rem' }}>Filter Tipe:</span>
+              {[
+                { id: 'all', label: 'Semua Riwayat', count: doneOrders.length },
+                { id: 'personal', label: 'Personal / Couple', count: doneOrders.filter(o => !o.isCircle).length },
+                { id: 'circle', label: 'Circle Keroyokan', count: doneOrders.filter(o => Boolean(o.isCircle)).length },
+              ].map(f => (
+                <button
+                  key={f.id}
+                  onClick={() => { setHistoryFilter(f.id); setHistoryPage(1); }}
+                  style={{
+                    padding: '0.35rem 0.8rem',
+                    borderRadius: '7px',
+                    border: historyFilter === f.id ? '1px solid #8B5CF6' : '1px solid #222',
+                    background: historyFilter === f.id ? 'rgba(139,92,246,0.18)' : '#111',
+                    color: historyFilter === f.id ? '#C4B5FD' : '#888',
+                    fontSize: '0.75rem',
+                    fontWeight: historyFilter === f.id ? 600 : 400,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  <span>{f.label}</span>
+                  <span style={{ background: historyFilter === f.id ? '#8B5CF6' : '#222', color: '#fff', fontSize: '0.65rem', padding: '1px 5px', borderRadius: '10px', fontWeight: 700 }}>
+                    {f.count}
+                  </span>
+                </button>
+              ))}
             </div>
-          ) : (
-            <>
-              <p style={{ fontSize: '0.75rem', color: '#555', marginBottom: '1rem' }}>
-                Menampilkan {paginatedHistory.length} dari {filteredDone.length} riwayat
-              </p>
-              <div style={{ ...S.grid, gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
-                {paginatedHistory.map((o) => (
-                  <div key={o.orderId} style={{ ...S.card, border: '1px solid #1a1a1a', opacity: 0.75 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                      <div style={{ ...S.cardSlug, color: '#888' }}>{o.orderId}</div>
-                      <div style={S.cardDate}>{o.createdAt}</div>
-                    </div>
-                    <div style={S.cardName}>From: {o.sender}</div>
-                    <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '1rem' }}>To: {o.recipient} (/{o.slug})</div>
-                    <div style={{ ...S.actions, marginTop: '0.5rem' }}>
-                      <button style={S.actionBtn('#8B5CF6')} onClick={() => setSelectedOrder(o)}>View Details</button>
-                      <button style={{ ...S.actionBtn('#EF4444'), padding: '0.4rem', flex: '0 0 auto', border: '1px solid #EF444440' }} onClick={() => handleDeleteOrder(o.orderId)} title="Hapus Riwayat">🗑️</button>
-                    </div>
-                  </div>
-                ))}
+
+            {loading ? (
+              <div style={S.grid}>{[1,2,3].map(i => <div key={i} style={S.skeleton} />)}</div>
+            ) : filteredDone.length === 0 ? (
+              <div style={S.empty}>
+                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>📜</div>
+                <p style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>{q ? 'Tidak ada riwayat yang cocok.' : 'Belum ada riwayat pada filter ini.'}</p>
+                <p style={{ fontSize: '0.8rem' }}>Pesanan yang sudah di-apply atau di-mark done akan muncul di sini.</p>
               </div>
+            ) : (
+              <>
+                <p style={{ fontSize: '0.75rem', color: '#555', marginBottom: '1rem' }}>
+                  Menampilkan {paginatedHistory.length} dari {filteredDone.length} riwayat
+                </p>
+                <div style={{ ...S.grid, gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
+                  {paginatedHistory.map((o) => (
+                    <div
+                      key={o.orderId}
+                      style={{
+                        ...S.card,
+                        border: o.isCircle ? '1px solid rgba(139,92,246,0.35)' : '1px solid #1a1a1a',
+                        background: o.isCircle ? '#0d0912' : '#0f0f0f',
+                        opacity: 0.85,
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                        <div style={{ ...S.cardSlug, color: o.isCircle ? '#A78BFA' : '#888' }}>{o.orderId}</div>
+                        <div style={S.cardDate}>{o.createdAt}</div>
+                      </div>
+
+                      {/* Circle Edition Badge in History */}
+                      {o.isCircle && (
+                        <div style={{
+                          display: 'inline-flex', alignItems: 'center', gap: '5px',
+                          background: 'rgba(139,92,246,0.15)',
+                          border: '1px solid rgba(139,92,246,0.3)',
+                          padding: '2px 8px', borderRadius: '6px',
+                          fontSize: '0.72rem', color: '#A78BFA', fontWeight: 600,
+                          marginBottom: '0.5rem',
+                        }}>
+                          <span>👥 Circle Edition</span>
+                          <span>·</span>
+                          <span>{o.usedSlots || o.circleWishesCount || 0}/{o.totalSlots || o.circleQuota || 8} Slot Terisi</span>
+                        </div>
+                      )}
+
+                      <div style={S.cardName}>From: {o.sender}</div>
+                      <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '1rem' }}>To: {o.recipient} (/{o.slug})</div>
+                      <div style={{ ...S.actions, marginTop: '0.5rem' }}>
+                        <button style={S.actionBtn('#8B5CF6')} onClick={() => setSelectedOrder(o)}>View Details</button>
+                        <button style={{ ...S.actionBtn('#EF4444'), padding: '0.4rem', flex: '0 0 auto', border: '1px solid #EF444440' }} onClick={() => handleDeleteOrder(o.orderId)} title="Hapus Riwayat">🗑️</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               {paginatedHistory.length < filteredDone.length && (
                 <div style={{ textAlign: 'center', marginTop: '2rem' }}>
                   <button onClick={() => setHistoryPage(p => p + 1)} style={{ background: '#1a1a1a', border: '1px solid #262626', borderRadius: '8px', color: '#aaa', fontSize: '0.8rem', padding: '0.6rem 1.5rem', cursor: 'pointer' }}>
@@ -865,8 +1198,9 @@ export default function StudioDashboard() {
                 </div>
               )}
             </>
-          )
-        )}
+          )}
+        </>
+      )}
 
         {/* ── TAB: QR GENERATOR ─────────────────────────────────── */}
         {activeTab === 'qr' && (
@@ -1025,43 +1359,343 @@ export default function StudioDashboard() {
                 )}
               </div>
 
-              {/* Circle Edition Details */}
+              {/* ── Circle Edition Management Section ── */}
               {selectedOrder.isCircle && (
                 <div style={{
                   gridColumn: 'span 2',
-                  background: selectedOrder.status === 'ready_to_craft' ? '#10B98115' : '#3B82F615',
-                  border: `1px solid ${selectedOrder.status === 'ready_to_craft' ? '#10B98150' : '#3B82F650'}`,
-                  borderRadius: '8px',
-                  padding: '0.85rem 1rem',
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(139,92,246,0.3)',
+                  borderRadius: '12px',
+                  padding: '1.25rem',
+                  marginBottom: '1rem',
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span style={{ fontSize: '1.1rem' }}>{selectedOrder.status === 'ready_to_craft' ? '🔥' : '👥'}</span>
-                      <strong style={{ fontSize: '0.9rem', color: selectedOrder.status === 'ready_to_craft' ? '#34D399' : '#60A5FA' }}>
-                        {selectedOrder.status === 'ready_to_craft' ? 'Circle Edition — Siap Dibuat!' : 'Circle Edition — Pengumpulan Aktif'}
-                      </strong>
+                  {/* Header */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '1.2rem' }}>👥</span>
+                        <strong style={{ fontSize: '1rem', color: '#fff' }}>Kado Keroyokan (Circle Edition)</strong>
+                      </div>
+                      <p style={{ fontSize: '0.75rem', color: '#888', margin: '3px 0 0' }}>
+                        Kelola kuota slot, tautan token privat teman, dan pesan ucapan yang masuk.
+                      </p>
                     </div>
-                    <div style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem', borderRadius: '999px', background: selectedOrder.status === 'ready_to_craft' ? '#10B98130' : '#3B82F630', color: selectedOrder.status === 'ready_to_craft' ? '#34D399' : '#93C5FD', fontWeight: 600 }}>
-                      {selectedOrder.usedSlots || selectedOrder.circleWishesCount || 0}/{selectedOrder.totalSlots || selectedOrder.circleQuota || 8} ucapan terkumpul
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      {/* Status Pill */}
+                      <div style={{
+                        fontSize: '0.72rem',
+                        padding: '0.25rem 0.75rem',
+                        borderRadius: '999px',
+                        fontWeight: 700,
+                        background: selectedOrder.status === 'ready_to_craft' ? 'rgba(16,185,129,0.2)' : 'rgba(59,130,246,0.2)',
+                        border: `1px solid ${selectedOrder.status === 'ready_to_craft' ? '#10B98160' : '#3B82F660'}`,
+                        color: selectedOrder.status === 'ready_to_craft' ? '#34D399' : '#60A5FA',
+                      }}>
+                        {selectedOrder.status === 'ready_to_craft' ? '🔥 Siap Dirangkai' : '⏳ Pengumpulan Aktif'}
+                      </div>
+
+                      {/* Slot ratio badge */}
+                      <div style={{
+                        fontSize: '0.72rem',
+                        padding: '0.25rem 0.75rem',
+                        borderRadius: '999px',
+                        fontWeight: 700,
+                        background: 'rgba(139,92,246,0.2)',
+                        border: '1px solid rgba(139,92,246,0.4)',
+                        color: '#C4B5FD',
+                      }}>
+                        {(Array.isArray(selectedOrder.slots) ? selectedOrder.slots.filter(s => s.status === 'used').length : modalWishes.length)} / {(selectedOrder.slots?.length || selectedOrder.circleQuota || 8)} Slot Terisi
+                      </div>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginTop: '0.6rem' }}>
+
+                  {/* Quick Action Links Bar */}
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
+                    <button
+                      type="button"
+                      onClick={handleCopyAllPendingLinks}
+                      style={{
+                        background: copiedSlotNotice === 'all' ? '#10B981' : '#1E1B4B',
+                        border: '1px solid rgba(139,92,246,0.4)',
+                        color: '#E0E7FF',
+                        padding: '0.4rem 0.85rem',
+                        borderRadius: '6px',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '5px',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      <span>📋</span>
+                      <span>{copiedSlotNotice === 'all' ? 'Semua Link Tersalin!' : 'Salin Semua Link Belum Terisi'}</span>
+                    </button>
+
+                    {(selectedOrder.slots?.length || 0) < 20 && (
+                      <button
+                        type="button"
+                        onClick={handleModalAddSlot}
+                        disabled={modalAddingSlot}
+                        style={{
+                          background: 'rgba(34,197,94,0.15)',
+                          border: '1px solid rgba(34,197,94,0.35)',
+                          color: '#4ADE80',
+                          padding: '0.4rem 0.85rem',
+                          borderRadius: '6px',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          cursor: modalAddingSlot ? 'wait' : 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                        }}
+                      >
+                        <span>➕</span>
+                        <span>{modalAddingSlot ? 'Menambah...' : 'Tambah Slot Teman'}</span>
+                      </button>
+                    )}
+
                     <a
                       href={`/track/${selectedOrder.orderId}`}
                       target="_blank"
                       rel="noreferrer"
-                      style={{ fontSize: '0.75rem', color: '#fff', background: '#333', padding: '0.35rem 0.75rem', borderRadius: '5px', textDecoration: 'none', border: '1px solid #555' }}
+                      style={{
+                        fontSize: '0.75rem',
+                        color: '#f5f5f5',
+                        background: '#222',
+                        border: '1px solid #444',
+                        padding: '0.4rem 0.85rem',
+                        borderRadius: '6px',
+                        textDecoration: 'none',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '5px',
+                      }}
                     >
-                      🔍 Buka Coordinator Tracker
+                      <span>🔍</span>
+                      <span>Buka Coordinator Hub</span>
                     </a>
-                    <a
-                      href={`/c/${selectedOrder.slug}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{ fontSize: '0.75rem', color: '#fff', background: '#1E293B', padding: '0.35rem 0.75rem', borderRadius: '5px', textDecoration: 'none', border: '1px solid #3B82F650' }}
-                    >
-                      🔗 Link Form Teman (/c/{selectedOrder.slug})
-                    </a>
+                  </div>
+
+                  {/* Section 1: Daftar Slot Token */}
+                  <div style={{ marginBottom: '1.25rem' }}>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>
+                      Daftar Slot & Token Privat
+                    </div>
+
+                    <div style={{ maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px', paddingRight: '4px' }}>
+                      {(Array.isArray(selectedOrder.slots) ? selectedOrder.slots : []).map(slot => {
+                        const isUsed = slot.status === 'used';
+                        const isCopied = copiedSlotNotice === slot.id;
+
+                        return (
+                          <div
+                            key={slot.id}
+                            style={{
+                              background: '#0d070b',
+                              border: `1px solid ${isUsed ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.06)'}`,
+                              borderRadius: '8px',
+                              padding: '0.5rem 0.75rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              gap: '8px',
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap' }}>
+                                Slot #{slot.index}
+                              </span>
+
+                              {isUsed ? (
+                                <span style={{ fontSize: '0.7rem', background: 'rgba(34,197,94,0.15)', color: '#4ADE80', padding: '1px 6px', borderRadius: '4px', whiteSpace: 'nowrap' }}>
+                                  ✓ {slot.claimedBy || 'Terisi'}
+                                </span>
+                              ) : (
+                                <span style={{ fontSize: '0.7rem', background: 'rgba(245,158,11,0.15)', color: '#FBBF24', padding: '1px 6px', borderRadius: '4px', whiteSpace: 'nowrap' }}>
+                                  Belum Terisi
+                                </span>
+                              )}
+
+                              <span style={{ fontSize: '0.7rem', fontFamily: 'monospace', color: '#666', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                token: {slot.token}
+                              </span>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                              <button
+                                type="button"
+                                onClick={() => handleCopySingleSlotLink(slot)}
+                                style={{
+                                  background: isCopied ? '#10B981' : '#222',
+                                  color: '#fff',
+                                  border: '1px solid #444',
+                                  padding: '2px 8px',
+                                  borderRadius: '4px',
+                                  fontSize: '0.7rem',
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                {isCopied ? 'Tersalin!' : 'Salin Link'}
+                              </button>
+
+                              {!isUsed && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleModalResetSlot(slot)}
+                                  disabled={modalResettingSlotId === slot.id}
+                                  style={{
+                                    background: 'transparent',
+                                    color: '#888',
+                                    border: '1px solid #333',
+                                    padding: '2px 6px',
+                                    borderRadius: '4px',
+                                    fontSize: '0.7rem',
+                                    cursor: modalResettingSlotId === slot.id ? 'wait' : 'pointer',
+                                  }}
+                                  title="Reset Token"
+                                >
+                                  🔄
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Section 2: Daftar Ucapan Teman Masuk */}
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                      <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        Ucapan Teman Masuk ({modalWishes.length})
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleRefreshModalWishes}
+                        disabled={loadingWishes}
+                        style={{ background: 'none', border: 'none', color: '#60A5FA', fontSize: '0.72rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
+                      >
+                        <span>🔄</span>
+                        <span>{loadingWishes ? 'Memuat...' : 'Refresh'}</span>
+                      </button>
+                    </div>
+
+                    {modalWishes.length === 0 ? (
+                      <div style={{ fontSize: '0.78rem', color: '#666', background: '#0a0a0a', padding: '1rem', borderRadius: '8px', textAlign: 'center', border: '1px dashed #222' }}>
+                        {loadingWishes ? 'Memuat ucapan...' : 'Belum ada ucapan teman yang masuk.'}
+                      </div>
+                    ) : (
+                      <div style={{ maxHeight: '280px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '4px' }}>
+                        {modalWishes.map((w, idx) => {
+                          const isEditing = editingWishId === w.id;
+
+                          return (
+                            <div
+                              key={w.id || idx}
+                              style={{
+                                background: '#0d070b',
+                                border: '1px solid rgba(255,255,255,0.08)',
+                                borderRadius: '10px',
+                                padding: '0.75rem',
+                              }}
+                            >
+                              {isEditing ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                  <div>
+                                    <label style={{ fontSize: '0.65rem', color: '#888', textTransform: 'uppercase' }}>Nama Teman</label>
+                                    <input
+                                      type="text"
+                                      value={editWishName}
+                                      onChange={e => setEditWishName(e.target.value)}
+                                      style={{ ...S.input, padding: '4px 8px', fontSize: '0.78rem', marginBottom: 0 }}
+                                    />
+                                  </div>
+                                  <div>
+                                    <label style={{ fontSize: '0.65rem', color: '#888', textTransform: 'uppercase' }}>Pesan Ucapan</label>
+                                    <textarea
+                                      rows={3}
+                                      value={editWishMessage}
+                                      onChange={e => setEditWishMessage(e.target.value)}
+                                      style={{ ...S.input, padding: '4px 8px', fontSize: '0.78rem', marginBottom: 0, resize: 'vertical' }}
+                                    />
+                                  </div>
+                                  <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', marginTop: '2px' }}>
+                                    <button
+                                      type="button"
+                                      onClick={() => setEditingWishId(null)}
+                                      style={{ background: '#222', color: '#aaa', border: '1px solid #444', padding: '3px 8px', borderRadius: '4px', fontSize: '0.72rem', cursor: 'pointer' }}
+                                    >
+                                      Batal
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleSaveEditedWish(w.id)}
+                                      disabled={savingWish}
+                                      style={{ background: '#10B981', color: '#fff', border: 'none', padding: '3px 10px', borderRadius: '4px', fontSize: '0.72rem', cursor: 'pointer', fontWeight: 600 }}
+                                    >
+                                      {savingWish ? 'Menyimpan...' : 'Simpan'}
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                      <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#fff' }}>
+                                        {w.name}
+                                      </span>
+                                      {w.createdAt && (
+                                        <span style={{ fontSize: '0.65rem', color: '#555' }}>
+                                          {new Date(w.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                      )}
+                                    </div>
+
+                                    <div style={{ display: 'flex', gap: '4px' }}>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleStartEditWish(w)}
+                                        style={{ background: 'none', border: 'none', color: '#FBBF24', fontSize: '0.7rem', cursor: 'pointer', padding: '2px 5px' }}
+                                        title="Edit ucapan ini"
+                                      >
+                                        ✏️ Edit
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleDeleteWishInModal(w.id)}
+                                        style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: '0.7rem', cursor: 'pointer', padding: '2px 5px' }}
+                                        title="Hapus ucapan ini"
+                                      >
+                                        🗑️
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  <p style={{ fontSize: '0.78rem', color: '#ccc', margin: '4px 0', lineHeight: 1.4, whiteSpace: 'pre-wrap' }}>
+                                    &ldquo;{w.message}&rdquo;
+                                  </p>
+
+                                  {w.photoUrl && (
+                                    <div style={{ marginTop: '6px' }}>
+                                      <a href={w.photoUrl} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.7rem', color: '#60A5FA', textDecoration: 'none' }}>
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={w.photoUrl} alt="Thumbnail" style={{ width: '28px', height: '28px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #333' }} />
+                                        <span>Lihat Foto Kenangan ↗</span>
+                                      </a>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

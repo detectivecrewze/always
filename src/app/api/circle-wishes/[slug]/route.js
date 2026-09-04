@@ -125,3 +125,48 @@ export async function DELETE(request, { params }) {
     return NextResponse.json({ error: 'Gagal menghapus ucapan' }, { status: 500 });
   }
 }
+
+// PUT /api/circle-wishes/[slug] — Update an existing wish (edit name/message)
+export async function PUT(request, { params }) {
+  try {
+    const { slug } = await params;
+
+    if (!slug || !/^[a-zA-Z0-9_-]+$/.test(slug)) {
+      return NextResponse.json({ error: 'Kado tidak ditemukan' }, { status: 404 });
+    }
+
+    const gift = await getGiftBySlug(slug);
+    if (!gift) {
+      return NextResponse.json({ error: 'Kado tidak ditemukan' }, { status: 404 });
+    }
+
+    const body = await request.json();
+    const wishId = (body.id || '').trim();
+    if (!wishId) {
+      return NextResponse.json({ error: 'ID ucapan wajib disertakan' }, { status: 400 });
+    }
+
+    const name = (body.name || '').trim();
+    const message = (body.message || '').trim();
+    if (!name) {
+      return NextResponse.json({ error: 'Nama pengirim wajib diisi' }, { status: 400 });
+    }
+    if (!message) {
+      return NextResponse.json({ error: 'Pesan ucapan wajib diisi' }, { status: 400 });
+    }
+
+    const updatedWish = await saveWish(slug, {
+      id: wishId,
+      name,
+      message,
+      photoUrl: body.photoUrl || '',
+      createdAt: body.createdAt || new Date().toISOString(),
+    });
+
+    return NextResponse.json({ success: true, wish: updatedWish });
+  } catch (error) {
+    console.error('Error updating wish:', error);
+    return NextResponse.json({ error: 'Gagal memperbarui ucapan' }, { status: 500 });
+  }
+}
+
