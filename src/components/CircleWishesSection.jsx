@@ -449,7 +449,12 @@ export default function CircleWishesSection({
                       ref={modalAudioRef}
                       src={selectedWish.audioUrl || selectedWish.mediaUrl}
                       onTimeUpdate={(e) => setAudioCurrentTime(e.target.currentTime)}
-                      onLoadedMetadata={(e) => setAudioDuration(e.target.duration || selectedWish.audioDuration || 0)}
+                      onLoadedMetadata={(e) => {
+                        const raw = e.target.duration;
+                        // WebM blobs recorded via MediaRecorder often return Infinity — use stored audioDuration as fallback
+                        const resolved = isFinite(raw) && raw > 0 ? raw : (selectedWish.audioDuration || 0);
+                        setAudioDuration(resolved);
+                      }}
                       onEnded={handleAudioEnded}
                       onPause={() => {
                         setIsPlayingAudio(false);

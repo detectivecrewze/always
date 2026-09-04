@@ -32,18 +32,28 @@ export async function saveWish(slug, wishData) {
     throw new Error('Valid wishId is required to save a wish');
   }
 
-  const resolvedMedia = (wishData.mediaUrl || wishData.photoUrl || '').trim();
+  // For audio wishes: audioUrl is the audio file, photoUrl is the optional memory photo (kept separate)
+  const audioUrl = (wishData.audioUrl || '').trim();
+  const photoUrl = (wishData.photoUrl || '').trim();
+  // mediaUrl = the primary displayable media (audio file URL for audio wishes, photo/video URL otherwise)
+  const mediaUrl = (wishData.mediaUrl || audioUrl || photoUrl || '').trim();
+
+  const isAudioWish = wishData.mediaType === 'audio' || Boolean(audioUrl);
   const inferredMediaType =
     wishData.mediaType ||
-    (resolvedMedia ? (/\.(mp4|webm|mov)(\?.*)?$/i.test(resolvedMedia) ? 'video' : 'photo') : null);
+    (audioUrl ? 'audio' : mediaUrl ? (/\.(mp4|webm|mov)(\?.*)?$/i.test(mediaUrl) ? 'video' : 'photo') : null);
 
   const wish = {
     id: wishId,
     name: (wishData.name || '').trim(),
     message: (wishData.message || '').trim(),
-    photoUrl: resolvedMedia,
-    mediaUrl: resolvedMedia,
+    // photoUrl: for audio wishes, this is the optional memory/kenangan photo (separate from audio file)
+    // for photo/video wishes, this equals mediaUrl
+    photoUrl: isAudioWish ? photoUrl : (mediaUrl || photoUrl),
+    mediaUrl,
     mediaType: inferredMediaType,
+    audioUrl: audioUrl || (isAudioWish ? mediaUrl : ''),
+    audioDuration: wishData.audioDuration ? Number(wishData.audioDuration) : null,
     createdAt: wishData.createdAt || new Date().toISOString(),
   };
 
@@ -165,14 +175,21 @@ export async function getWishesBySlug(slug) {
   }
 
   const wishes = Array.from(wishMap.values()).map((w) => {
-    const resolvedMedia = (w.mediaUrl || w.photoUrl || '').trim();
+    const isAudioWish = w.mediaType === 'audio' || Boolean(w.audioUrl);
+    // Resolve mediaUrl: primary media reference (audio URL for audio, photo/video URL otherwise)
+    const resolvedMedia = (w.mediaUrl || w.audioUrl || w.photoUrl || '').trim();
+    // photoUrl for audio wishes: keep the stored photo (memory photo), not the audio URL
+    const resolvedPhoto = isAudioWish ? (w.photoUrl || '').trim() : resolvedMedia;
+
     return {
       ...w,
-      photoUrl: resolvedMedia,
+      photoUrl: resolvedPhoto,
       mediaUrl: resolvedMedia,
+      audioUrl: isAudioWish ? ((w.audioUrl || resolvedMedia).trim()) : (w.audioUrl || ''),
+      audioDuration: w.audioDuration ?? null,
       mediaType:
         w.mediaType ||
-        (resolvedMedia ? (/\.(mp4|webm|mov)(\?.*)?$/i.test(resolvedMedia) ? 'video' : 'photo') : null),
+        (isAudioWish ? 'audio' : resolvedMedia ? (/\.(mp4|webm|mov)(\?.*)?$/i.test(resolvedMedia) ? 'video' : 'photo') : null),
     };
   });
 

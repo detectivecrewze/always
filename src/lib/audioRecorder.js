@@ -30,7 +30,7 @@ export function getSupportedAudioMimeType() {
 }
 
 export function formatAudioTime(seconds) {
-  if (isNaN(seconds) || seconds === null || seconds === undefined) return '0:00';
+  if (!isFinite(seconds) || isNaN(seconds) || seconds === null || seconds === undefined) return '0:00';
   const totalSec = Math.max(0, Math.floor(seconds));
   const mins = Math.floor(totalSec / 60);
   const secs = totalSec % 60;
