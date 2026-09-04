@@ -39,7 +39,8 @@ export function generateSlotToken() {
  * Create initial slot array for a Circle order
  */
 export function createInitialSlots(count = 8) {
-  const safeCount = Math.min(20, Math.max(3, parseInt(count, 10) || 8));
+  const parsed = parseInt(count, 10);
+  const safeCount = Math.min(20, Math.max(1, isNaN(parsed) ? 8 : parsed));
   const slots = [];
   for (let i = 1; i <= safeCount; i++) {
     slots.push({

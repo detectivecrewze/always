@@ -39,7 +39,8 @@ export async function POST(request) {
 
     const orderId = `ORD-${Date.now().toString(36).toUpperCase()}`;
     const isCircle = Boolean(data.isCircle);
-    const circleQuota = isCircle ? Math.min(20, Math.max(3, parseInt(data.circleQuota, 10) || 8)) : null;
+    const parsedQuota = parseInt(data.circleQuota, 10);
+    const circleQuota = isCircle ? Math.min(20, Math.max(1, isNaN(parsedQuota) ? 8 : parsedQuota)) : null;
     const slots = isCircle ? createInitialSlots(circleQuota) : [];
 
     const order = {

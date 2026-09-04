@@ -456,12 +456,13 @@ export default function OrderForm() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                     <div>
                       <div style={{ fontSize: '0.82rem', fontWeight: 600 }}>Jumlah Teman</div>
-                      <div style={{ fontSize: '0.7rem', opacity: 0.65 }}>Pilih 3 – 20 teman</div>
+                      <div style={{ fontSize: '0.7rem', opacity: 0.65 }}>Pilih 1 – 20 teman</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <button
                         type="button"
-                        onClick={() => update('circleQuota', Math.max(3, (data.circleQuota || 8) - 1))}
+                        onClick={() => update('circleQuota', Math.max(1, (data.circleQuota || 8) - 1))}
+                        disabled={(data.circleQuota || 8) <= 1}
                         style={{
                           width: '32px',
                           height: '32px',
@@ -470,7 +471,8 @@ export default function OrderForm() {
                           background: 'transparent',
                           color: currentTheme.text,
                           fontSize: '1.1rem',
-                          cursor: 'pointer',
+                          cursor: (data.circleQuota || 8) <= 1 ? 'not-allowed' : 'pointer',
+                          opacity: (data.circleQuota || 8) <= 1 ? 0.35 : 1,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -485,6 +487,7 @@ export default function OrderForm() {
                       <button
                         type="button"
                         onClick={() => update('circleQuota', Math.min(20, (data.circleQuota || 8) + 1))}
+                        disabled={(data.circleQuota || 8) >= 20}
                         style={{
                           width: '32px',
                           height: '32px',
@@ -493,7 +496,8 @@ export default function OrderForm() {
                           background: 'transparent',
                           color: currentTheme.text,
                           fontSize: '1.1rem',
-                          cursor: 'pointer',
+                          cursor: (data.circleQuota || 8) >= 20 ? 'not-allowed' : 'pointer',
+                          opacity: (data.circleQuota || 8) >= 20 ? 0.35 : 1,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
