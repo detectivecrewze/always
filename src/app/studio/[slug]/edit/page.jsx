@@ -857,12 +857,18 @@ function TabCircleWishes({ data, set, slug }) {
 
       if (newlyAdded.length > 0) {
         const normalizedAdded = newlyAdded.map((w) => {
-          const m = (w.mediaUrl || w.photoUrl || w.photo || '').trim();
+          const isAudioWish = w.mediaType === 'audio' || Boolean(w.audioUrl);
+          const resolvedAudio = (w.audioUrl || (isAudioWish ? w.mediaUrl : '') || '').trim();
+          // For audio wishes: mediaUrl = audio file URL, photoUrl = kenangan photo (kept separate)
+          const resolvedMedia = isAudioWish ? resolvedAudio : (w.mediaUrl || w.photoUrl || w.photo || '').trim();
+          const resolvedPhoto = isAudioWish ? (w.photoUrl || '').trim() : resolvedMedia;
           return {
             ...w,
-            photoUrl: m,
-            mediaUrl: m,
-            mediaType: w.mediaType || (m ? (isVideoMedia(m) ? 'video' : 'photo') : null),
+            photoUrl: resolvedPhoto,
+            mediaUrl: resolvedMedia,
+            audioUrl: resolvedAudio,
+            audioDuration: w.audioDuration ?? null,
+            mediaType: w.mediaType || (isAudioWish ? 'audio' : resolvedMedia ? (isVideoMedia(resolvedMedia) ? 'video' : 'photo') : null),
           };
         });
         set('circleWishes', [...wishes, ...normalizedAdded]);

@@ -20,6 +20,23 @@ import PreviewOnlyBadge from '@/components/PreviewOnlyBadge';
 import LockedSection from '@/components/LockedSection';
 import { themes, defaultTheme } from '@/lib/themes';
 
+// Runtime normalization: fix audio wishes where photoUrl was incorrectly set to audioUrl
+// This handles data saved before the fix, without requiring a re-sync in Studio
+function normalizeCircleWishes(wishes) {
+  if (!wishes || !Array.isArray(wishes)) return wishes;
+  return wishes.map((w) => {
+    const isAudioWish = w.mediaType === 'audio' || Boolean(w.audioUrl);
+    if (!isAudioWish) return w;
+
+    const audioUrl = (w.audioUrl || w.mediaUrl || '').trim();
+    // If photoUrl is the same as audioUrl (or contains audio extension), clear it
+    const isPhotoUrlActuallyAudio = w.photoUrl && w.photoUrl === audioUrl;
+    const photoUrl = isPhotoUrlActuallyAudio ? '' : (w.photoUrl || '');
+
+    return { ...w, audioUrl, mediaUrl: audioUrl, photoUrl };
+  });
+}
+
 export default function GiftPage({ data }) {
   const searchParams = useSearchParams();
   const isStudioMode = searchParams.get('studio') === '1';
@@ -208,7 +225,7 @@ export default function GiftPage({ data }) {
 
             {data.circleWishes && data.circleWishes.length > 0 && (
               <CircleWishesSection
-                wishes={data.circleWishes}
+                wishes={normalizeCircleWishes(data.circleWishes)}
                 recipient={data.recipient}
                 moment={data.moment}
                 circleTitle1={data.circleTitle1}
