@@ -15,7 +15,7 @@ const FORM_COPY = [
   ['Momen Spesial', 'Special Occasion'], ['Tulis momen spesialmu di sini... (cth: Hari pertama kenalan)', 'Write your special occasion here... (e.g. the day we first met)'],
   ['Nama Momen / Acara (Opsional)', 'Occasion / Event Name (Optional)'], ['Kamu dan', 'You and'], ['adalah...', 'are...'],
   ['Gaya & Suasana', 'Style & Mood'], ['Pilih Palet Warna', 'Choose a Color Palette'],
-  ['Tema Bagian Alasan Cinta', 'Love Reasons Section Theme'], ['Pilih tema untuk kartu-kartu alasan kenapa kamu mencintai dia.', 'Choose a theme for the cards that explain why you love them.'],
+  ['Tema Kartu Alasan & Kenangan', 'Reasons & Memories Section Theme'], ['Pilih sudut pandang cerita untuk kartu-kartu pesan tentang dia.', 'Choose a story perspective for the cards about them.'],
   ['Bahasa Penulisan', 'Letter Language'], ['Pilih satu bahasa utama untuk surat kamu.', 'Choose one main language for your letter.'],
   ['Lainnya / Custom', 'Other / Custom'], ['Tulis preferensi bahasa kamu sendiri di bawah ini.', 'Write your language preference below.'],
   ['Gaya Penulisan (Vibe)', 'Writing Style (Vibe)'], ['Boleh pilih lebih dari satu untuk hasil yang lebih pas.', 'You can choose more than one for a better result.'],
@@ -312,8 +312,8 @@ export default function OrderForm() {
 
   const REASON_THEMES = [
     { id: 'qualities', icon: <Star size={24} strokeWidth={1.5} />, title: 'Sifat Spesial (Qualities)', desc: 'Hal-hal yang membuat dia begitu istimewa di mata kamu.' },
-    { id: 'moments', icon: <Camera size={24} strokeWidth={1.5} />, title: 'Momen Berharga (Moments)', desc: 'Kenangan-kenangan yang membentuk kisah cinta kalian.' },
-    { id: 'promises', icon: <HeartHandshake size={24} strokeWidth={1.5} />, title: 'Janji Setia (Promises)', desc: 'Hal-hal yang selalu kamu janjikan untuk dia.' },
+    { id: 'moments', icon: <Camera size={24} strokeWidth={1.5} />, title: 'Momen Berharga (Moments)', desc: 'Kenangan-kenangan indah yang kalian lalui bersama.' },
+    { id: 'promises', icon: <HeartHandshake size={24} strokeWidth={1.5} />, title: 'Harapan & Janji (Promises)', desc: 'Harapan terbaik atau janji manis yang ingin kamu sampaikan untuk dia.' },
     { id: 'gratitude', icon: <Sparkles size={24} strokeWidth={1.5} />, title: 'Rasa Syukur (Gratitude)', desc: 'Segala hal yang kamu syukuri atas kehadiran dia.' },
   ];
 
@@ -757,8 +757,8 @@ export default function OrderForm() {
               {/* Metaphor section hidden — no longer used */}
 
               <div style={{ marginBottom: '2rem' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.2rem' }}>Tema Bagian Alasan Cinta</label>
-                <p style={{ fontSize: '0.75rem', opacity: 0.7, marginBottom: '1.25rem', lineHeight: 1.4 }}>Pilih tema untuk kartu-kartu alasan kenapa kamu mencintai dia.</p>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.2rem' }}>Tema Kartu Alasan & Kenangan</label>
+                <p style={{ fontSize: '0.75rem', opacity: 0.7, marginBottom: '1.25rem', lineHeight: 1.4 }}>Pilih sudut pandang cerita untuk kartu-kartu pesan tentang dia.</p>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
                   {REASON_THEMES.map(theme => {
                     const isSelected = data.reasonChoice === theme.id;
