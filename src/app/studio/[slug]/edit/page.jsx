@@ -876,6 +876,11 @@ const CIRCLE_WISHES_PRESETS = [
   },
 ];
 
+function isAudioUrl(url) {
+  if (!url || typeof url !== 'string') return false;
+  return /\.(mp3|m4a|wav|ogg|aac|webm)(\?.*)?$/i.test(url.trim());
+}
+
 function TabCircleWishes({ data, set, slug }) {
   const wishes = data.circleWishes || [];
   const [syncing, setSyncing] = useState(false);
@@ -922,14 +927,38 @@ function TabCircleWishes({ data, set, slug }) {
     }
   };
 
-  const addManualWish = () => {
+  const autoDetectAudioDuration = (url, idx) => {
+    if (!url || typeof window === 'undefined') return;
+    try {
+      const audio = new Audio();
+      audio.preload = 'metadata';
+      audio.src = url;
+      audio.onloadedmetadata = () => {
+        const dur = audio.duration;
+        if (isFinite(dur) && dur > 0) {
+          const rounded = Math.round(dur);
+          const next = [...wishes];
+          if (next[idx] && next[idx].audioDuration !== rounded) {
+            next[idx] = { ...next[idx], audioDuration: rounded };
+            set('circleWishes', next);
+          }
+        }
+      };
+    } catch (e) {
+      console.warn('Could not auto-detect audio duration:', e);
+    }
+  };
+
+  const addManualWish = (isVoice = false) => {
     const newWish = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
       name: '',
       message: '',
       photoUrl: '',
       mediaUrl: '',
-      mediaType: null,
+      audioUrl: '',
+      audioDuration: null,
+      mediaType: isVoice ? 'audio' : null,
       createdAt: new Date().toISOString(),
     };
     set('circleWishes', [...wishes, newWish]);
@@ -1117,9 +1146,22 @@ function TabCircleWishes({ data, set, slug }) {
             fontWeight: 600,
             padding: '0.45rem 0.9rem',
           }}
-          onClick={addManualWish}
+          onClick={() => addManualWish(false)}
         >
           + Tambah Ucapan Manual
+        </button>
+
+        <button
+          style={{
+            ...S.smallBtn('#EC4899'),
+            background: 'rgba(236,72,153,0.1)',
+            border: '1px solid rgba(236,72,153,0.3)',
+            fontWeight: 600,
+            padding: '0.45rem 0.9rem',
+          }}
+          onClick={() => addManualWish(true)}
+        >
+          🎙️ + Tambah Voice Note (Link)
         </button>
 
         <span style={{ fontSize: '0.7rem', color: '#666', marginLeft: 'auto' }}>
@@ -1224,46 +1266,67 @@ function TabCircleWishes({ data, set, slug }) {
               </div>
             </div>
 
-            {/* Media Preview (Photo, Video, or Audio) if present */}
+            {/* Media Preview (Photo, Video, or Audio) */}
             {(() => {
-              const mediaUrl = (w.mediaUrl || w.photoUrl || w.photo || '').trim();
-              const audioUrl = (w.audioUrl || (w.mediaType === 'audio' ? mediaUrl : '')).trim();
-              const isAudio = Boolean(audioUrl) || w.mediaType === 'audio' || /\.(mp3|m4a|wav|ogg|aac)(\?.*)?$/i.test(mediaUrl);
-              if (!mediaUrl && !audioUrl) return null;
+              const isAudio = Boolean(w.audioUrl) || w.mediaType === 'audio' || isAudioUrl(w.mediaUrl);
+              const resolvedAudioUrl = (w.audioUrl || (isAudioUrl(w.mediaUrl) ? w.mediaUrl : '') || '').trim();
+              const resolvedPhotoUrl = (w.photoUrl || (!isAudioUrl(w.mediaUrl) && !isVideoMedia(w.mediaUrl) ? w.mediaUrl : '') || '').trim();
+              const mediaUrl = (w.mediaUrl || w.photoUrl || '').trim();
               const isVideo = !isAudio && isVideoMedia(mediaUrl);
+
+              if (isAudio) {
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '0.75rem', background: '#0a0a0a', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(236,72,153,0.3)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#F472B6', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        🎙️ Voice Note {w.audioDuration ? `· ${Math.round(w.audioDuration)}s (Auto)` : ''}
+                      </span>
+                      {resolvedAudioUrl && (
+                        <a href={resolvedAudioUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.65rem', color: '#60A5FA', textDecoration: 'none' }}>
+                          Buka Audio ↗
+                        </a>
+                      )}
+                    </div>
+
+                    {resolvedAudioUrl ? (
+                      <audio
+                        src={resolvedAudioUrl}
+                        controls
+                        style={{ width: '100%', height: '32px' }}
+                        onLoadedMetadata={(e) => {
+                          const dur = e.currentTarget.duration;
+                          if (isFinite(dur) && dur > 0) {
+                            const rounded = Math.round(dur);
+                            if (w.audioDuration !== rounded) {
+                              updateWish(i, 'audioDuration', rounded);
+                            }
+                          }
+                        }}
+                      />
+                    ) : (
+                      <div style={{ fontSize: '0.7rem', color: '#888', fontStyle: 'italic' }}>
+                        Belum ada link audio. Tempelkan URL audio pada input di bawah.
+                      </div>
+                    )}
+
+                    {resolvedPhotoUrl && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px', paddingTop: '6px', borderTop: '1px solid #1a1a1a' }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={resolvedPhotoUrl} alt="Lampiran" style={{ width: '38px', height: '38px', borderRadius: '6px', objectFit: 'cover', border: '1px solid #333', flexShrink: 0 }} />
+                        <div style={{ fontSize: '0.68rem', color: '#aaa', minWidth: 0, flex: 1 }} className="truncate">
+                          🖼️ Foto Kenangan: <span style={{ color: '#60A5FA' }}>{resolvedPhotoUrl}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              if (!mediaUrl) return null;
 
               return (
                 <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start', marginBottom: '0.75rem', background: '#0a0a0a', padding: '8px 12px', borderRadius: '8px', border: '1px solid #222' }}>
-                  {isAudio ? (
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-                        <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#ff4d79' }}>
-                          🎙️ Rekaman Suara (Voice Note) {w.audioDuration ? `· ${Math.round(w.audioDuration)}s` : ''}
-                        </span>
-                        <a href={audioUrl || mediaUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.65rem', color: '#60A5FA', textDecoration: 'none' }}>
-                          Buka Audio ↗
-                        </a>
-                      </div>
-                      <audio src={audioUrl || mediaUrl} controls style={{ width: '100%', height: '32px' }} />
-                      {w.photoUrl && w.photoUrl !== (audioUrl || mediaUrl) && (
-                        <div style={{ marginTop: '6px' }}>
-                          <a href={w.photoUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.65rem', color: '#60A5FA', textDecoration: 'none' }}>
-                            Lihat Foto Lampiran ↗
-                          </a>
-                        </div>
-                      )}
-                      <button
-                        style={{ ...S.smallBtn('#EF4444'), fontSize: '0.65rem', padding: '0.1rem 0.4rem', marginTop: '0.35rem' }}
-                        onClick={() => {
-                          const next = [...wishes];
-                          next[i] = { ...next[i], photoUrl: '', mediaUrl: '', audioUrl: '', audioDuration: null, mediaType: null };
-                          set('circleWishes', next);
-                        }}
-                      >
-                        Hapus Audio
-                      </button>
-                    </div>
-                  ) : isVideo ? (
+                  {isVideo ? (
                     <div style={{ width: '120px', height: '80px', flexShrink: 0, borderRadius: '6px', overflow: 'hidden', background: '#000', border: '1px solid #333' }}>
                       <video
                         src={mediaUrl}
@@ -1287,66 +1350,200 @@ function TabCircleWishes({ data, set, slug }) {
                     />
                   )}
 
-                  {!isAudio && (
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '0.72rem', fontWeight: 600, color: isVideo ? '#A78BFA' : '#888' }}>
-                          {isVideo ? '🎥 Video Kenangan' : '🖼️ Foto Kenangan'}
-                        </span>
-                        <a href={mediaUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.65rem', color: '#60A5FA', textDecoration: 'none' }}>
-                          Buka Media ↗
-                        </a>
-                      </div>
-                      <div style={{ fontSize: '0.65rem', color: '#555', wordBreak: 'break-all', marginTop: '2px' }} className="truncate">
-                        {mediaUrl}
-                      </div>
-                      <button
-                        style={{ ...S.smallBtn('#EF4444'), fontSize: '0.65rem', padding: '0.1rem 0.4rem', marginTop: '0.35rem' }}
-                        onClick={() => {
-                          const next = [...wishes];
-                          next[i] = { ...next[i], photoUrl: '', mediaUrl: '', mediaType: null };
-                          set('circleWishes', next);
-                        }}
-                      >
-                        Hapus {isVideo ? 'Video' : 'Foto'}
-                      </button>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 600, color: isVideo ? '#A78BFA' : '#888' }}>
+                        {isVideo ? '🎥 Video Kenangan' : '🖼️ Foto Kenangan'}
+                      </span>
+                      <a href={mediaUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.65rem', color: '#60A5FA', textDecoration: 'none' }}>
+                        Buka Media ↗
+                      </a>
                     </div>
-                  )}
+                    <div style={{ fontSize: '0.65rem', color: '#555', wordBreak: 'break-all', marginTop: '2px' }} className="truncate">
+                      {mediaUrl}
+                    </div>
+                    <button
+                      style={{ ...S.smallBtn('#EF4444'), fontSize: '0.65rem', padding: '0.1rem 0.4rem', marginTop: '0.35rem' }}
+                      onClick={() => {
+                        const next = [...wishes];
+                        next[i] = { ...next[i], photoUrl: '', mediaUrl: '', mediaType: null };
+                        set('circleWishes', next);
+                      }}
+                    >
+                      Hapus {isVideo ? 'Video' : 'Foto'}
+                    </button>
+                  </div>
                 </div>
               );
             })()}
 
-            <Field
-              label="Nama Pengirim"
-              value={w.name}
-              onChange={(v) => updateWish(i, 'name', v)}
-              placeholder="Contoh: Sarah / Sahabat SMA"
-            />
+            {/* Format Switcher: Teks / Media vs Voice Note */}
+            {(() => {
+              const isAudio = Boolean(w.audioUrl) || w.mediaType === 'audio' || isAudioUrl(w.mediaUrl);
+              return (
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '0.75rem', marginTop: '0.25rem' }}>
+                  <button
+                    type="button"
+                    style={{
+                      fontSize: '0.7rem',
+                      padding: '0.25rem 0.6rem',
+                      borderRadius: '6px',
+                      background: !isAudio ? 'rgba(59,130,246,0.15)' : '#111',
+                      border: `1px solid ${!isAudio ? '#3B82F6' : '#262626'}`,
+                      color: !isAudio ? '#60A5FA' : '#888',
+                      fontWeight: !isAudio ? 600 : 400,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                    }}
+                    onClick={() => {
+                      const next = [...wishes];
+                      const item = next[i];
+                      const photo = item.photoUrl || (!isAudioUrl(item.mediaUrl) ? item.mediaUrl : '');
+                      next[i] = {
+                        ...item,
+                        mediaType: photo ? (isVideoMedia(photo) ? 'video' : 'photo') : null,
+                        photoUrl: photo || '',
+                        mediaUrl: photo || '',
+                        audioUrl: '',
+                        audioDuration: null,
+                      };
+                      set('circleWishes', next);
+                    }}
+                  >
+                    💬 Ucapan Teks / Media
+                  </button>
 
-            <Field
-              label="Pesan Ucapan"
-              value={w.message}
-              onChange={(v) => updateWish(i, 'message', v)}
-              placeholder="Tuliskan ucapan..."
-              multiline
-            />
+                  <button
+                    type="button"
+                    style={{
+                      fontSize: '0.7rem',
+                      padding: '0.25rem 0.6rem',
+                      borderRadius: '6px',
+                      background: isAudio ? 'rgba(236,72,153,0.15)' : '#111',
+                      border: `1px solid ${isAudio ? '#EC4899' : '#262626'}`,
+                      color: isAudio ? '#F472B6' : '#888',
+                      fontWeight: isAudio ? 600 : 400,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                    }}
+                    onClick={() => {
+                      const next = [...wishes];
+                      const item = next[i];
+                      const photo = item.photoUrl || (!isAudioUrl(item.mediaUrl) && !isVideoMedia(item.mediaUrl) ? item.mediaUrl : '');
+                      const audio = item.audioUrl || (isAudioUrl(item.mediaUrl) ? item.mediaUrl : '');
+                      next[i] = {
+                        ...item,
+                        mediaType: 'audio',
+                        photoUrl: photo || '',
+                        audioUrl: audio || '',
+                        mediaUrl: audio || photo || '',
+                      };
+                      set('circleWishes', next);
+                      if (audio) {
+                        autoDetectAudioDuration(audio, i);
+                      }
+                    }}
+                  >
+                    🎙️ Voice Note (Audio)
+                  </button>
+                </div>
+              );
+            })()}
 
-            <Field
-              label="URL Media / Foto / Video (Opsional)"
-              value={w.mediaUrl || w.photoUrl || ''}
-              onChange={(v) => {
-                const next = [...wishes];
-                const trimmed = v.trim();
-                next[i] = {
-                  ...next[i],
-                  photoUrl: trimmed,
-                  mediaUrl: trimmed,
-                  mediaType: trimmed ? (isVideoMedia(trimmed) ? 'video' : 'photo') : null,
-                };
-                set('circleWishes', next);
-              }}
-              placeholder="https://... atau .mp4 / .mov / .jpg"
-            />
+            {/* Form Fields */}
+            {(() => {
+              const isAudio = Boolean(w.audioUrl) || w.mediaType === 'audio' || isAudioUrl(w.mediaUrl);
+              const resolvedAudioUrl = (w.audioUrl || (isAudioUrl(w.mediaUrl) ? w.mediaUrl : '') || '').trim();
+              const resolvedPhotoUrl = (w.photoUrl || (!isAudioUrl(w.mediaUrl) && !isVideoMedia(w.mediaUrl) ? w.mediaUrl : '') || '').trim();
+
+              return (
+                <>
+                  <Field
+                    label="Nama Pengirim"
+                    value={w.name}
+                    onChange={(v) => updateWish(i, 'name', v)}
+                    placeholder="Contoh: Sarah / Sahabat SMA"
+                  />
+
+                  {isAudio ? (
+                    <>
+                      <Field
+                        label="Catatan / Teks Pengantar (Opsional, Maks 150 Karakter)"
+                        value={w.message}
+                        onChange={(v) => updateWish(i, 'message', v.slice(0, 150))}
+                        placeholder="Misal: Dengerin yaa! Selamat ulang tahun! 🤍"
+                        multiline
+                      />
+
+                      <Field
+                        label="🎙️ URL Voice Note / Audio (.mp3, .m4a, .webm, .wav)"
+                        value={resolvedAudioUrl}
+                        onChange={(v) => {
+                          const next = [...wishes];
+                          const trimmed = v.trim();
+                          const existingPhoto = next[i].photoUrl || (!isAudioUrl(next[i].mediaUrl) && !isVideoMedia(next[i].mediaUrl) ? next[i].mediaUrl : '');
+                          next[i] = {
+                            ...next[i],
+                            audioUrl: trimmed,
+                            photoUrl: existingPhoto || '',
+                            mediaUrl: trimmed || existingPhoto || '',
+                            mediaType: 'audio',
+                          };
+                          set('circleWishes', next);
+                          if (trimmed) {
+                            autoDetectAudioDuration(trimmed, i);
+                          }
+                        }}
+                        placeholder="https://cdn.for-you-always.my.id/... atau link file audio"
+                      />
+
+                      <Field
+                        label="🖼️ URL Foto Kenangan Lampiran (Opsional)"
+                        value={resolvedPhotoUrl}
+                        onChange={(v) => {
+                          const next = [...wishes];
+                          const trimmed = v.trim();
+                          next[i] = {
+                            ...next[i],
+                            photoUrl: trimmed,
+                            mediaUrl: next[i].audioUrl || trimmed || '',
+                          };
+                          set('circleWishes', next);
+                        }}
+                        placeholder="https://... (opsional jika pengirim menyertakan foto bersama)"
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <Field
+                        label="Pesan Ucapan (Maks 300 Karakter)"
+                        value={w.message}
+                        onChange={(v) => updateWish(i, 'message', v.slice(0, 300))}
+                        placeholder="Tuliskan ucapan..."
+                        multiline
+                      />
+
+                      <Field
+                        label="URL Foto / Video Kenangan (Opsional)"
+                        value={w.mediaUrl || w.photoUrl || ''}
+                        onChange={(v) => {
+                          const next = [...wishes];
+                          const trimmed = v.trim();
+                          next[i] = {
+                            ...next[i],
+                            photoUrl: trimmed,
+                            mediaUrl: trimmed,
+                            mediaType: trimmed ? (isVideoMedia(trimmed) ? 'video' : 'photo') : null,
+                          };
+                          set('circleWishes', next);
+                        }}
+                        placeholder="https://... atau .mp4 / .mov / .jpg"
+                      />
+                    </>
+                  )}
+                </>
+              );
+            })()}
           </div>
         ))
       )}
