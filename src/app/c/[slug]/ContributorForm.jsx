@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles,
   Camera,
+  Video,
   Zap,
   AlertCircle,
   Send,
@@ -17,6 +18,7 @@ import {
 } from 'lucide-react';
 import { themes, defaultTheme } from '@/lib/themes';
 import { compressImage } from '@/lib/imageCompression';
+import { checkVideoMetadata, isVideoMedia } from '@/lib/videoValidation';
 
 function formatBytes(bytes) {
   if (!bytes || bytes === 0) return '0 B';
@@ -61,16 +63,27 @@ export default function ContributorForm({
 
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');
-  const [photoFile, setPhotoFile] = useState(null);
+  const [mediaFile, setMediaFile] = useState(null);
+  const [mediaType, setMediaType] = useState(null); // 'image' | 'video' | null
+  const [videoDuration, setVideoDuration] = useState(null);
   const [compressedResult, setCompressedResult] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
-  const [isCompressing, setIsCompressing] = useState(false);
+  const [isProcessingMedia, setIsProcessingMedia] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusStep, setStatusStep] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [submittedWish, setSubmittedWish] = useState(null);
 
   const fileInputRef = useRef(null);
+
+  // Clean up object URL when component unmounts or previewUrl changes
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   // Client-side verification fallback if initialValidation was not passed
   useEffect(() => {
@@ -102,42 +115,73 @@ export default function ContributorForm({
     }
   }, [slug, urlToken, initialValidation]);
 
-  const handlePhotoSelect = async (e) => {
+  const handleMediaSelect = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      setErrorMsg('Harap pilih file gambar (JPG, PNG, atau WebP).');
+    setErrorMsg('');
+
+    // 1. Check Max Size: 20 MB
+    const MAX_SIZE = 20 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+      setErrorMsg(`Ukuran file terlalu besar (${sizeMB} MB). Batas maksimal adalah 20 MB.`);
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
-    setErrorMsg('');
-    setIsCompressing(true);
+    // 2. Classify media type
+    const isImage = file.type.startsWith('image/') || /\.(jpe?g|png|webp|heic)$/i.test(file.name);
+    const isVideo = file.type.startsWith('video/') || /\.(mp4|webm|mov)$/i.test(file.name);
+
+    if (!isImage && !isVideo) {
+      setErrorMsg('Format file tidak didukung. Harap pilih foto (JPG, PNG, WebP) atau video pendek (MP4, WebM, MOV).');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    setIsProcessingMedia(true);
 
     try {
-      const res = await compressImage(file);
-      setCompressedResult(res);
-      setPhotoFile(res.file);
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
+      if (isVideo) {
+        // Validate video duration: 1 to 15 seconds (tolerance up to 15.9s)
+        const dur = await checkVideoMetadata(file, 1, 15);
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+
+        const newPreview = URL.createObjectURL(file);
+        setMediaType('video');
+        setMediaFile(file);
+        setVideoDuration(dur);
+        setCompressedResult(null);
+        setPreviewUrl(newPreview);
+      } else {
+        // Compress image via canvas downsampler
+        const res = await compressImage(file);
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+
+        setMediaType('image');
+        setCompressedResult(res);
+        setMediaFile(res.file);
+        setVideoDuration(null);
+        setPreviewUrl(URL.createObjectURL(res.blob));
       }
-      setPreviewUrl(URL.createObjectURL(res.blob));
     } catch (err) {
-      console.error('Compression error:', err);
-      setPhotoFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
-      setCompressedResult(null);
+      console.error('Media processing error:', err);
+      setErrorMsg(err.message || 'Gagal memproses file yang dipilih.');
+      handleRemoveMedia();
     } finally {
-      setIsCompressing(false);
-      e.target.value = '';
+      setIsProcessingMedia(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
-  const handleRemovePhoto = () => {
+  const handleRemoveMedia = () => {
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
     }
-    setPhotoFile(null);
+    setMediaFile(null);
+    setMediaType(null);
+    setVideoDuration(null);
     setCompressedResult(null);
     setPreviewUrl('');
     if (fileInputRef.current) {
@@ -161,14 +205,19 @@ export default function ContributorForm({
 
     setErrorMsg('');
     setIsSubmitting(true);
-    let uploadedPhotoUrl = '';
+    let uploadedMediaUrl = '';
 
     try {
-      // 1. Upload photo if selected
-      if (photoFile) {
-        setStatusStep('Mengompres & mengunggah foto...');
+      // 1. Upload media if selected
+      if (mediaFile) {
+        if (mediaType === 'video') {
+          setStatusStep('Mengunggah video pendek...');
+        } else {
+          setStatusStep('Mengompres & mengunggah foto...');
+        }
+
         const formData = new FormData();
-        formData.append('file', photoFile);
+        formData.append('file', mediaFile);
         formData.append('slug', slug);
 
         const uploadRes = await fetch('/api/upload-public', {
@@ -177,11 +226,11 @@ export default function ContributorForm({
         });
 
         if (!uploadRes.ok) {
-          throw new Error('Gagal mengunggah foto');
+          throw new Error('Gagal mengunggah media');
         }
 
         const uploadData = await uploadRes.json();
-        uploadedPhotoUrl = uploadData.url || '';
+        uploadedMediaUrl = uploadData.url || '';
       }
 
       // 2. Submit wish with token to circle-wishes endpoint
@@ -193,7 +242,9 @@ export default function ContributorForm({
           token,
           name: cleanName,
           message: cleanMessage,
-          photoUrl: uploadedPhotoUrl,
+          photoUrl: uploadedMediaUrl,
+          mediaUrl: uploadedMediaUrl,
+          mediaType: mediaType || (uploadedMediaUrl ? (isVideoMedia(uploadedMediaUrl) ? 'video' : 'photo') : null),
           createdAt: new Date().toISOString(),
         }),
       });
@@ -208,7 +259,9 @@ export default function ContributorForm({
         wishData.wish || {
           name: cleanName,
           message: cleanMessage,
-          photoUrl: uploadedPhotoUrl,
+          photoUrl: uploadedMediaUrl,
+          mediaUrl: uploadedMediaUrl,
+          mediaType: mediaType,
         }
       );
     } catch (err) {
@@ -383,55 +436,90 @@ export default function ContributorForm({
                     />
                   </div>
 
-                  {/* Memory Photo (Optional) */}
+                  {/* Memory Media (Photo or Short Video) */}
                   <div>
                     <label className="block text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">
-                      Foto Kenangan (Opsional)
+                      Foto Kenangan / Video Pendek (Opsional)
                     </label>
 
                     <input
                       type="file"
                       ref={fileInputRef}
-                      accept="image/*"
-                      onChange={handlePhotoSelect}
+                      accept="image/*,video/mp4,video/webm,video/quicktime"
+                      onChange={handleMediaSelect}
                       className="hidden"
-                      disabled={isSubmitting || isCompressing}
+                      disabled={isSubmitting || isProcessingMedia}
                     />
 
                     {!previewUrl ? (
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        disabled={isCompressing || isSubmitting}
+                        disabled={isProcessingMedia || isSubmitting}
                         className="w-full border-2 border-dashed border-white/15 hover:border-accent/50 rounded-xl p-5 text-center transition-all flex flex-col items-center justify-center gap-2 group cursor-pointer bg-white/[0.02] hover:bg-white/[0.05]"
                       >
                         <div className="w-10 h-10 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent group-hover:scale-110 transition-transform">
-                          {isCompressing ? (
+                          {isProcessingMedia ? (
                             <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
                           ) : (
-                            <Camera size={18} />
+                            <div className="flex items-center gap-1">
+                              <Camera size={16} />
+                              <Video size={16} />
+                            </div>
                           )}
                         </div>
                         <span className="text-xs font-medium text-text">
-                          {isCompressing ? 'Mengompres foto...' : 'Pilih Foto dari Galeri / Kamera'}
+                          {isProcessingMedia ? 'Memeriksa & memproses media...' : 'Pilih Foto atau Video Pendek'}
                         </span>
                         <span className="text-[11px] text-text-muted">
-                          Otomatis dikompresi & dioptimasi di perangkat Anda
+                          Foto otomatis dioptimasi · Video maks 15 dtk &amp; 20 MB
                         </span>
                       </button>
                     ) : (
                       <div className="relative rounded-xl overflow-hidden border border-white/15 bg-black/30 p-3 flex items-center gap-4">
-                        <img
-                          src={previewUrl}
-                          alt="Preview"
-                          className="w-20 h-20 object-cover rounded-lg border border-white/10 shrink-0"
-                        />
+                        {mediaType === 'video' ? (
+                          <div className="relative w-20 h-20 rounded-lg overflow-hidden border border-white/10 shrink-0 bg-black/60 flex items-center justify-center">
+                            <video
+                              src={previewUrl}
+                              autoPlay
+                              loop
+                              muted
+                              playsInline
+                              webkit-playsinline=""
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-black/70 text-[9px] text-white font-mono leading-none">
+                              {videoDuration ? `${videoDuration.toFixed(1)}s` : 'Video'}
+                            </div>
+                          </div>
+                        ) : (
+                          <img
+                            src={previewUrl}
+                            alt="Preview"
+                            className="w-20 h-20 object-cover rounded-lg border border-white/10 shrink-0"
+                          />
+                        )}
+
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 text-xs text-text font-medium truncate">
-                            <Camera size={13} className="text-accent shrink-0" />
-                            <span className="truncate">{photoFile?.name || 'Foto Terpilih'}</span>
+                            {mediaType === 'video' ? (
+                              <Video size={13} className="text-accent shrink-0" />
+                            ) : (
+                              <Camera size={13} className="text-accent shrink-0" />
+                            )}
+                            <span className="truncate">{mediaFile?.name || 'Media Terpilih'}</span>
                           </div>
-                          {compressedResult && (
+
+                          {mediaType === 'video' && videoDuration && (
+                            <div className="mt-1.5 inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/20">
+                              <Video size={11} />
+                              <span>
+                                {videoDuration.toFixed(1)} dtk · {formatBytes(mediaFile?.size)}
+                              </span>
+                            </div>
+                          )}
+
+                          {mediaType === 'image' && compressedResult && (
                             <div className="mt-1.5 inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/20">
                               <Zap size={11} />
                               <span>
@@ -439,6 +527,7 @@ export default function ContributorForm({
                               </span>
                             </div>
                           )}
+
                           <div className="mt-2 flex gap-2">
                             <button
                               type="button"
@@ -446,12 +535,12 @@ export default function ContributorForm({
                               className="text-[11px] text-accent hover:underline"
                               disabled={isSubmitting}
                             >
-                              Ganti Foto
+                              {mediaType === 'video' ? 'Ganti Video' : 'Ganti Foto'}
                             </button>
                             <span className="text-[11px] text-text-muted">•</span>
                             <button
                               type="button"
-                              onClick={handleRemovePhoto}
+                              onClick={handleRemoveMedia}
                               className="text-[11px] text-red-400 hover:underline"
                               disabled={isSubmitting}
                             >
@@ -478,7 +567,7 @@ export default function ContributorForm({
                   {/* Submit Button */}
                   <button
                     type="submit"
-                    disabled={isSubmitting || isCompressing}
+                    disabled={isSubmitting || isProcessingMedia}
                     className="w-full py-3.5 px-6 rounded-xl font-medium text-sm text-white shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99]"
                     style={{
                       background: 'linear-gradient(135deg, var(--color-accent), color-mix(in srgb, var(--color-accent) 70%, #000))',
@@ -522,13 +611,25 @@ export default function ContributorForm({
 
                   {/* Polaroid Preview Card */}
                   <div className="max-w-xs mx-auto p-4 rounded-xl bg-surface/90 border border-white/10 shadow-xl text-left transform rotate-1 transition-transform hover:rotate-0">
-                    {submittedWish.photoUrl ? (
+                    {submittedWish.photoUrl || submittedWish.mediaUrl ? (
                       <div className="aspect-square rounded-lg overflow-hidden mb-3 bg-black/30">
-                        <img
-                          src={submittedWish.photoUrl}
-                          alt="Memory"
-                          className="w-full h-full object-cover"
-                        />
+                        {submittedWish.mediaType === 'video' || isVideoMedia(submittedWish.photoUrl || submittedWish.mediaUrl) ? (
+                          <video
+                            src={submittedWish.mediaUrl || submittedWish.photoUrl}
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            webkit-playsinline=""
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <img
+                            src={submittedWish.photoUrl || submittedWish.mediaUrl}
+                            alt="Memory"
+                            className="w-full h-full object-cover"
+                          />
+                        )}
                       </div>
                     ) : (
                       <div className="w-12 h-12 rounded-full bg-accent/20 border border-accent/30 text-accent font-serif flex items-center justify-center text-lg mb-3">

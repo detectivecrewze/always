@@ -30,6 +30,7 @@ export default function GiftPage({ data }) {
   const [gateOpen, setGateOpen] = useState(isStudioMode);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef(null);
+  const wasMusicPlayingBeforeWishVideoRef = useRef(false);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -65,11 +66,31 @@ export default function GiftPage({ data }) {
     if (isPlaying) {
       audioRef.current.pause();
       setIsPlaying(false);
+      wasMusicPlayingBeforeWishVideoRef.current = false;
     } else {
       audioRef.current.volume = 0.5;
       audioRef.current.play().then(() => {
         setIsPlaying(true);
       }).catch(() => {});
+    }
+  }, [isPlaying]);
+
+  const handleWishVideoAudioChange = useCallback((isActive) => {
+    if (!audioRef.current) return;
+
+    if (isActive) {
+      // Pause background music if it was playing
+      if (isPlaying || !audioRef.current.paused) {
+        wasMusicPlayingBeforeWishVideoRef.current = true;
+        audioRef.current.pause();
+      }
+    } else {
+      // Resume background music only if it was playing before unmuting
+      if (wasMusicPlayingBeforeWishVideoRef.current && isPlaying) {
+        audioRef.current.volume = 0.5;
+        audioRef.current.play().catch(() => {});
+        wasMusicPlayingBeforeWishVideoRef.current = false;
+      }
     }
   }, [isPlaying]);
 
@@ -193,6 +214,7 @@ export default function GiftPage({ data }) {
                 circleTitle1={data.circleTitle1}
                 circleTitle2={data.circleTitle2}
                 circleSubtitle={data.circleSubtitle}
+                onVideoAudioChange={handleWishVideoAudioChange}
               />
             )}
 

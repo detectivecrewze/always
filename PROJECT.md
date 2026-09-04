@@ -1,83 +1,78 @@
-# Project: Circle Wishes (Kado Keroyokan Ulang Tahun) in Memoria
+# Project: Circle Wishes Short Video Support (Memoria / loves-edition)
 
 ## Architecture
-- **Overview**: 100% backward-compatible, strictly additive extension to Memoria (`loves-edition`) that enables collective group birthday wishes ("Kado Keroyokan") alongside existing couple/solo gifts.
-- **Data Flow**:
-  1. Organizer distributes Contributor Portal link `/c/[slug]`.
-  2. Friends submit name, message, and 1 memory photo from mobile or desktop.
-  3. Client-side HTML5 Canvas automatically compresses high-res mobile photos (>5MB–10MB) down to <1MB before uploading.
-  4. Photo uploaded via `/api/upload-public` (backed by Cloudflare R2 / local fallback).
-  5. Submission saved via discrete append-only key `wish:${slug}:${wishId}` in Cloudflare KV / `data/wishes/${slug}/${wishId}.json` in local filesystem, ensuring 0 race conditions.
-  6. Organizer reviews, edits typos, removes spam, and reorders wishes in Studio Editor (`/studio/[slug]/edit`).
-  7. Final curated array stored inside `gift:${slug}.circleWishes`.
-  8. `GiftPage.jsx` renders `CircleWishesSection.jsx` alongside `ReasonCards` when `circleWishes` exists, styled using active theme CSS variables.
+The feature enables contributors to submit short videos (1–15s, <=20MB) as an alternative to photos for Circle Wishes. The implementation spans 4 modules:
+1. **Contributor Submission Module (`src/app/c/[slug]/ContributorForm.jsx` & API endpoints)**:
+   - Unified media file input accepting `image/*,video/mp4,video/webm,video/quicktime`.
+   - Client-side validation for file size (<=20MB) and video duration (1–15.9s via HTML5 video `loadedmetadata` with WebKit `Infinity` guard).
+   - Dual-mode preview: compressed image preview vs muted looping `<video>` preview.
+   - Post-submission success screen rendering video or photo appropriately.
+   - Backend upload endpoint (`POST /api/upload-public`) enforces server-side 20MB limit and stores files to Cloudflare R2 / filesystem.
+   - Circle wishes endpoint (`POST /api/circle-wishes/[slug]` & `src/lib/wishes.js`) stores both `photoUrl` and `mediaUrl` with optional `mediaType` for 100% backward compatibility.
+2. **Gift Display & Bento Grid Module (`src/components/CircleWishesSection.jsx`)**:
+   - Live-photo style video card rendering: `<video autoPlay loop muted playsInline webkit-playsinline="" preload="metadata">` with `pointer-events-none` inside `aspect-[4/3]` container.
+   - 100% clean visual design with NO badges or icons on cards.
+   - Wish detail modal with interactive audio toggle (`"🔊 Dengarkan dengan Suara"` / `"🔇 Bisukan Video"` and click-to-unmute on video element).
+   - Elevated modal backdrop z-index to `z-[100]` to blanket floating `MusicPlayer`.
+   - Decoupled lifecycle effects: unmount cleanup calls `onVideoAudioChange(false)` while state resets only when a new wish opens.
+3. **Gift Audio Coordination Module (`src/app/[slug]/GiftPage.jsx`)**:
+   - `onVideoAudioChange(isActive)` callback coordination between `CircleWishesSection` and `GiftPage`.
+   - Pauses gift background music (`audioRef`) when video sound is active; safely resumes music on video mute, pause, or modal dismissal (via ESC, backdrop click, or close button) only if music was previously playing.
+   - Avoids restarting background music if user manually paused music prior to opening the modal.
+4. **Studio Moderation Module (`src/app/studio/page.jsx` & `src/app/studio/[slug]/edit/page.jsx`)**:
+   - Studio Dashboard "View Details" modal renders interactive `<video controls playsInline preload="metadata">` for video submissions so Aldo can review video and sound.
+   - Fixes data-loss bug in `handleSaveEditedWish` by preserving `photoUrl` / `mediaUrl`.
+   - Studio Editor Tab "Circle Wishes" displays video player, supports editing media URL, and allows deleting video wishes without affecting photo or text-only wishes.
 
 ## Feature Inventory
-| # | Feature | Description | Milestone | Status | Source |
+| # | Feature | Description | Milestone | Source | Status |
 |---|---------|-------------|-----------|--------|--------|
-| 1 | Backward-Compatible Schema & Guards | Existing gifts without `circleWishes` run 100% unaffected with zero DOM changes | M4 | DONE | R1, survey |
-| 2 | Anti-Collision Discrete Storage | Cloudflare KV & local filesystem storage using `wish:${slug}:${wishId}` preventing race condition overwrites | M2 | DONE | R3, survey |
-| 3 | Wishes Ingestion & Fetch APIs | Endpoints `/api/circle-wishes/[slug]` for submitting wishes and syncing into studio | M2 | DONE | R3, survey |
-| 4 | Client-Side Canvas Image Compression | `src/lib/imageCompression.js` downscales and compresses >5MB photos to <1MB with 2-pass safety | M2 | DONE | R2, survey |
-| 5 | Mobile-First Contributor Portal | Clean, elegant submission page at `/c/[slug]` (with `/contribute/[slug]` alias) with privacy isolation | M3 | DONE | R2, survey |
-| 6 | Contributor UI Feedback & States | Live image preview, compression badge, upload progress, and celebratory success state | M3 | DONE | R2, survey |
-| 7 | Interactive CircleWishesSection Component | Bento/polaroid card layout in `src/components/CircleWishesSection.jsx` using theme CSS variables | M4 | DONE | R4, survey |
-| 8 | Expandable Modal with Framer Motion | Smooth spring modal dialog, backdrop blur, ESC key dismiss, and scroll lock | M4 | DONE | R4, survey |
-| 9 | GiftPage.jsx Integration | Placed after ReasonCards/SeasonsSection and before Gallery, guarded by double checks | M4 | DONE | R4, survey |
-| 10 | Studio Editor Circle Wishes Tab | Tab `'Circle Wishes'` in `src/app/studio/[slug]/edit/page.jsx` for managing submissions | M5 | DONE | R5, survey |
-| 11 | Studio Review, Edit & Reorder | Ability to edit typos, delete inappropriate cards, reorder with `↑`/`↓`, and add manual wishes | M5 | DONE | R5, survey |
-| 12 | Contributor Link Sharing in Studio | 1-click copy button for `/c/[slug]` link in Studio Editor | M5 | DONE | R5, survey |
-| 13 | Build & Regression Hardening | `npm run build` exits 0; legacy gifts and order forms verified intact | M6 | DONE | Acceptance Criteria |
+| F1 | Unified Media Input | Single file input accepting images and videos (`image/*,video/mp4,video/webm,video/quicktime`) with drag-and-drop | M1 | ORIGINAL_REQUEST §R1 | DONE |
+| F2 | Client-Side 20MB Limit | Reject files > 20MB before upload with friendly Indonesian error message | M1 | ORIGINAL_REQUEST §R1 | DONE |
+| F3 | Client-Side Duration Validation | Reject videos < 1s or > 15.9s using HTML5 `loadedmetadata` before upload | M1 | ORIGINAL_REQUEST §R1 | DONE |
+| F4 | Contributor Form Preview | Dual-mode preview: image compression info vs HTML5 looping muted video preview with duration/size badge | M1 | ORIGINAL_REQUEST §R1 | DONE |
+| F5 | Contributor Success View Video Support | Render video preview if submitted wish media is a video on success screen | M1 | Survey Explorer 1 | DONE |
+| F6 | Server API & Storage Compatibility | Store both `photoUrl` and `mediaUrl` in `POST /api/circle-wishes/[slug]` & `src/lib/wishes.js` | M1 | Survey Explorer 1 | DONE |
+| F7 | Bento Grid Live-Photo Video Card | `<video autoPlay loop muted playsInline webkit-playsinline="" preload="metadata">` filling frame, `pointer-events-none`, 100% clean without badges | M1 | ORIGINAL_REQUEST §R2 | DONE |
+| F8 | Modal Video Player | Modal renders video in high resolution with muted autoplay initial state and interactive sound toggle | M1 | ORIGINAL_REQUEST §R3 | DONE |
+| F9 | Modal Audio Sync & Background Music Control | `onVideoAudioChange` pauses background music when video unmuted, resumes on mute/pause/modal close | M1 | ORIGINAL_REQUEST §R3 | DONE |
+| F10 | Leak-Proof Modal Dismissal & Stacking | ESC key, backdrop click, close button, and unmount hook all restore audio state; modal z-index `z-[100]` | M1 | Survey Explorer 2 | DONE |
+| F11 | Studio Dashboard Video Preview & Edit Fix | Render video player with controls in View Details modal; fix `handleSaveEditedWish` data-loss bug | M1 | ORIGINAL_REQUEST §R4 | DONE |
+| F12 | Studio Editor Circle Wishes Video Tab | Display video player in editor tab, support URL editing and deletion without photo/text regressions | M1 | ORIGINAL_REQUEST §R4 | DONE |
+| F13 | Build Verification & Non-Regression | Clean `npm run build` exit code 0; existing wishes, photos, and texts function 100% normally | M1 | ORIGINAL_REQUEST §Criteria | DONE |
 
 ## Milestones
 | # | Name | Scope | Dependencies | Status |
 |---|------|-------|-------------|--------|
-| M1 | Survey & Architecture Mapping | Full codebase investigation, schema analysis, theme review | none | DONE |
-| M2 | Ingestion Backend & Image Compression | KV anti-collision storage, `/api/circle-wishes/[slug]` API, `imageCompression.js` | M1 | DONE |
-| M3 | Mobile-First Contributor Portal | Route `/c/[slug]`, `/contribute/[slug]` redirect, form UI, compression integration | M2 | DONE |
-| M4 | CircleWishesSection & GiftPage | `src/components/CircleWishesSection.jsx`, integration in `GiftPage.jsx`, theme harmony | M3 | DONE |
-| M5 | Studio Editor Management | `TabCircleWishes` in `edit/page.jsx`, sync, edit, reorder, delete, copy portal link | M4 | DONE |
-| M6 | Verification, Non-Regression & Quality Gate | Automated build, multi-agent audit (Reviewers, Challengers, Auditor), backward compatibility | M5 | DONE |
+| M1 | Circle Wishes Video Upload & Playback Integration | Implement R1, R2, R3, R4 across ContributorForm, CircleWishesSection, GiftPage, Studio Dashboard & Editor, and verify clean build | none | DONE |
 
 ## Interface Contracts
+### `ContributorForm` ↔ `POST /api/upload-public`
+- Input: `FormData` with field `file` (File object)
+- Validation: Server checks `file.size <= 20MB`; returns HTTP 400 if exceeded.
+- Output: `{ ok: true, url: "https://..." }` or `{ ok: false, error: "..." }`
 
-### Contributor Submission Payload (POST `/api/circle-wishes/[slug]`)
-```json
-{
-  "name": "Sarah Jenkins",
-  "message": "Happy 21st Birthday! So grateful for all our memories together! ✨",
-  "photoUrl": "https://pub-...r2.dev/uploads/...jpg",
-  "createdAt": "2026-09-04T03:55:00.000Z"
-}
-```
+### `ContributorForm` ↔ `POST /api/circle-wishes/[slug]`
+- Payload: `{ name: string, message: string, photoUrl: string, mediaUrl: string, mediaType?: "video"|"photo" }`
+- Output: `{ ok: true, wish: { id, name, message, photoUrl, mediaUrl, createdAt } }`
 
-### Stored Wish Object (`wish:${slug}:${wishId}` & in `gift.circleWishes`)
-```json
-{
-  "id": "1725410001234-7a8f9c2d",
-  "name": "Sarah Jenkins",
-  "message": "Happy 21st Birthday! So grateful for all our memories together! ✨",
-  "photoUrl": "https://pub-...r2.dev/uploads/...jpg",
-  "createdAt": "2026-09-04T03:55:00.000Z"
-}
-```
+### `CircleWishesSection` ↔ `GiftPage`
+- Prop: `onVideoAudioChange?: (isActive: boolean) => void`
+- Trigger: Called with `true` when video in modal is unmuted and playing sound; called with `false` when video is muted, paused, ended, or modal is closed.
+- Expected behavior in `GiftPage`:
+  - When `isActive === true`: record `wasMusicPlayingBeforeWishVideoRef.current = isPlaying`, pause `audioRef.current`.
+  - When `isActive === false`: if `wasMusicPlayingBeforeWishVideoRef.current && isPlaying`, resume `audioRef.current.play()`.
 
-### `CircleWishesSection` Component Props
-```javascript
-<CircleWishesSection
-  wishes={data.circleWishes} // Array of wish objects
-  recipient={data.recipient}  // string (e.g. "Nadia")
-  moment={data.moment}        // string (e.g. "Ultah")
-/>
-```
+### Media Detection Helper
+- Standard regex: `const isVideoMedia = (url) => typeof url === 'string' && /\.(mp4|webm|mov)(\?.*)?$/i.test(url.split('#')[0]);`
 
 ## Code Layout
-- `src/lib/imageCompression.js` — Client-side HTML5 canvas image compression utility.
-- `src/lib/wishes.js` — Storage abstraction for Circle Wishes (Cloudflare KV & local filesystem fallback with path traversal protection).
-- `src/app/api/circle-wishes/[slug]/route.js` — Ingestion & listing API endpoint with strict regex whitelisting and 404 gift verification.
-- `src/app/c/[slug]/page.jsx` — Contributor Portal page with privacy isolation.
-- `src/app/c/[slug]/ContributorForm.jsx` — Interactive mobile-first submission form with live compression feedback.
-- `src/app/contribute/[slug]/page.jsx` — Canonical redirect to `/c/[slug]`.
-- `src/components/CircleWishesSection.jsx` — Interactive showcase component in GiftPage with Framer Motion modal.
-- `src/app/[slug]/GiftPage.jsx` — Main gift renderer (incorporating CircleWishesSection alongside ReasonCards).
-- `src/app/studio/[slug]/edit/page.jsx` — Studio Editor with TabCircleWishes (link copy, sync, edit, reorder, delete).
+- `src/lib/videoValidation.js`: Helper functions `isVideoMedia(url)` and `checkVideoMetadata(file, minDuration, maxDuration)` with iOS NaN guard.
+- `src/app/c/[slug]/ContributorForm.jsx`: Unified upload, client-side validation, dual preview, success view.
+- `src/app/api/upload-public/route.js`: Server-side size validation and public upload handler.
+- `src/app/api/circle-wishes/[slug]/route.js`: Dual field handling (`photoUrl` & `mediaUrl`).
+- `src/lib/wishes.js`: Backend wish persistence ensuring backward compatibility.
+- `src/components/CircleWishesSection.jsx`: Bento grid video cards, modal video player, audio toggle, decoupled lifecycle effects.
+- `src/app/[slug]/GiftPage.jsx`: Background music coordination with `CircleWishesSection`.
+- `src/app/studio/page.jsx`: View details video preview player and wish edit data-loss fix.
+- `src/app/studio/[slug]/edit/page.jsx`: TabCircleWishes video preview and URL editing.

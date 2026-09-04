@@ -32,11 +32,18 @@ export async function saveWish(slug, wishData) {
     throw new Error('Valid wishId is required to save a wish');
   }
 
+  const resolvedMedia = (wishData.mediaUrl || wishData.photoUrl || '').trim();
+  const inferredMediaType =
+    wishData.mediaType ||
+    (resolvedMedia ? (/\.(mp4|webm|mov)(\?.*)?$/i.test(resolvedMedia) ? 'video' : 'photo') : null);
+
   const wish = {
     id: wishId,
     name: (wishData.name || '').trim(),
     message: (wishData.message || '').trim(),
-    photoUrl: wishData.photoUrl || '',
+    photoUrl: resolvedMedia,
+    mediaUrl: resolvedMedia,
+    mediaType: inferredMediaType,
     createdAt: wishData.createdAt || new Date().toISOString(),
   };
 
@@ -157,7 +164,17 @@ export async function getWishesBySlug(slug) {
     console.error('Error reading local wishes:', err);
   }
 
-  const wishes = Array.from(wishMap.values());
+  const wishes = Array.from(wishMap.values()).map((w) => {
+    const resolvedMedia = (w.mediaUrl || w.photoUrl || '').trim();
+    return {
+      ...w,
+      photoUrl: resolvedMedia,
+      mediaUrl: resolvedMedia,
+      mediaType:
+        w.mediaType ||
+        (resolvedMedia ? (/\.(mp4|webm|mov)(\?.*)?$/i.test(resolvedMedia) ? 'video' : 'photo') : null),
+    };
+  });
 
   // Sort chronologically ascending
   wishes.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));

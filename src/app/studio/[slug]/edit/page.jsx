@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import playlistData from '../../playlist.json';
 import AestheticQRCode from '@/components/AestheticQRCode';
 import { themes } from '@/lib/themes';
+import { isVideoMedia } from '@/lib/videoValidation';
 
 const TABS = ['Theme', 'Opening', 'Hero', 'Time', 'Letter', 'Reasons', 'Seasons', 'Circle Wishes', 'Gallery', 'Music', 'Closing'];
 
@@ -835,6 +836,8 @@ function TabCircleWishes({ data, set, slug }) {
       name: '',
       message: '',
       photoUrl: '',
+      mediaUrl: '',
+      mediaType: null,
       createdAt: new Date().toISOString(),
     };
     set('circleWishes', [...wishes, newWish]);
@@ -853,7 +856,16 @@ function TabCircleWishes({ data, set, slug }) {
       const newlyAdded = incoming.filter((w) => !currentIds.has(w.id));
 
       if (newlyAdded.length > 0) {
-        set('circleWishes', [...wishes, ...newlyAdded]);
+        const normalizedAdded = newlyAdded.map((w) => {
+          const m = (w.mediaUrl || w.photoUrl || w.photo || '').trim();
+          return {
+            ...w,
+            photoUrl: m,
+            mediaUrl: m,
+            mediaType: w.mediaType || (m ? (isVideoMedia(m) ? 'video' : 'photo') : null),
+          };
+        });
+        set('circleWishes', [...wishes, ...normalizedAdded]);
         setSyncStatus(`✓ Berhasil menambahkan ${newlyAdded.length} ucapan baru dari kontributor!`);
       } else {
         setSyncStatus('✓ Semua ucapan dari kontributor sudah tersinkronisasi.');
@@ -1086,28 +1098,64 @@ function TabCircleWishes({ data, set, slug }) {
               </div>
             </div>
 
-            {/* Photo Thumbnail if present */}
-            {w.photoUrl && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '0.75rem' }}>
-                <img
-                  src={w.photoUrl}
-                  alt={w.name}
-                  style={{ width: '56px', height: '56px', borderRadius: '8px', objectFit: 'cover', border: '1px solid #333' }}
-                />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '0.7rem', color: '#888' }}>Foto Kenangan</div>
-                  <div style={{ fontSize: '0.65rem', color: '#555', wordBreak: 'break-all' }} className="truncate">
-                    {w.photoUrl}
+            {/* Media Preview (Photo or Video) if present */}
+            {(() => {
+              const mediaUrl = (w.mediaUrl || w.photoUrl || w.photo || '').trim();
+              if (!mediaUrl) return null;
+              const isVideo = isVideoMedia(mediaUrl);
+
+              return (
+                <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start', marginBottom: '0.75rem', background: '#0a0a0a', padding: '8px 12px', borderRadius: '8px', border: '1px solid #222' }}>
+                  {isVideo ? (
+                    <div style={{ width: '120px', height: '80px', flexShrink: 0, borderRadius: '6px', overflow: 'hidden', background: '#000', border: '1px solid #333' }}>
+                      <video
+                        src={mediaUrl}
+                        controls
+                        playsInline
+                        preload="metadata"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        onPlay={(e) => {
+                          document.querySelectorAll('video').forEach((v) => {
+                            if (v !== e.target) v.pause();
+                          });
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={mediaUrl}
+                      alt={w.name}
+                      style={{ width: '56px', height: '56px', borderRadius: '8px', objectFit: 'cover', border: '1px solid #333', flexShrink: 0 }}
+                    />
+                  )}
+
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 600, color: isVideo ? '#A78BFA' : '#888' }}>
+                        {isVideo ? '🎥 Video Kenangan' : '🖼️ Foto Kenangan'}
+                      </span>
+                      <a href={mediaUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.65rem', color: '#60A5FA', textDecoration: 'none' }}>
+                        Buka Media ↗
+                      </a>
+                    </div>
+                    <div style={{ fontSize: '0.65rem', color: '#555', wordBreak: 'break-all', marginTop: '2px' }} className="truncate">
+                      {mediaUrl}
+                    </div>
+                    <button
+                      style={{ ...S.smallBtn('#EF4444'), fontSize: '0.65rem', padding: '0.1rem 0.4rem', marginTop: '0.35rem' }}
+                      onClick={() => {
+                        const next = [...wishes];
+                        next[i] = { ...next[i], photoUrl: '', mediaUrl: '', mediaType: null };
+                        set('circleWishes', next);
+                      }}
+                    >
+                      Hapus {isVideo ? 'Video' : 'Foto'}
+                    </button>
                   </div>
-                  <button
-                    style={{ ...S.smallBtn('#EF4444'), fontSize: '0.65rem', padding: '0.1rem 0.4rem', marginTop: '0.25rem' }}
-                    onClick={() => updateWish(i, 'photoUrl', '')}
-                  >
-                    Hapus Foto
-                  </button>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             <Field
               label="Nama Pengirim"
@@ -1125,10 +1173,20 @@ function TabCircleWishes({ data, set, slug }) {
             />
 
             <Field
-              label="URL Foto (Opsional)"
-              value={w.photoUrl}
-              onChange={(v) => updateWish(i, 'photoUrl', v)}
-              placeholder="https://..."
+              label="URL Media / Foto / Video (Opsional)"
+              value={w.mediaUrl || w.photoUrl || ''}
+              onChange={(v) => {
+                const next = [...wishes];
+                const trimmed = v.trim();
+                next[i] = {
+                  ...next[i],
+                  photoUrl: trimmed,
+                  mediaUrl: trimmed,
+                  mediaType: trimmed ? (isVideoMedia(trimmed) ? 'video' : 'photo') : null,
+                };
+                set('circleWishes', next);
+              }}
+              placeholder="https://... atau .mp4 / .mov / .jpg"
             />
           </div>
         ))

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import playlist from './playlist.json';
 import AestheticQRCode from '@/components/AestheticQRCode';
 import { themes } from '@/lib/themes';
+import { isVideoMedia } from '@/lib/videoValidation';
 
 const HISTORY_PAGE_SIZE = 20;
 const DRAFT_STALE_DAYS = 7;
@@ -48,6 +49,7 @@ export default function StudioDashboard() {
   const [editingWishId, setEditingWishId] = useState(null);
   const [editWishName, setEditWishName] = useState('');
   const [editWishMessage, setEditWishMessage] = useState('');
+  const [editWishMediaUrl, setEditWishMediaUrl] = useState('');
   const [savingWish, setSavingWish] = useState(false);
   const [copiedSlotNotice, setCopiedSlotNotice] = useState(null);
   const [modalAddingSlot, setModalAddingSlot] = useState(false);
@@ -613,6 +615,7 @@ export default function StudioDashboard() {
     setEditingWishId(wish.id);
     setEditWishName(wish.name || '');
     setEditWishMessage(wish.message || '');
+    setEditWishMediaUrl(wish.mediaUrl || wish.photoUrl || wish.photo || '');
   };
 
   const handleSaveEditedWish = async (wishId) => {
@@ -623,6 +626,7 @@ export default function StudioDashboard() {
     }
     setSavingWish(true);
     try {
+      const trimmedMedia = editWishMediaUrl.trim();
       const res = await fetch(`/api/circle-wishes/${encodeURIComponent(selectedOrder.slug)}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -630,12 +634,22 @@ export default function StudioDashboard() {
           id: wishId,
           name: editWishName.trim(),
           message: editWishMessage.trim(),
+          photoUrl: trimmedMedia,
+          mediaUrl: trimmedMedia,
         }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        setModalWishes(prev => prev.map(w => w.id === wishId ? { ...w, name: editWishName.trim(), message: editWishMessage.trim() } : w));
+        setModalWishes(prev => prev.map(w => w.id === wishId ? {
+          ...w,
+          name: editWishName.trim(),
+          message: editWishMessage.trim(),
+          photoUrl: trimmedMedia,
+          mediaUrl: trimmedMedia,
+          mediaType: trimmedMedia ? (isVideoMedia(trimmedMedia) ? 'video' : 'photo') : null,
+        } : w));
         setEditingWishId(null);
+        setEditWishMediaUrl('');
       } else {
         alert(data.error || 'Gagal menyimpan perubahan ucapan');
       }
@@ -1627,10 +1641,23 @@ export default function StudioDashboard() {
                                       style={{ ...S.input, padding: '4px 8px', fontSize: '0.78rem', marginBottom: 0, resize: 'vertical' }}
                                     />
                                   </div>
+                                  <div>
+                                    <label style={{ fontSize: '0.65rem', color: '#888', textTransform: 'uppercase' }}>URL Media / Foto / Video (Opsional)</label>
+                                    <input
+                                      type="text"
+                                      value={editWishMediaUrl}
+                                      onChange={e => setEditWishMediaUrl(e.target.value)}
+                                      placeholder="https://... atau .mp4 / .mov / .jpg"
+                                      style={{ ...S.input, padding: '4px 8px', fontSize: '0.78rem', marginBottom: 0 }}
+                                    />
+                                  </div>
                                   <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', marginTop: '2px' }}>
                                     <button
                                       type="button"
-                                      onClick={() => setEditingWishId(null)}
+                                      onClick={() => {
+                                        setEditingWishId(null);
+                                        setEditWishMediaUrl('');
+                                      }}
                                       style={{ background: '#222', color: '#aaa', border: '1px solid #444', padding: '3px 8px', borderRadius: '4px', fontSize: '0.72rem', cursor: 'pointer' }}
                                     >
                                       Batal
@@ -1683,15 +1710,47 @@ export default function StudioDashboard() {
                                     &ldquo;{w.message}&rdquo;
                                   </p>
 
-                                  {w.photoUrl && (
-                                    <div style={{ marginTop: '6px' }}>
-                                      <a href={w.photoUrl} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.7rem', color: '#60A5FA', textDecoration: 'none' }}>
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={w.photoUrl} alt="Thumbnail" style={{ width: '28px', height: '28px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #333' }} />
-                                        <span>Lihat Foto Kenangan ↗</span>
-                                      </a>
-                                    </div>
-                                  )}
+                                  {(() => {
+                                    const mediaUrl = w.mediaUrl || w.photoUrl || w.photo || '';
+                                    if (!mediaUrl) return null;
+                                    const isVideo = isVideoMedia(mediaUrl);
+                                    return (
+                                      <div style={{ marginTop: '8px' }}>
+                                        {isVideo ? (
+                                          <div>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                              <span style={{ fontSize: '0.7rem', color: '#C4B5FD', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                <span>🎥</span> Video Kenangan ({mediaUrl.split('.').pop()?.split('?')[0]?.toUpperCase()})
+                                              </span>
+                                              <a href={mediaUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.68rem', color: '#8B5CF6', textDecoration: 'none' }}>
+                                                Buka Video Penuh ↗
+                                              </a>
+                                            </div>
+                                            <div style={{ maxWidth: '240px', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(139,92,246,0.3)', background: '#000' }}>
+                                              <video
+                                                src={mediaUrl}
+                                                controls
+                                                playsInline
+                                                preload="metadata"
+                                                style={{ width: '100%', maxHeight: '160px', display: 'block', objectFit: 'contain' }}
+                                                onPlay={(e) => {
+                                                  document.querySelectorAll('video').forEach((v) => {
+                                                    if (v !== e.target) v.pause();
+                                                  });
+                                                }}
+                                              />
+                                            </div>
+                                          </div>
+                                        ) : (
+                                          <a href={mediaUrl} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.7rem', color: '#60A5FA', textDecoration: 'none' }}>
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img src={mediaUrl} alt="Thumbnail" style={{ width: '28px', height: '28px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #333' }} />
+                                            <span>Lihat Foto Kenangan ↗</span>
+                                          </a>
+                                        )}
+                                      </div>
+                                    );
+                                  })()}
                                 </div>
                               )}
                             </div>

@@ -21,7 +21,11 @@ export async function POST(request, { params }) {
     const token = (body.token || '').trim();
     const name = (body.name || '').trim();
     const message = (body.message || '').trim();
-    const photoUrl = (body.photoUrl || '').trim();
+    const photoUrl = (body.photoUrl || body.mediaUrl || '').trim();
+    const mediaUrl = (body.mediaUrl || body.photoUrl || '').trim();
+    const mediaType =
+      body.mediaType ||
+      (mediaUrl ? (/\.(mp4|webm|mov)(\?.*)?$/i.test(mediaUrl) ? 'video' : 'photo') : null);
     const createdAt = body.createdAt || new Date().toISOString();
 
     if (!token) {
@@ -51,6 +55,8 @@ export async function POST(request, { params }) {
       name,
       message,
       photoUrl,
+      mediaUrl,
+      mediaType,
       createdAt,
     });
 
@@ -155,11 +161,19 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: 'Pesan ucapan wajib diisi' }, { status: 400 });
     }
 
+    const photoUrl = (body.photoUrl || body.mediaUrl || '').trim();
+    const mediaUrl = (body.mediaUrl || body.photoUrl || '').trim();
+    const mediaType =
+      body.mediaType ||
+      (mediaUrl ? (/\.(mp4|webm|mov)(\?.*)?$/i.test(mediaUrl) ? 'video' : 'photo') : null);
+
     const updatedWish = await saveWish(slug, {
       id: wishId,
       name,
       message,
-      photoUrl: body.photoUrl || '',
+      photoUrl,
+      mediaUrl,
+      mediaType,
       createdAt: body.createdAt || new Date().toISOString(),
     });
 

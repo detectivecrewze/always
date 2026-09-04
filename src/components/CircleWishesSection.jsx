@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { isVideoMedia } from '@/lib/videoValidation';
 
 function formatDate(dateStr) {
   if (!dateStr) return '';
@@ -25,6 +26,7 @@ export default function CircleWishesSection({
   circleTitle1,
   circleTitle2,
   circleSubtitle,
+  onVideoAudioChange,
 }) {
   // Strict non-breaking guard
   if (!wishes || wishes.length === 0) {
@@ -32,6 +34,8 @@ export default function CircleWishesSection({
   }
 
   const [selectedWish, setSelectedWish] = useState(null);
+  const [isMuted, setIsMuted] = useState(true);
+  const modalVideoRef = useRef(null);
 
   // Helper to render dynamic subtitle with {recipient} placeholder support
   const renderSubtitle = () => {
@@ -59,13 +63,55 @@ export default function CircleWishesSection({
     return rawSubtitle;
   };
 
+  // Toggle video sound with onVideoAudioChange notification
+  const toggleMute = useCallback(() => {
+    if (!modalVideoRef.current) return;
+    const nextMuted = !isMuted;
+    setIsMuted(nextMuted);
+    modalVideoRef.current.muted = nextMuted;
+
+    if (!nextMuted) {
+      modalVideoRef.current.play().catch(() => {});
+      if (onVideoAudioChange) onVideoAudioChange(true);
+    } else {
+      if (onVideoAudioChange) onVideoAudioChange(false);
+    }
+  }, [isMuted, onVideoAudioChange]);
+
+  // Unified modal close handler ensuring audio cleanup
+  const closeModal = useCallback(() => {
+    if (modalVideoRef.current) {
+      modalVideoRef.current.pause();
+      modalVideoRef.current.muted = true;
+    }
+    if (!isMuted) {
+      setIsMuted(true);
+      if (onVideoAudioChange) onVideoAudioChange(false);
+    }
+    setSelectedWish(null);
+  }, [isMuted, onVideoAudioChange]);
+
+  // 1. Unmount cleanup only
+  useEffect(() => {
+    return () => {
+      if (onVideoAudioChange) onVideoAudioChange(false);
+    };
+  }, [onVideoAudioChange]);
+
+  // 2. Reset muted state only when selectedWish changes (new wish opened)
+  useEffect(() => {
+    if (selectedWish) {
+      setIsMuted(true);
+    }
+  }, [selectedWish]);
+
   // Lock body scroll when modal is open, and handle ESC key
   useEffect(() => {
     if (!selectedWish) return;
 
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
-        setSelectedWish(null);
+        closeModal();
       }
     };
 
@@ -77,7 +123,7 @@ export default function CircleWishesSection({
       window.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = originalOverflow;
     };
-  }, [selectedWish]);
+  }, [selectedWish, closeModal]);
 
   return (
     <section className="relative z-10 px-4 sm:px-6 py-16 md:py-24 flex flex-col items-center">
@@ -127,15 +173,28 @@ export default function CircleWishesSection({
             >
               {/* Card Body */}
               <div>
-                {/* Photo Display or Monogram */}
+                {/* Photo or Video Display or Monogram */}
                 {wish.photoUrl ? (
-                  <div className="aspect-[4/3] rounded-xl overflow-hidden mb-4 bg-black/20 border border-white/10">
-                    <img
-                      src={wish.photoUrl}
-                      alt={wish.name}
-                      className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                      loading="lazy"
-                    />
+                  <div className="aspect-[4/3] rounded-xl overflow-hidden mb-4 bg-black/20 border border-white/10 relative">
+                    {isVideoMedia(wish.photoUrl) ? (
+                      <video
+                        src={wish.photoUrl}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        webkit-playsinline=""
+                        preload="metadata"
+                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 pointer-events-none"
+                      />
+                    ) : (
+                      <img
+                        src={wish.photoUrl}
+                        alt={wish.name}
+                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                        loading="lazy"
+                      />
+                    )}
                   </div>
                 ) : (
                   <div className="flex items-center gap-3 mb-4">
@@ -201,8 +260,8 @@ export default function CircleWishesSection({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setSelectedWish(null)}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md"
+            onClick={closeModal}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md"
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -219,7 +278,7 @@ export default function CircleWishesSection({
               {/* Close Button */}
               <button
                 type="button"
-                onClick={() => setSelectedWish(null)}
+                onClick={closeModal}
                 className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-text flex items-center justify-center transition-colors z-10 text-xs font-semibold cursor-pointer"
                 aria-label="Tutup dialog ucapan"
               >
@@ -227,14 +286,71 @@ export default function CircleWishesSection({
               </button>
 
               <div className="overflow-y-auto pr-1 space-y-5">
-                {/* Full-size Photo if present */}
+                {/* Full-size Photo or Video if present */}
                 {selectedWish.photoUrl && (
-                  <div className="w-full max-h-[340px] rounded-xl overflow-hidden bg-black/40 border border-white/10">
-                    <img
-                      src={selectedWish.photoUrl}
-                      alt={selectedWish.name}
-                      className="w-full h-full object-contain mx-auto"
-                    />
+                  <div className="relative w-full max-h-[340px] rounded-xl overflow-hidden bg-black/40 border border-white/10 flex items-center justify-center">
+                    {isVideoMedia(selectedWish.photoUrl) ? (
+                      <>
+                        <video
+                          ref={modalVideoRef}
+                          src={selectedWish.photoUrl}
+                          autoPlay
+                          loop
+                          playsInline
+                          webkit-playsinline=""
+                          muted={isMuted}
+                          preload="auto"
+                          onClick={toggleMute}
+                          onPlay={() => {
+                            if (!isMuted && onVideoAudioChange) onVideoAudioChange(true);
+                          }}
+                          onPause={() => {
+                            if (!isMuted && onVideoAudioChange) onVideoAudioChange(false);
+                          }}
+                          onEnded={() => {
+                            if (!isMuted && onVideoAudioChange) onVideoAudioChange(false);
+                          }}
+                          className="w-full h-full max-h-[340px] object-contain mx-auto cursor-pointer"
+                        />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleMute();
+                          }}
+                          className="absolute bottom-3 right-3 px-3.5 py-1.5 rounded-full text-xs font-medium border flex items-center gap-2 shadow-lg backdrop-blur-md transition-all duration-200 cursor-pointer z-10"
+                          style={{
+                            background: isMuted
+                              ? 'rgba(0, 0, 0, 0.75)'
+                              : 'color-mix(in srgb, var(--color-accent) 85%, transparent)',
+                            borderColor: isMuted ? 'rgba(255, 255, 255, 0.25)' : 'var(--color-accent)',
+                            color: '#ffffff',
+                            boxShadow: isMuted
+                              ? '0 4px 16px rgba(0,0,0,0.5)'
+                              : '0 4px 20px color-mix(in srgb, var(--color-accent) 50%, transparent)',
+                          }}
+                          aria-label={isMuted ? 'Dengarkan dengan Suara' : 'Bisukan Video'}
+                        >
+                          {isMuted ? (
+                            <>
+                              <span className="text-sm">🔊</span>
+                              <span>Dengarkan dengan Suara</span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="text-sm">🔇</span>
+                              <span>Bisukan Video</span>
+                            </>
+                          )}
+                        </button>
+                      </>
+                    ) : (
+                      <img
+                        src={selectedWish.photoUrl}
+                        alt={selectedWish.name}
+                        className="w-full h-full object-contain mx-auto"
+                      />
+                    )}
                   </div>
                 )}
 
@@ -279,7 +395,7 @@ export default function CircleWishesSection({
               <div className="mt-6 pt-4 border-t border-white/10 flex justify-end">
                 <button
                   type="button"
-                  onClick={() => setSelectedWish(null)}
+                  onClick={closeModal}
                   className="px-5 py-2 rounded-xl text-xs font-medium border border-accent/40 text-accent hover:bg-accent/10 transition-colors"
                 >
                   Tutup Ucapan

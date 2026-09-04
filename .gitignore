@@ -43,3 +43,8 @@ next-env.d.ts
 # local runtime data
 data/orders.json
 data/wishes/
+
+# agent runtime logs
+.agents/*
+!.agents/AGENTS.md
+
