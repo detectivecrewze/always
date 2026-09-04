@@ -190,6 +190,9 @@ export default function GiftPage({ data }) {
                 wishes={data.circleWishes}
                 recipient={data.recipient}
                 moment={data.moment}
+                circleTitle1={data.circleTitle1}
+                circleTitle2={data.circleTitle2}
+                circleSubtitle={data.circleSubtitle}
               />
             )}
 

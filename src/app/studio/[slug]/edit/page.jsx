@@ -752,12 +752,57 @@ function TabSeasons({ data, set }) {
   </>);
 }
 
-// ── Circle Wishes Tab ──────────────────────────────────────────────
+// ── Circle Wishes Presets ──────────────────────────────────────────
+const CIRCLE_WISHES_PRESETS = [
+  {
+    id: 'circle',
+    name: '💫 Circle of Friends',
+    desc: 'Untaian pesan hangat sahabat & kerabat',
+    title1: 'Circle of',
+    title2: 'Heartfelt Wishes',
+    subtitle: 'Untaian pesan hangat dan kenangan manis dari teman-teman tersayang untuk {recipient}.',
+  },
+  {
+    id: 'birthday',
+    name: '🎂 Birthday Wishes',
+    desc: 'Ucapan ulang tahun spesial dari circle',
+    title1: 'Wishes From',
+    title2: 'Your Favorite People',
+    subtitle: 'Doa dan ucapan tulus di hari spesialmu dari orang-orang tersayang untuk {recipient}.',
+  },
+  {
+    id: 'farewell',
+    name: '🕊️ Farewell & Journey',
+    desc: 'Pesan perpisahan & kenangan terindah',
+    title1: 'Memories & Wishes',
+    title2: 'From All of Us',
+    subtitle: 'Kenangan terindah dan doa terbaik untuk langkah barumu ke depan, {recipient}.',
+  },
+  {
+    id: 'graduation',
+    name: '🎓 Graduation & Milestone',
+    desc: 'Apresiasi kelulusan & pencapaian',
+    title1: 'Proud Wishes',
+    title2: 'On Your Big Day',
+    subtitle: 'Selamat dan sukses selalu dari sahabat dan keluarga tersayang untuk {recipient}.',
+  },
+];
+
 function TabCircleWishes({ data, set, slug }) {
   const wishes = data.circleWishes || [];
   const [syncing, setSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState('');
   const [copiedPortalLink, setCopiedPortalLink] = useState(false);
+
+  const currentPreset = CIRCLE_WISHES_PRESETS.find(
+    p => p.title1 === data.circleTitle1 && p.title2 === data.circleTitle2
+  )?.id || null;
+
+  const applyPreset = (preset) => {
+    set('circleTitle1', preset.title1);
+    set('circleTitle2', preset.title2);
+    set('circleSubtitle', preset.subtitle);
+  };
 
   const updateWish = (idx, field, value) => {
     const next = [...wishes];
@@ -836,6 +881,37 @@ function TabCircleWishes({ data, set, slug }) {
       <div style={S.sectionDesc}>
         Kumpulkan dan kurasi pesan ucapan serta foto kenangan dari sahabat dan kerabat.
       </div>
+
+      <div style={S.sectionTitle}>Choose a Preset</div>
+      <div style={S.sectionDesc}>Pilih tema judul dan deskripsi kado keroyokan.</div>
+      <PresetGrid presets={CIRCLE_WISHES_PRESETS} currentId={currentPreset} onApply={applyPreset} />
+      <div className="w-full h-px bg-[#1a1a1a] mb-4" />
+
+      <div style={S.sectionTitle}>Section Header</div>
+      <div style={S.sectionDesc}>Atur judul dan deskripsi section kado keroyokan.</div>
+      <Field
+        label="Section Title 1"
+        value={data.circleTitle1}
+        onChange={(v) => set('circleTitle1', v)}
+        placeholder="Circle of"
+      />
+      <Field
+        label="Section Title 2 (Italic Accent)"
+        value={data.circleTitle2}
+        onChange={(v) => set('circleTitle2', v)}
+        placeholder="Heartfelt Wishes"
+      />
+      <Field
+        label="Section Description"
+        value={data.circleSubtitle}
+        onChange={(v) => set('circleSubtitle', v)}
+        placeholder="Untaian pesan hangat dan kenangan manis dari teman-teman tersayang untuk {recipient}."
+        multiline
+      />
+      <p style={{ fontSize: '0.7rem', color: '#888', marginTop: '-0.5rem', marginBottom: '1.25rem' }}>
+        💡 Tip: Gunakan token <code style={{ color: '#F472B6', background: 'rgba(244,114,182,0.1)', padding: '2px 5px', borderRadius: '4px' }}>{`{recipient}`}</code> di dalam deskripsi agar otomatis digantikan dengan nama penerima.
+      </p>
+      <div className="w-full h-px bg-[#1a1a1a] mb-4" />
 
       {/* Contributor Portal Share Box */}
       <div style={{ ...S.cardWrap, border: '1px solid rgba(225,29,72,0.3)', background: 'rgba(225,29,72,0.04)' }}>

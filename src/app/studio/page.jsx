@@ -325,6 +325,9 @@ export default function StudioDashboard() {
         ...(order.isCircle ? {
           isCircle: true,
           circleWishes: syncedWishes,
+          circleTitle1: existingGift.circleTitle1 || 'Circle of',
+          circleTitle2: existingGift.circleTitle2 || 'Heartfelt Wishes',
+          circleSubtitle: existingGift.circleSubtitle || 'Untaian pesan hangat dan kenangan manis dari teman-teman tersayang untuk {recipient}.',
         } : {}),
         ...(order.pinEnabled || order.pinCode ? {
           pinEnabled: true,

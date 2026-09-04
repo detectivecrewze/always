@@ -18,13 +18,46 @@ function formatDate(dateStr) {
   }
 }
 
-export default function CircleWishesSection({ wishes, recipient, moment }) {
+export default function CircleWishesSection({
+  wishes,
+  recipient,
+  moment,
+  circleTitle1,
+  circleTitle2,
+  circleSubtitle,
+}) {
   // Strict non-breaking guard
   if (!wishes || wishes.length === 0) {
     return null;
   }
 
   const [selectedWish, setSelectedWish] = useState(null);
+
+  // Helper to render dynamic subtitle with {recipient} placeholder support
+  const renderSubtitle = () => {
+    const rawSubtitle =
+      circleSubtitle ??
+      'Untaian pesan hangat dan kenangan manis dari teman-teman tersayang untuk {recipient}.';
+    if (!rawSubtitle) return null;
+
+    if (rawSubtitle.includes('{recipient}')) {
+      const parts = rawSubtitle.split('{recipient}');
+      return (
+        <>
+          {parts.map((part, i) => (
+            <span key={i}>
+              {part}
+              {i < parts.length - 1 && (
+                <span className="text-accent font-medium">{recipient || 'kamu'}</span>
+              )}
+            </span>
+          ))}
+        </>
+      );
+    }
+
+    return rawSubtitle;
+  };
 
   // Lock body scroll when modal is open, and handle ESC key
   useEffect(() => {
@@ -56,21 +89,16 @@ export default function CircleWishesSection({ wishes, recipient, moment }) {
         viewport={{ once: true, amount: 0.3 }}
         transition={{ duration: 0.9, ease: [0.25, 0.1, 0.25, 1] }}
       >
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium tracking-wider uppercase mb-4 border border-accent/25 bg-accent/10 text-accent">
-          <span>✨</span>
-          <span>From The Inner Circle</span>
-        </div>
         <h2 className="flex flex-col gap-1 md:gap-2">
           <span className="block font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-text leading-tight">
-            Circle of
+            {circleTitle1 || 'Circle of'}
           </span>
           <span className="block font-serif italic text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-accent leading-tight">
-            Heartfelt Wishes
+            {circleTitle2 || 'Heartfelt Wishes'}
           </span>
         </h2>
-        <p className="text-text-muted text-xs sm:text-sm mt-3 max-w-md mx-auto">
-          Untaian pesan hangat dan kenangan manis dari teman-teman tersayang untuk{' '}
-          <span className="text-accent font-medium">{recipient || 'kamu'}</span>.
+        <p className="text-text-muted text-xs sm:text-sm mt-3 max-w-md mx-auto leading-relaxed">
+          {renderSubtitle()}
         </p>
       </motion.div>
 
