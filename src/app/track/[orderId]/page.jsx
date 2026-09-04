@@ -13,6 +13,11 @@ import {
   Lock,
   Plus,
   AlertCircle,
+  Eye,
+  Trash2,
+  X,
+  Video,
+  MessageSquare,
 } from 'lucide-react';
 
 export default function CoordinatorTrackPage({ params }) {
@@ -28,6 +33,9 @@ export default function CoordinatorTrackPage({ params }) {
   const [addingSlot, setAddingSlot] = useState(false);
   const [resettingSlotId, setResettingSlotId] = useState(null);
   const [actionNotice, setActionNotice] = useState(null);
+  const [selectedWishModal, setSelectedWishModal] = useState(null);
+  const [wishToDelete, setWishToDelete] = useState(null);
+  const [deletingWish, setDeletingWish] = useState(false);
 
   const fetchTracking = useCallback(async (isSilent = false) => {
     if (!orderId) return;
@@ -142,6 +150,64 @@ export default function CoordinatorTrackPage({ params }) {
       setActionNotice({ type: 'error', text: 'Terjadi kesalahan saat mereset slot.' });
     } finally {
       setResettingSlotId(null);
+    }
+  };
+
+  const getSlotWish = (slot) => {
+    if (!slot || slot.status !== 'used') return null;
+    const wishes = Array.isArray(order?.circleWishes) ? order.circleWishes : [];
+    return (
+      wishes.find((w) => slot.wishId && w.id === slot.wishId) ||
+      wishes.find((w) => w.name && slot.claimedBy && w.name.trim().toLowerCase() === slot.claimedBy.trim().toLowerCase()) ||
+      null
+    );
+  };
+
+  const handleDeleteWish = async () => {
+    if (!wishToDelete) return;
+    const { slot, wish } = wishToDelete;
+    setDeletingWish(true);
+    setActionNotice(null);
+    try {
+      const res = await fetch(`/api/orders/${encodeURIComponent(orderId)}/slots`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'delete-wish',
+          slotId: slot.id,
+          wishId: wish?.id || slot.wishId || null,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setOrder((prev) => {
+          if (!prev) return prev;
+          const updatedSlots = data.slots || prev.slots.map((s) => (s.id === slot.id ? data.slot : s));
+          const deletedId = data.deletedWishId || wish?.id;
+          const updatedWishes = (prev.circleWishes || []).filter((w) => w.id !== deletedId);
+          return {
+            ...prev,
+            slots: updatedSlots,
+            circleWishes: updatedWishes,
+            wishesCount: Math.max(0, (prev.wishesCount || updatedWishes.length) - 1),
+          };
+        });
+
+        setActionNotice({
+          type: 'success',
+          text: `Ucapan dari ${wish?.name || slot.claimedBy || 'teman'} berhasil dihapus. Slot #${slot.index} siap diisi ulang dengan link baru.`,
+        });
+        setTimeout(() => setActionNotice(null), 4000);
+
+        setWishToDelete(null);
+        setSelectedWishModal(null);
+      } else {
+        setActionNotice({ type: 'error', text: data.error || 'Gagal menghapus ucapan.' });
+      }
+    } catch {
+      setActionNotice({ type: 'error', text: 'Terjadi kesalahan saat menghapus ucapan.' });
+    } finally {
+      setDeletingWish(false);
     }
   };
 
@@ -360,6 +426,7 @@ export default function CoordinatorTrackPage({ params }) {
               const isUsed = slot.status === 'used';
               const isCopied = copiedSlotId === slot.id;
               const slotUrl = getSlotUrl(slot);
+              const wish = isUsed ? getSlotWish(slot) : null;
 
               return (
                 <div
@@ -379,7 +446,7 @@ export default function CoordinatorTrackPage({ params }) {
                       {isUsed ? (
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', color: '#4ADE80', padding: '0.15rem 0.55rem', borderRadius: '50px', fontWeight: 600 }}>
                           <Check size={11} />
-                          <span>Terisi oleh {slot.claimedBy || 'Teman'}</span>
+                          <span>Terisi oleh {slot.claimedBy || wish?.name || 'Teman'}</span>
                         </span>
                       ) : (
                         <span style={{ fontSize: '0.72rem', background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', color: '#FBBF24', padding: '0.15rem 0.55rem', borderRadius: '50px', fontWeight: 600 }}>
@@ -413,13 +480,132 @@ export default function CoordinatorTrackPage({ params }) {
                   </div>
 
                   {isUsed ? (
-                    <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '0.25rem' }}>
-                      <Lock size={12} color="#4ADE80" />
-                      <span>
-                        Ucapan telah diterima
-                        {slot.usedAt ? ` (${new Date(slot.usedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })})` : ''}
-                        . Tautan terkunci demi keamanan.
-                      </span>
+                    <div>
+                      {wish ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                          <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', background: '#0a0508', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', padding: '0.75rem' }}>
+                            {/* Media thumbnail */}
+                            {wish.mediaType === 'video' || (wish.mediaUrl && /\.(mp4|webm|mov)(\?.*)?$/i.test(wish.mediaUrl)) ? (
+                              <div style={{ position: 'relative', width: '56px', height: '56px', minWidth: '56px', borderRadius: '8px', overflow: 'hidden', background: '#000' }}>
+                                <video src={wish.mediaUrl} muted playsInline autoPlay loop style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                <div style={{ position: 'absolute', bottom: 3, right: 3, background: 'rgba(0,0,0,0.65)', borderRadius: '4px', padding: '2px 4px', display: 'flex', alignItems: 'center' }}>
+                                  <Video size={10} color="#fff" />
+                                </div>
+                              </div>
+                            ) : wish.photoUrl ? (
+                              <div style={{ width: '56px', height: '56px', minWidth: '56px', borderRadius: '8px', overflow: 'hidden', background: '#160d13' }}>
+                                <img src={wish.photoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              </div>
+                            ) : (
+                              <div style={{ width: '56px', height: '56px', minWidth: '56px', borderRadius: '8px', background: 'rgba(225,29,72,0.1)', border: '1px solid rgba(225,29,72,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FB7185' }}>
+                                <MessageSquare size={20} />
+                              </div>
+                            )}
+
+                            {/* Snippet text */}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
+                                <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#fff' }}>{wish.name || slot.claimedBy}</span>
+                                {wish.createdAt && (
+                                  <span style={{ fontSize: '0.7rem', opacity: 0.4 }}>
+                                    {new Date(wish.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                )}
+                              </div>
+                              <p style={{
+                                fontSize: '0.78rem',
+                                color: 'rgba(255,255,255,0.7)',
+                                margin: 0,
+                                lineHeight: 1.4,
+                                fontStyle: 'italic',
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden',
+                              }}>
+                                &ldquo;{wish.message}&rdquo;
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Action buttons for filled slot */}
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                            <button
+                              onClick={() => setSelectedWishModal({ slot, wish })}
+                              style={{
+                                background: 'rgba(255,255,255,0.06)',
+                                border: '1px solid rgba(255,255,255,0.12)',
+                                color: '#fff',
+                                padding: '0.45rem 0.75rem',
+                                borderRadius: '8px',
+                                fontSize: '0.76rem',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '5px',
+                                transition: 'all 0.2s',
+                              }}
+                            >
+                              <Eye size={13} />
+                              <span>Lihat Ucapan</span>
+                            </button>
+
+                            <button
+                              onClick={() => setWishToDelete({ slot, wish })}
+                              style={{
+                                background: 'rgba(239,68,68,0.1)',
+                                border: '1px solid rgba(239,68,68,0.25)',
+                                color: '#F87171',
+                                padding: '0.45rem 0.75rem',
+                                borderRadius: '8px',
+                                fontSize: '0.76rem',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '5px',
+                                transition: 'all 0.2s',
+                              }}
+                            >
+                              <Trash2 size={13} />
+                              <span>Hapus Ucapan</span>
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
+                          <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Lock size={12} color="#4ADE80" />
+                            <span>
+                              Ucapan telah diterima
+                              {slot.usedAt ? ` (${new Date(slot.usedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })})` : ''}
+                              . Tautan terkunci demi keamanan.
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => setWishToDelete({ slot, wish: null })}
+                            style={{
+                              background: 'rgba(239,68,68,0.1)',
+                              border: '1px solid rgba(239,68,68,0.25)',
+                              color: '#F87171',
+                              padding: '0.35rem 0.65rem',
+                              borderRadius: '6px',
+                              fontSize: '0.72rem',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                            }}
+                          >
+                            <Trash2 size={12} />
+                            <span>Hapus Ucapan</span>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div>
@@ -507,18 +693,64 @@ export default function CoordinatorTrackPage({ params }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {order.circleWishes.map((w, idx) => {
                 const subDate = w.createdAt ? new Date(w.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+                const matchedSlot = slots.find((s) => s.wishId === w.id || (s.claimedBy && s.claimedBy.trim().toLowerCase() === w.name.trim().toLowerCase()));
                 return (
                   <div
                     key={w.id || idx}
-                    style={{ background: '#0a0508', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                    style={{ background: '#0a0508', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#E11D4825', border: '1px solid #E11D4855', color: '#E11D48', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
+                      <div style={{ width: '28px', height: '28px', minWidth: '28px', borderRadius: '50%', background: '#E11D4825', border: '1px solid #E11D4855', color: '#E11D48', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700 }}>
                         {idx + 1}
                       </div>
-                      <span style={{ fontSize: '0.88rem', fontWeight: 600 }}>{w.name}</span>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: '0.88rem', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{w.name}</div>
+                        {subDate && <div style={{ fontSize: '0.7rem', opacity: 0.4 }}>{subDate}</div>}
+                      </div>
                     </div>
-                    {subDate && <span style={{ fontSize: '0.72rem', opacity: 0.4 }}>{subDate}</span>}
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <button
+                        onClick={() => setSelectedWishModal({ slot: matchedSlot, wish: w })}
+                        style={{
+                          background: 'rgba(255,255,255,0.06)',
+                          border: '1px solid rgba(255,255,255,0.12)',
+                          color: '#fff',
+                          padding: '0.35rem 0.65rem',
+                          borderRadius: '6px',
+                          fontSize: '0.72rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                        }}
+                      >
+                        <Eye size={12} />
+                        <span>Lihat</span>
+                      </button>
+                      {matchedSlot && (
+                        <button
+                          onClick={() => setWishToDelete({ slot: matchedSlot, wish: w })}
+                          style={{
+                            background: 'rgba(239,68,68,0.1)',
+                            border: '1px solid rgba(239,68,68,0.25)',
+                            color: '#F87171',
+                            padding: '0.35rem 0.65rem',
+                            borderRadius: '6px',
+                            fontSize: '0.72rem',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                          }}
+                        >
+                          <Trash2 size={12} />
+                          <span>Hapus</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -567,6 +799,262 @@ export default function CoordinatorTrackPage({ params }) {
               <Sparkles size={18} />
               <span>{markingReady ? 'Menyimpan...' : 'Semua Teman Sudah Isi — Siap Dibuat!'}</span>
             </button>
+          </div>
+        )}
+
+        {/* Modal Pratinjau Ucapan Teman */}
+        {selectedWishModal && (
+          <div
+            onClick={() => setSelectedWishModal(null)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0,0,0,0.82)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              zIndex: 100,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '1rem',
+            }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: '#160d13',
+                border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: '20px',
+                maxWidth: '480px',
+                width: '100%',
+                maxHeight: '90vh',
+                overflowY: 'auto',
+                padding: '1.5rem',
+                boxShadow: '0 20px 50px rgba(0,0,0,0.8)',
+                position: 'relative',
+              }}
+            >
+              {/* Header */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+                <div>
+                  <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#E11D48', fontWeight: 600 }}>
+                    {selectedWishModal.slot ? `Slot #${selectedWishModal.slot.index}` : 'Ucapan Teman'}
+                  </span>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 600, margin: '2px 0 0' }}>
+                    {selectedWishModal.wish?.name || selectedWishModal.slot?.claimedBy || 'Teman'}
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setSelectedWishModal(null)}
+                  style={{
+                    background: 'rgba(255,255,255,0.08)',
+                    border: 'none',
+                    color: 'rgba(255,255,255,0.7)',
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              {/* Media display */}
+              {selectedWishModal.wish && (
+                <>
+                  {selectedWishModal.wish.mediaType === 'video' ||
+                  (selectedWishModal.wish.mediaUrl && /\.(mp4|webm|mov)(\?.*)?$/i.test(selectedWishModal.wish.mediaUrl)) ? (
+                    <div style={{ marginBottom: '1.25rem', borderRadius: '14px', overflow: 'hidden', background: '#000', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      <video
+                        src={selectedWishModal.wish.mediaUrl}
+                        controls
+                        playsInline
+                        autoPlay
+                        style={{ width: '100%', maxHeight: '340px', display: 'block', objectFit: 'contain' }}
+                      />
+                    </div>
+                  ) : selectedWishModal.wish.photoUrl ? (
+                    <div style={{ marginBottom: '1.25rem', borderRadius: '14px', overflow: 'hidden', background: '#080407', border: '1px solid rgba(255,255,255,0.08)', textAlign: 'center' }}>
+                      <img
+                        src={selectedWishModal.wish.photoUrl}
+                        alt=""
+                        style={{ width: '100%', maxHeight: '340px', objectFit: 'contain', display: 'block', margin: '0 auto' }}
+                      />
+                    </div>
+                  ) : null}
+
+                  {/* Full message text */}
+                  <div style={{ background: '#0a0508', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '14px', padding: '1.25rem', marginBottom: '1.25rem' }}>
+                    <p style={{ fontSize: '0.92rem', color: 'rgba(255,255,255,0.92)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line', fontStyle: 'italic' }}>
+                      &ldquo;{selectedWishModal.wish.message}&rdquo;
+                    </p>
+                    {selectedWishModal.wish.createdAt && (
+                      <div style={{ fontSize: '0.72rem', opacity: 0.45, marginTop: '0.75rem', textAlign: 'right' }}>
+                        Dikirim pada {new Date(selectedWishModal.wish.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* Actions in modal */}
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                {selectedWishModal.slot && (
+                  <button
+                    onClick={() => {
+                      const item = selectedWishModal;
+                      setWishToDelete(item);
+                    }}
+                    style={{
+                      background: 'rgba(239,68,68,0.12)',
+                      border: '1px solid rgba(239,68,68,0.3)',
+                      color: '#F87171',
+                      padding: '0.65rem 1.25rem',
+                      borderRadius: '10px',
+                      fontSize: '0.82rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <Trash2 size={14} />
+                    <span>Hapus Ucapan Ini</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => setSelectedWishModal(null)}
+                  style={{
+                    background: 'rgba(255,255,255,0.08)',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    color: '#fff',
+                    padding: '0.65rem 1.25rem',
+                    borderRadius: '10px',
+                    fontSize: '0.82rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Tutup
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Dialog Konfirmasi Penghapusan */}
+        {wishToDelete && (
+          <div
+            onClick={() => !deletingWish && setWishToDelete(null)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0,0,0,0.85)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              zIndex: 120,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '1rem',
+            }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: '#1a0e16',
+                border: '1px solid rgba(225,29,72,0.3)',
+                borderRadius: '20px',
+                maxWidth: '420px',
+                width: '100%',
+                padding: '1.75rem',
+                textAlign: 'center',
+                boxShadow: '0 20px 50px rgba(0,0,0,0.8)',
+              }}
+            >
+              <div
+                style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '50%',
+                  background: 'rgba(225,29,72,0.15)',
+                  border: '1px solid rgba(225,29,72,0.3)',
+                  color: '#FB7185',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 1rem',
+                }}
+              >
+                <Trash2 size={22} />
+              </div>
+
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 600, marginBottom: '0.5rem', color: '#fff' }}>
+                Hapus Ucapan Teman?
+              </h3>
+
+              <p style={{ fontSize: '0.82rem', opacity: 0.75, lineHeight: 1.5, marginBottom: '1.5rem', color: '#f5f5f5' }}>
+                Ucapan dan foto/video dari <strong style={{ color: '#fff' }}>{wishToDelete.wish?.name || wishToDelete.slot?.claimedBy || 'teman'}</strong> akan dihapus permanen.
+                <br /><br />
+                Tautan Slot #{wishToDelete.slot?.index} akan otomatis di-reset menjadi tautan baru yang siap dibagikan ulang agar teman bisa mengisi kembali.
+              </p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <button
+                  onClick={() => setWishToDelete(null)}
+                  disabled={deletingWish}
+                  style={{
+                    background: 'transparent',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    color: '#fff',
+                    padding: '0.75rem',
+                    borderRadius: '10px',
+                    fontSize: '0.82rem',
+                    fontWeight: 600,
+                    cursor: deletingWish ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  Batal
+                </button>
+
+                <button
+                  onClick={handleDeleteWish}
+                  disabled={deletingWish}
+                  style={{
+                    background: 'linear-gradient(135deg, #E11D48, #BE123C)',
+                    border: 'none',
+                    color: '#fff',
+                    padding: '0.75rem',
+                    borderRadius: '10px',
+                    fontSize: '0.82rem',
+                    fontWeight: 600,
+                    cursor: deletingWish ? 'not-allowed' : 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    boxShadow: '0 4px 14px rgba(225,29,72,0.3)',
+                  }}
+                >
+                  {deletingWish ? (
+                    <>
+                      <RefreshCw size={13} style={{ animation: 'spin 1s linear infinite' }} />
+                      <span>Menghapus...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={13} />
+                      <span>Ya, Hapus</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         )}
 

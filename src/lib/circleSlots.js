@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { isKVConfigured, getOrder, putOrder, listOrders } from './kv.js';
+import { deleteWish, getWishesBySlug } from './wishes.js';
 
 const KV_BASE = () =>
   `https://api.cloudflare.com/client/v4/accounts/${process.env.CLOUDFLARE_ACCOUNT_ID}/storage/kv/namespaces/${process.env.KV_NAMESPACE_ID}`;
@@ -285,4 +286,58 @@ export async function resetSlotToken(orderId, slotId) {
   await saveOrder(order);
 
   return { order, slot };
+}
+
+/**
+ * Delete a contributor's wish and reset the slot back to pending with a fresh token.
+ */
+export async function deleteWishAndResetSlot(orderId, slotId, targetWishId) {
+  const order = await findOrder(orderId);
+  if (!order) {
+    throw new Error('Pesanan tidak ditemukan');
+  }
+
+  const slots = Array.isArray(order.slots) ? order.slots : [];
+  const slot = slots.find((s) => s.id === slotId);
+
+  if (!slot) {
+    throw new Error('Slot tidak ditemukan');
+  }
+
+  let resolvedWishId = targetWishId || slot.wishId;
+
+  // Fallback: if resolvedWishId is missing, check wishes by claimedBy
+  if (!resolvedWishId && order.slug && slot.claimedBy) {
+    try {
+      const slugWishes = await getWishesBySlug(order.slug);
+      const matched = slugWishes.find((w) => w.name?.trim().toLowerCase() === slot.claimedBy?.trim().toLowerCase());
+      if (matched) {
+        resolvedWishId = matched.id;
+      }
+    } catch (e) {
+      console.error('Error finding wish by claimedBy fallback:', e);
+    }
+  }
+
+  // If resolvedWishId exists, delete from KV and filesystem
+  if (resolvedWishId && order.slug) {
+    try {
+      await deleteWish(order.slug, resolvedWishId);
+    } catch (delErr) {
+      console.error(`Error deleting wish ${resolvedWishId} for slug ${order.slug}:`, delErr);
+    }
+  }
+
+  // Reset slot state to fresh pending link
+  slot.status = 'pending';
+  slot.claimedBy = null;
+  slot.wishId = null;
+  slot.usedAt = null;
+  slot.token = generateSlotToken();
+  slot.createdAt = new Date().toISOString();
+
+  order.slots = slots;
+  await saveOrder(order);
+
+  return { order, slot, deletedWishId: resolvedWishId };
 }

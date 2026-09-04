@@ -80,11 +80,22 @@ export async function GET(request, { params: paramsPromise }) {
         circleQuota: order.circleQuota || (Array.isArray(order.slots) ? order.slots.length : 8),
         slots: Array.isArray(order.slots) ? order.slots : [],
         wishesCount: wishes.length,
-        circleWishes: wishes.map((w) => ({
-          id: w.id,
-          name: w.name,
-          createdAt: w.createdAt,
-        })),
+        circleWishes: wishes.map((w) => {
+          const resolvedMedia = (w.mediaUrl || w.photoUrl || '').trim();
+          const inferredMediaType =
+            w.mediaType ||
+            (resolvedMedia ? (/\.(mp4|webm|mov)(\?.*)?$/i.test(resolvedMedia) ? 'video' : 'photo') : null);
+
+          return {
+            id: w.id,
+            name: w.name,
+            message: w.message || '',
+            photoUrl: resolvedMedia,
+            mediaUrl: resolvedMedia,
+            mediaType: inferredMediaType,
+            createdAt: w.createdAt,
+          };
+        }),
       },
     });
   } catch (err) {

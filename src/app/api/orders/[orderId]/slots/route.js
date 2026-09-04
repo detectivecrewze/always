@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { addSlotToOrder, resetSlotToken, findOrder } from '@/lib/circleSlots';
+import { addSlotToOrder, resetSlotToken, deleteWishAndResetSlot, findOrder } from '@/lib/circleSlots';
 
 // POST /api/orders/[orderId]/slots — Coordinator slot management
 export async function POST(request, { params: paramsPromise }) {
@@ -44,7 +44,27 @@ export async function POST(request, { params: paramsPromise }) {
       }
     }
 
-    return NextResponse.json({ error: 'Invalid action. Supported: add, reset' }, { status: 400 });
+    if (action === 'delete-wish') {
+      const slotId = body?.slotId;
+      const wishId = body?.wishId;
+      if (!slotId) {
+        return NextResponse.json({ error: 'slotId is required for delete-wish action' }, { status: 400 });
+      }
+
+      try {
+        const result = await deleteWishAndResetSlot(order.orderId, slotId, wishId);
+        return NextResponse.json({
+          success: true,
+          slot: result.slot,
+          slots: result.order.slots,
+          deletedWishId: result.deletedWishId,
+        });
+      } catch (err) {
+        return NextResponse.json({ error: err.message || 'Gagal menghapus ucapan dan mereset slot' }, { status: 400 });
+      }
+    }
+
+    return NextResponse.json({ error: 'Invalid action. Supported: add, reset, delete-wish' }, { status: 400 });
   } catch (err) {
     console.error('Error managing order slots:', err);
     return NextResponse.json({ error: 'Terjadi kesalahan pada server' }, { status: 500 });
