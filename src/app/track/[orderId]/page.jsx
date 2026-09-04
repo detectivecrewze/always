@@ -1,8 +1,19 @@
 'use client';
 
 import { useState, useEffect, useCallback, use } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Copy, Check, Users, ExternalLink, RefreshCw, Send, ArrowRight, ShieldCheck, Heart } from 'lucide-react';
+import {
+  Sparkles,
+  Copy,
+  Check,
+  Users,
+  ExternalLink,
+  RefreshCw,
+  Send,
+  ShieldCheck,
+  Lock,
+  Plus,
+  AlertCircle,
+} from 'lucide-react';
 
 export default function CoordinatorTrackPage({ params }) {
   const unwrappedParams = use(params);
@@ -11,9 +22,12 @@ export default function CoordinatorTrackPage({ params }) {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [copied, setCopied] = useState(false);
+  const [copiedSlotId, setCopiedSlotId] = useState(null);
   const [markingReady, setMarkingReady] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [addingSlot, setAddingSlot] = useState(false);
+  const [resettingSlotId, setResettingSlotId] = useState(null);
+  const [actionNotice, setActionNotice] = useState(null);
 
   const fetchTracking = useCallback(async (isSilent = false) => {
     if (!orderId) return;
@@ -47,17 +61,88 @@ export default function CoordinatorTrackPage({ params }) {
     fetchTracking(true);
   };
 
-  const getContributorUrl = () => {
+  const getSlotUrl = (slot) => {
     if (typeof window === 'undefined' || !order?.slug) return '';
-    return `${window.location.origin}/c/${order.slug}`;
+    return `${window.location.origin}/c/${order.slug}?token=${slot.token}`;
   };
 
-  const copyContributorLink = () => {
-    const url = getContributorUrl();
+  const copySlotLink = (slot) => {
+    const url = getSlotUrl(slot);
     if (!url) return;
     navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
+    setCopiedSlotId(slot.id);
+    setTimeout(() => setCopiedSlotId(null), 2500);
+  };
+
+  const getSlotWaUrl = (slot) => {
+    const url = getSlotUrl(slot);
+    if (!url) return '#';
+    const text = encodeURIComponent(
+      `Halo! Ini tautan khusus kamu untuk mengisi ucapan dan foto kenangan kado kejutan ${order.recipient}:\n\n` +
+      `${url}\n\n` +
+      `Catatan: Tautan ini bersifat privat dan hanya dapat digunakan 1 kali demi keamanan kado. Terima kasih banyak!`
+    );
+    return `https://wa.me/?text=${text}`;
+  };
+
+  const handleAddSlot = async () => {
+    const currentSlots = Array.isArray(order?.slots) ? order.slots : [];
+    if (currentSlots.length >= 20) {
+      alert('Maksimal kuota kado keroyokan adalah 20 slot.');
+      return;
+    }
+    setAddingSlot(true);
+    setActionNotice(null);
+    try {
+      const res = await fetch(`/api/orders/${encodeURIComponent(orderId)}/slots`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'add' }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setOrder((prev) => (prev ? { ...prev, slots: data.slots, circleQuota: data.slots.length } : prev));
+        setActionNotice({ type: 'success', text: `Slot #${data.slot.index} berhasil ditambahkan.` });
+        setTimeout(() => setActionNotice(null), 3500);
+      } else {
+        setActionNotice({ type: 'error', text: data.error || 'Gagal menambah slot.' });
+      }
+    } catch {
+      setActionNotice({ type: 'error', text: 'Terjadi kesalahan saat menambah slot.' });
+    } finally {
+      setAddingSlot(false);
+    }
+  };
+
+  const handleResetSlot = async (slot) => {
+    if (slot.status === 'used') {
+      alert('Slot yang sudah terisi oleh teman tidak dapat direset.');
+      return;
+    }
+    if (!confirm(`Yakin ingin mereset tautan untuk Slot #${slot.index}? Tautan lama akan hangus dan dibuatkan token baru.`)) {
+      return;
+    }
+    setResettingSlotId(slot.id);
+    setActionNotice(null);
+    try {
+      const res = await fetch(`/api/orders/${encodeURIComponent(orderId)}/slots`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reset', slotId: slot.id }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setOrder((prev) => (prev ? { ...prev, slots: data.slots } : prev));
+        setActionNotice({ type: 'success', text: `Tautan Slot #${slot.index} berhasil diperbarui dengan token baru.` });
+        setTimeout(() => setActionNotice(null), 3500);
+      } else {
+        setActionNotice({ type: 'error', text: data.error || 'Gagal mereset tautan slot.' });
+      }
+    } catch {
+      setActionNotice({ type: 'error', text: 'Terjadi kesalahan saat mereset slot.' });
+    } finally {
+      setResettingSlotId(null);
+    }
   };
 
   const handleMarkReady = async () => {
@@ -72,7 +157,7 @@ export default function CoordinatorTrackPage({ params }) {
       });
       const result = await res.json();
       if (res.ok && (result.success || result.ok)) {
-        setOrder(prev => prev ? { ...prev, status: 'ready_to_craft' } : prev);
+        setOrder((prev) => (prev ? { ...prev, status: 'ready_to_craft' } : prev));
       } else {
         alert(result.error || 'Gagal mengubah status pesanan.');
       }
@@ -117,15 +202,14 @@ export default function CoordinatorTrackPage({ params }) {
   const isReadyToCraft = order.status === 'ready_to_craft';
   const isDone = order.status === 'done';
 
-  const waShareText = encodeURIComponent(
-    `Guys! Tolong isi ucapan & upload foto kenangan kalian buat kado ultah ${order.recipient} di sini yaa (rahasia yaa jangan bilang orangnya):\n\n` +
-    `${getContributorUrl()}\n\n` +
-    `Tinggal klik link-nya dan submit langsung dari HP. Makasihh yaa guys!`
-  );
+  const slots = Array.isArray(order.slots) ? order.slots : [];
+  const usedSlotsCount = slots.filter((s) => s.status === 'used').length;
+  const totalSlotsCount = slots.length || order.circleQuota || 8;
+  const progressPercent = Math.min(100, Math.round((usedSlotsCount / (totalSlotsCount || 1)) * 100));
 
   return (
     <div style={{ minHeight: '100vh', background: '#0d070b', color: '#f5f5f5', padding: '2rem 1rem', fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ maxWidth: '620px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '640px', margin: '0 auto' }}>
         
         {/* Top Branding */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
@@ -169,7 +253,7 @@ export default function CoordinatorTrackPage({ params }) {
           </div>
 
           <p style={{ fontSize: '0.82rem', opacity: 0.8, lineHeight: 1.5, margin: 0 }}>
-            {isCollecting && 'Sebarkan link pengumpulan ke teman-teman. Begitu semua sudah selesai mengisi, klik tombol "Siap Dibuat" agar kado segera dirangkai oleh tim FYA.'}
+            {isCollecting && 'Bagikan tautan slot unik di bawah ke masing-masing teman. Begitu semua slot terisi atau dirasa cukup, klik tombol "Siap Dibuat" agar kado segera dirangkai oleh tim FYA.'}
             {isReadyToCraft && 'Pesanan kamu sudah masuk antrean prioritas atelier tim FYA! Kami sedang merangkai tata letak ucapan dan estetika kado.'}
             {isDone && 'Kado kamu sudah terbit dan siap dinikmati! Kamu bisa melihat preview kado final lewat tombol di bawah.'}
           </p>
@@ -189,38 +273,215 @@ export default function CoordinatorTrackPage({ params }) {
           )}
         </div>
 
-        {/* Share Box for WhatsApp */}
-        <div style={{ background: '#160d13', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '1.5rem', marginBottom: '1.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.5rem' }}>
-            <Users size={18} color="#E11D48" />
-            <h2 style={{ fontSize: '1rem', fontWeight: 600, margin: 0 }}>Link Portal Teman-Teman</h2>
-          </div>
-          <p style={{ fontSize: '0.78rem', opacity: 0.65, marginBottom: '1rem', lineHeight: 1.4 }}>
-            Kirimkan link ini ke grup chat teman-teman. Mereka bisa mengisi nama, pesan, dan upload 1 foto kenangan.
-          </p>
-
-          <div style={{ background: '#0a0508', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', marginBottom: '1rem' }}>
-            <span style={{ fontSize: '0.82rem', fontFamily: 'monospace', opacity: 0.9, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {getContributorUrl()}
-            </span>
-            <button
-              onClick={copyContributorLink}
-              style={{ background: copied ? '#22C55E' : 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', padding: '0.45rem 0.8rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', flexShrink: 0, transition: 'all 0.2s' }}
-            >
-              {copied ? <Check size={14} /> : <Copy size={14} />}
-              <span>{copied ? 'Tersalin!' : 'Salin'}</span>
-            </button>
-          </div>
-
-          <a
-            href={`https://wa.me/?text=${waShareText}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', background: '#25D366', color: '#fff', textDecoration: 'none', padding: '0.8rem', borderRadius: '12px', fontSize: '0.85rem', fontWeight: 700, boxSizing: 'border-box', boxShadow: '0 4px 16px rgba(37,211,102,0.2)' }}
+        {/* Action Notice Banner */}
+        {actionNotice && (
+          <div
+            style={{
+              padding: '0.75rem 1rem',
+              borderRadius: '12px',
+              fontSize: '0.8rem',
+              marginBottom: '1.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: actionNotice.type === 'success' ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
+              border: `1px solid ${actionNotice.type === 'success' ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`,
+              color: actionNotice.type === 'success' ? '#4ADE80' : '#F87171',
+            }}
           >
-            <Send size={16} />
-            <span>Bagikan Langsung ke Grup WhatsApp</span>
-          </a>
+            {actionNotice.type === 'success' ? <Check size={15} /> : <AlertCircle size={15} />}
+            <span>{actionNotice.text}</span>
+          </div>
+        )}
+
+        {/* Slot Management Section */}
+        <div style={{ background: '#160d13', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '1.5rem', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.25rem' }}>
+                <Users size={18} color="#E11D48" />
+                <h2 style={{ fontSize: '1.05rem', fontWeight: 600, margin: 0 }}>Daftar Slot Undangan Teman</h2>
+              </div>
+              <p style={{ fontSize: '0.78rem', opacity: 0.65, margin: 0, lineHeight: 1.4 }}>
+                Setiap tautan memiliki token unik sekali pakai (one-time use) demi keamanan kado.
+              </p>
+            </div>
+
+            {/* Add Slot Button */}
+            {totalSlotsCount < 20 && (
+              <button
+                onClick={handleAddSlot}
+                disabled={addingSlot}
+                style={{
+                  background: 'rgba(225,29,72,0.15)',
+                  border: '1px solid rgba(225,29,72,0.3)',
+                  color: '#FB7185',
+                  padding: '0.45rem 0.85rem',
+                  borderRadius: '8px',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  cursor: addingSlot ? 'not-allowed' : 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <Plus size={14} />
+                <span>{addingSlot ? 'Menambah...' : 'Tambah Slot Teman'}</span>
+              </button>
+            )}
+          </div>
+
+          {/* Slot Progress Bar */}
+          <div style={{ background: '#0a0508', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', padding: '0.85rem 1rem', marginBottom: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', fontSize: '0.78rem' }}>
+              <span style={{ opacity: 0.7 }}>Kemajuan Pengisian Slot</span>
+              <strong style={{ color: '#fff' }}>
+                {usedSlotsCount} dari {totalSlotsCount} Slot Terisi ({progressPercent}%)
+              </strong>
+            </div>
+            <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.08)', borderRadius: '999px', overflow: 'hidden' }}>
+              <div
+                style={{
+                  width: `${progressPercent}%`,
+                  height: '100%',
+                  background: progressPercent === 100 ? '#22C55E' : 'linear-gradient(90deg, #E11D48, #FB7185)',
+                  borderRadius: '999px',
+                  transition: 'width 0.4s ease',
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Slot Cards List */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {slots.map((slot) => {
+              const isUsed = slot.status === 'used';
+              const isCopied = copiedSlotId === slot.id;
+              const slotUrl = getSlotUrl(slot);
+
+              return (
+                <div
+                  key={slot.id}
+                  style={{
+                    background: '#0d070b',
+                    border: `1px solid ${isUsed ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.08)'}`,
+                    borderRadius: '14px',
+                    padding: '1rem',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.65rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fff' }}>
+                        Slot #{slot.index}
+                      </span>
+                      {isUsed ? (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', color: '#4ADE80', padding: '0.15rem 0.55rem', borderRadius: '50px', fontWeight: 600 }}>
+                          <Check size={11} />
+                          <span>Terisi oleh {slot.claimedBy || 'Teman'}</span>
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: '0.72rem', background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', color: '#FBBF24', padding: '0.15rem 0.55rem', borderRadius: '50px', fontWeight: 600 }}>
+                          Belum Terisi
+                        </span>
+                      )}
+                    </div>
+
+                    {!isUsed && (
+                      <button
+                        onClick={() => handleResetSlot(slot)}
+                        disabled={resettingSlotId === slot.id}
+                        title="Reset token jika salah kirim link"
+                        style={{
+                          background: 'transparent',
+                          border: '1px solid rgba(255,255,255,0.12)',
+                          color: 'rgba(255,255,255,0.6)',
+                          padding: '0.2rem 0.5rem',
+                          borderRadius: '6px',
+                          fontSize: '0.7rem',
+                          cursor: resettingSlotId === slot.id ? 'not-allowed' : 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                        }}
+                      >
+                        <RefreshCw size={11} style={{ animation: resettingSlotId === slot.id ? 'spin 1s linear infinite' : 'none' }} />
+                        <span>Reset Link</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {isUsed ? (
+                    <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '0.25rem' }}>
+                      <Lock size={12} color="#4ADE80" />
+                      <span>
+                        Ucapan telah diterima
+                        {slot.usedAt ? ` (${new Date(slot.usedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })})` : ''}
+                        . Tautan terkunci demi keamanan.
+                      </span>
+                    </div>
+                  ) : (
+                    <div>
+                      {/* URL preview */}
+                      <div style={{ background: '#070406', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', padding: '0.45rem 0.75rem', fontFamily: 'monospace', fontSize: '0.75rem', color: 'rgba(255,255,255,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '0.65rem' }}>
+                        {slotUrl}
+                      </div>
+
+                      {/* Action buttons */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                        <button
+                          onClick={() => copySlotLink(slot)}
+                          style={{
+                            background: isCopied ? '#22C55E' : 'rgba(255,255,255,0.08)',
+                            color: '#fff',
+                            border: 'none',
+                            padding: '0.5rem 0.75rem',
+                            borderRadius: '8px',
+                            fontSize: '0.76rem',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '5px',
+                            transition: 'all 0.2s',
+                          }}
+                        >
+                          {isCopied ? <Check size={13} /> : <Copy size={13} />}
+                          <span>{isCopied ? 'Tersalin!' : 'Salin Link'}</span>
+                        </button>
+
+                        <a
+                          href={getSlotWaUrl(slot)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            background: 'rgba(37,211,102,0.15)',
+                            border: '1px solid rgba(37,211,102,0.3)',
+                            color: '#25D366',
+                            textDecoration: 'none',
+                            padding: '0.5rem 0.75rem',
+                            borderRadius: '8px',
+                            fontSize: '0.76rem',
+                            fontWeight: 600,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '5px',
+                            boxSizing: 'border-box',
+                          }}
+                        >
+                          <Send size={13} />
+                          <span>Kirim via WA</span>
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Live Contributor Progress Tracker */}
@@ -266,7 +527,7 @@ export default function CoordinatorTrackPage({ params }) {
             <div style={{ textAlign: 'center', padding: '2rem 1rem', background: '#0a0508', borderRadius: '12px', border: '1px dashed rgba(255,255,255,0.1)' }}>
               <Users size={32} style={{ opacity: 0.3, margin: '0 auto 0.5rem' }} />
               <p style={{ fontSize: '0.82rem', opacity: 0.6, margin: 0 }}>Belum ada ucapan teman yang masuk.</p>
-              <p style={{ fontSize: '0.72rem', opacity: 0.4, margin: '4px 0 0' }}>Bagikan link di atas ke teman-teman agar daftar terisi.</p>
+              <p style={{ fontSize: '0.72rem', opacity: 0.4, margin: '4px 0 0' }}>Kirim tautan slot di atas ke masing-masing teman agar daftar terisi.</p>
             </div>
           )}
         </div>

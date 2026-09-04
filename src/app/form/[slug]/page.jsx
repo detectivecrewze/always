@@ -91,8 +91,10 @@ export default function OrderForm() {
     pinCode: '',
     pinHint: '',
     isCircle: false,
+    circleQuota: 8,
   });
 
+  const [createdSlots, setCreatedSlots] = useState([]);
   const [trackerWishes, setTrackerWishes] = useState([]);
   const [trackerCopied, setTrackerCopied] = useState(false);
   const [isOrderReady, setIsOrderReady] = useState(false);
@@ -270,6 +272,7 @@ export default function OrderForm() {
         ...data,
         slug,
         isCircle: Boolean(data.isCircle),
+        circleQuota: data.isCircle ? (data.circleQuota || 8) : null,
         photos,
         secretPhoto: secretPhotoUrl,
       };
@@ -283,6 +286,9 @@ export default function OrderForm() {
       const result = await res.json();
       if (result.ok) {
         setOrderId(result.orderId);
+        if (result.order && Array.isArray(result.order.slots)) {
+          setCreatedSlots(result.order.slots);
+        }
         setStep(5); // Success screen
         
         // Delete the online draft so it disappears from Studio Live Drafts
@@ -446,9 +452,62 @@ export default function OrderForm() {
                 </button>
               </div>
               {data.isCircle && (
-                <p style={{ fontSize: '0.74rem', opacity: 0.7, marginTop: '0.6rem', lineHeight: 1.4 }}>
-                  Kamu akan mendapatkan tautan khusus setelah formulir ini selesai untuk disebarkan ke teman-teman agar mereka bisa mengirimkan ucapan dan foto masing-masing.
-                </p>
+                <div style={{ marginTop: '1rem', paddingTop: '0.85rem', borderTop: `1px solid ${currentTheme.text}15` }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <div>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 600 }}>Kuota Slot Teman</div>
+                      <div style={{ fontSize: '0.7rem', opacity: 0.65 }}>Setiap teman mendapatkan 1 link token unik sekali pakai</div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <button
+                        type="button"
+                        onClick={() => update('circleQuota', Math.max(3, (data.circleQuota || 8) - 1))}
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '8px',
+                          border: `1px solid ${currentTheme.text}35`,
+                          background: 'transparent',
+                          color: currentTheme.text,
+                          fontSize: '1.1rem',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.2s',
+                        }}
+                      >
+                        -
+                      </button>
+                      <span style={{ fontSize: '1rem', fontWeight: 700, minWidth: '28px', textAlign: 'center', fontFamily: 'monospace' }}>
+                        {data.circleQuota || 8}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => update('circleQuota', Math.min(20, (data.circleQuota || 8) + 1))}
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '8px',
+                          border: `1px solid ${currentTheme.text}35`,
+                          background: 'transparent',
+                          color: currentTheme.text,
+                          fontSize: '1.1rem',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.2s',
+                        }}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                  <p style={{ fontSize: '0.72rem', opacity: 0.65, lineHeight: 1.4, margin: 0 }}>
+                    Pilih antara 3 hingga 20 teman. Tautan unik dengan token rahasia akan otomatis disiapkan untuk mencegah spam.
+                  </p>
+                </div>
               )}
             </div>
 
@@ -1294,38 +1353,61 @@ export default function OrderForm() {
                   Kado kejutan untuk <strong>{data.recipient}</strong> siap dikumpulkan. Sebarkan link berikut ke grup teman-teman agar mereka bisa mengirimkan ucapan & foto masing-masing.
                 </p>
 
-                {/* Share Box */}
-                <div style={{ background: 'rgba(0,0,0,0.04)', border: `1px solid ${currentTheme.text}20`, padding: '1.25rem', borderRadius: '18px', textAlign: 'left', marginBottom: '1.5rem' }}>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.3rem' }}>Link Portal Teman-Teman</div>
-                  <p style={{ fontSize: '0.74rem', opacity: 0.6, margin: '0 0 0.75rem' }}>Bagikan link ini ke grup teman-teman geng kamu:</p>
+                {/* Coordinator Hub Card */}
+                <div style={{ background: 'rgba(0,0,0,0.04)', border: `1px solid ${currentTheme.text}20`, padding: '1.5rem', borderRadius: '18px', textAlign: 'center', marginBottom: '1.5rem' }}>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 600, marginBottom: '0.35rem' }}>
+                    {data.circleQuota || (createdSlots.length > 0 ? createdSlots.length : 8)} Slot Undangan Unik Siap Digunakan
+                  </div>
+                  <p style={{ fontSize: '0.78rem', opacity: 0.7, margin: '0 0 1.25rem', lineHeight: 1.5 }}>
+                    Setiap teman mendapatkan link khusus dengan token unik sekali pakai agar tidak sembarang orang bisa mengunggah foto. Kelola dan bagikan link teman langsung dari Hub Pelacak Koordinator.
+                  </p>
                   
-                  <div style={{ background: 'rgba(0,0,0,0.08)', border: `1px solid ${currentTheme.text}15`, borderRadius: '10px', padding: '0.6rem 0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '0.8rem' }}>
-                    <span style={{ fontSize: '0.78rem', fontFamily: 'monospace', opacity: 0.85, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {contributorUrl}
-                    </span>
+                  <a
+                    href={trackerUrl}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '100%',
+                      background: currentTheme.text,
+                      color: currentTheme.bg,
+                      textDecoration: 'none',
+                      padding: '0.9rem 1.2rem',
+                      borderRadius: '12px',
+                      fontSize: '0.9rem',
+                      fontWeight: 700,
+                      boxSizing: 'border-box',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                    }}
+                  >
+                    Buka Hub Pelacak Koordinator & Salin Link Teman
+                  </a>
+
+                  <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '0.72rem', opacity: 0.6 }}>Tautan Pelacak:</span>
+                    <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', fontWeight: 600 }}>{trackerUrl}</span>
                     <button
                       type="button"
                       onClick={() => {
-                        if (contributorUrl) {
-                          navigator.clipboard.writeText(contributorUrl);
+                        if (trackerUrl) {
+                          navigator.clipboard.writeText(trackerUrl);
                           setTrackerCopied(true);
                           setTimeout(() => setTrackerCopied(false), 2000);
                         }
                       }}
-                      style={{ background: trackerCopied ? '#22C55E' : currentTheme.text, color: currentTheme.bg, border: 'none', padding: '0.4rem 0.75rem', borderRadius: '8px', fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}
+                      style={{
+                        background: 'transparent',
+                        border: `1px solid ${currentTheme.text}30`,
+                        color: currentTheme.text,
+                        borderRadius: '6px',
+                        padding: '2px 8px',
+                        fontSize: '0.68rem',
+                        cursor: 'pointer',
+                      }}
                     >
-                      {trackerCopied ? 'Tersalin!' : 'Salin Link'}
+                      {trackerCopied ? 'Tersalin' : 'Salin'}
                     </button>
                   </div>
-
-                  <a
-                    href={`https://wa.me/?text=${waShareGroupText}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%', background: '#25D366', color: '#fff', textDecoration: 'none', padding: '0.75rem', borderRadius: '10px', fontSize: '0.82rem', fontWeight: 700, boxSizing: 'border-box' }}
-                  >
-                    <span>Bagikan ke Grup WhatsApp</span>
-                  </a>
                 </div>
 
                 {/* Live Wishes Tracker */}

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { saveWish, getWishesBySlug, deleteWish } from '@/lib/wishes';
+import { validateSlotToken, claimSlotToken } from '@/lib/circleSlots';
 import { getGiftBySlug } from '@/lib/getData';
 
 // POST /api/circle-wishes/[slug]
@@ -17,10 +18,21 @@ export async function POST(request, { params }) {
     }
 
     const body = await request.json();
+    const token = (body.token || '').trim();
     const name = (body.name || '').trim();
     const message = (body.message || '').trim();
     const photoUrl = (body.photoUrl || '').trim();
     const createdAt = body.createdAt || new Date().toISOString();
+
+    if (!token) {
+      return NextResponse.json({ error: 'Token undangan wajib disertakan' }, { status: 403 });
+    }
+
+    // Validate slot token security
+    const validation = await validateSlotToken(slug, token);
+    if (!validation.valid) {
+      return NextResponse.json({ error: validation.message || 'Token undangan tidak valid atau sudah digunakan' }, { status: 403 });
+    }
 
     if (!name) {
       return NextResponse.json({ error: 'Nama pengirim wajib diisi' }, { status: 400 });
@@ -42,6 +54,13 @@ export async function POST(request, { params }) {
       createdAt,
     });
 
+    // Atomically claim the slot token
+    try {
+      await claimSlotToken(slug, token, name, wish.id);
+    } catch (claimErr) {
+      console.error('Error claiming slot token:', claimErr);
+    }
+
     return NextResponse.json({ success: true, wish }, { status: 201 });
   } catch (error) {
     console.error('Error submitting circle wish:', error);
@@ -61,6 +80,14 @@ export async function GET(request, { params }) {
     const gift = await getGiftBySlug(slug);
     if (!gift) {
       return NextResponse.json({ error: 'Kado tidak ditemukan' }, { status: 404 });
+    }
+
+    // If query contains token, validate that specific slot token
+    const { searchParams } = new URL(request.url);
+    const token = searchParams.get('token');
+    if (token) {
+      const validation = await validateSlotToken(slug, token);
+      return NextResponse.json(validation);
     }
 
     const wishes = await getWishesBySlug(slug);

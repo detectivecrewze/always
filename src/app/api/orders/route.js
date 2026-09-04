@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { verifySession } from '@/lib/auth';
 import { isKVConfigured, putOrder, listOrders, getOrder } from '@/lib/kv';
 import { getWishesBySlug } from '@/lib/wishes';
+import { createInitialSlots, saveOrder } from '@/lib/circleSlots';
 import fs from 'fs';
 import path from 'path';
 
@@ -38,21 +39,19 @@ export async function POST(request) {
 
     const orderId = `ORD-${Date.now().toString(36).toUpperCase()}`;
     const isCircle = Boolean(data.isCircle);
+    const circleQuota = isCircle ? Math.min(20, Math.max(3, parseInt(data.circleQuota, 10) || 8)) : null;
+    const slots = isCircle ? createInitialSlots(circleQuota) : [];
+
     const order = {
       ...data,
       orderId,
       isCircle,
+      ...(isCircle && { circleQuota, slots }),
       status: data.isCircle === true ? 'collecting' : 'pending',
       createdAt: new Date().toISOString(),
     };
 
-    if (isKVConfigured()) {
-      await putOrder(orderId, order);
-    } else {
-      const orders = readLocalOrders();
-      orders.push(order);
-      writeLocalOrders(orders);
-    }
+    await saveOrder(order);
 
     return NextResponse.json({ ok: true, success: true, orderId, order });
   } catch {
@@ -89,9 +88,15 @@ export async function GET(request) {
         circleWishesCount = 0;
       }
     }
+    const slots = Array.isArray(order.slots) ? order.slots : [];
+    const totalSlots = order.circleQuota || (slots.length > 0 ? slots.length : circleWishesCount);
+    const usedSlots = slots.length > 0 ? slots.filter((s) => s.status === 'used').length : circleWishesCount;
+
     return {
       ...order,
       circleWishesCount,
+      totalSlots,
+      usedSlots,
     };
   }));
 

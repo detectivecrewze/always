@@ -722,7 +722,7 @@ export default function StudioDashboard() {
                           letterSpacing: '0.02em',
                         }}>
                           <span>{o.status === 'ready_to_craft' ? '🔥' : '⏳'}</span>
-                          <span>{o.status === 'ready_to_craft' ? `Ready to Craft · ${o.circleWishesCount || 0} ucapan` : `Collecting · ${o.circleWishesCount || 0} ucapan`}</span>
+                          <span>{o.status === 'ready_to_craft' ? `Ready to Craft · ${o.usedSlots || o.circleWishesCount || 0}/${o.totalSlots || o.circleQuota || 8} ucapan` : `Collecting · ${o.usedSlots || o.circleWishesCount || 0}/${o.totalSlots || o.circleQuota || 8} ucapan`}</span>
                         </div>
                       )}
                     </div>
@@ -1042,7 +1042,7 @@ export default function StudioDashboard() {
                       </strong>
                     </div>
                     <div style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem', borderRadius: '999px', background: selectedOrder.status === 'ready_to_craft' ? '#10B98130' : '#3B82F630', color: selectedOrder.status === 'ready_to_craft' ? '#34D399' : '#93C5FD', fontWeight: 600 }}>
-                      {selectedOrder.circleWishesCount || 0} ucapan terkumpul
+                      {selectedOrder.usedSlots || selectedOrder.circleWishesCount || 0}/{selectedOrder.totalSlots || selectedOrder.circleQuota || 8} ucapan terkumpul
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginTop: '0.6rem' }}>
