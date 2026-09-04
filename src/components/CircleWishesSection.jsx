@@ -229,7 +229,10 @@ export default function CircleWishesSection({
               </div>
 
               {/* Bottom Action Hint */}
-              <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] text-accent/80 font-medium group-hover:text-accent transition-colors">
+              <div
+                className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] font-medium transition-colors"
+                style={{ color: 'var(--color-accent)' }}
+              >
                 <span>Buka ucapan lengkap</span>
                 <span className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
                   ↗
@@ -370,7 +373,12 @@ export default function CircleWishesSection({
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="px-5 py-2 rounded-xl text-xs font-medium border border-accent/40 text-accent hover:bg-accent/10 transition-colors"
+                  className="px-5 py-2 rounded-xl text-xs font-medium border transition-colors cursor-pointer"
+                  style={{
+                    color: 'var(--color-accent)',
+                    borderColor: 'color-mix(in srgb, var(--color-accent) 40%, transparent)',
+                    background: 'color-mix(in srgb, var(--color-accent) 10%, transparent)',
+                  }}
                 >
                   Tutup Ucapan
                 </button>
