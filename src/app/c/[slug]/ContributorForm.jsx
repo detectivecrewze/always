@@ -83,6 +83,7 @@ export default function ContributorForm({
   const [isProcessingMedia, setIsProcessingMedia] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusStep, setStatusStep] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
   const [submittedWish, setSubmittedWish] = useState(null);
 
   // Voice Note states
