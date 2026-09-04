@@ -981,7 +981,7 @@ export default function OrderForm() {
             {data.isCircle && (
               <div style={{ padding: '0.85rem 1rem', borderRadius: '14px', background: 'rgba(0,0,0,0.04)', border: `1px solid ${currentTheme.text}20`, marginBottom: '2rem' }}>
                 <p style={{ fontSize: '0.8rem', lineHeight: 1.5, opacity: 0.85, margin: 0 }}>
-                  <strong>Mode Circle Edition:</strong> Unggah foto di bawah ini <em>bersifat opsional</em>. Foto atau video dari teman-teman akan otomatis terpasang di kartu ucapan masing-masing saat mereka mengisi link kado. Kamu bisa unggah foto kenangan bersama jika ingin ada galeri tambahan, atau langsung lewati ke bawah.
+                  <strong>Mode Circle Edition:</strong> Galeri ini <em>bersifat opsional</em>. Foto atau video teman-teman akan otomatis terpasang di kartu ucapan masing-masing. Kamu bisa unggah foto si penerima kado atau momen bersama jika ingin galeri tambahan, atau langsung lewati ke bawah.
                 </p>
               </div>
             )}
