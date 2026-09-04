@@ -593,9 +593,9 @@ export default function StudioDashboard() {
     }
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     const textLines = [
-      `Daftar Tautan Slot Circle Edition untuk ${selectedOrder.recipient}:`,
-      ...pendingSlots.map(s => `Slot #${s.index}: ${origin}/c/${selectedOrder.slug}?token=${s.token}`),
-      `\nCatatan: Tiap tautan hanya berlaku untuk 1 orang (one-time use).`
+      `Daftar Link Ucapan Circle Edition untuk ${selectedOrder.recipient}:`,
+      ...pendingSlots.map(s => `Teman #${s.index}: ${origin}/c/${selectedOrder.slug}?token=${s.token}`),
+      `\nCatatan: Tiap tautan privat untuk 1 teman agar ucapan tidak tertimpa.`
     ];
     navigator.clipboard.writeText(textLines.join('\n'));
     setCopiedSlotNotice('all');

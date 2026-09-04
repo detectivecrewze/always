@@ -330,8 +330,8 @@ export default function ContributorForm({
               </h3>
               <p className="text-xs sm:text-sm text-text-muted leading-relaxed max-w-sm mx-auto">
                 {validationData?.reason === 'missing_parameters' || tokenState === 'missing'
-                  ? `Halaman pengisian ucapan untuk ${recipient} dilindungi dengan sistem slot undangan privat. Pastikan kamu membuka tautan khusus yang dibagikan oleh koordinator kado.`
-                  : (validationData?.message || 'Token undangan ini tidak valid atau sudah kedaluwarsa. Silakan hubungi koordinator kado untuk mendapatkan tautan baru.')}
+                  ? `Halaman pengisian ucapan untuk ${recipient} bersifat privat. Pastikan kamu membuka tautan khusus yang dibagikan oleh koordinator kado.`
+                  : (validationData?.message || 'Tautan undangan ini tidak valid atau sudah kedaluwarsa. Silakan hubungi koordinator kado untuk mendapatkan tautan baru.')}
               </p>
               <div className="pt-2">
                 <span className="inline-flex items-center gap-1.5 text-[11px] px-3 py-1 rounded-full bg-white/5 border border-white/10 text-text-muted">

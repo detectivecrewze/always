@@ -151,7 +151,7 @@ export async function saveOrder(order) {
  */
 export async function validateSlotToken(slug, token) {
   if (!slug || !token) {
-    return { valid: false, reason: 'missing_parameters', message: 'Tautan memerlukan token undangan yang valid.' };
+    return { valid: false, reason: 'missing_parameters', message: 'Tautan memerlukan link undangan yang valid.' };
   }
 
   const order = await findOrder(slug);
@@ -167,7 +167,7 @@ export async function validateSlotToken(slug, token) {
   const slot = slots.find((s) => s.token === token);
 
   if (!slot) {
-    return { valid: false, reason: 'invalid_token', message: 'Token undangan tidak valid atau sudah kedaluwarsa.' };
+    return { valid: false, reason: 'invalid_token', message: 'Tautan undangan tidak valid atau sudah kedaluwarsa.' };
   }
 
   if (slot.status === 'used') {

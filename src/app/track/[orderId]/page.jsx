@@ -253,7 +253,7 @@ export default function CoordinatorTrackPage({ params }) {
           </div>
 
           <p style={{ fontSize: '0.82rem', opacity: 0.8, lineHeight: 1.5, margin: 0 }}>
-            {isCollecting && 'Bagikan tautan slot unik di bawah ke masing-masing teman. Begitu semua slot terisi atau dirasa cukup, klik tombol "Siap Dibuat" agar kado segera dirangkai oleh tim FYA.'}
+            {isCollecting && 'Bagikan tautan privat di bawah ke masing-masing teman agar mereka bisa titip ucapan. Begitu ucapan terkumpul atau dirasa cukup, klik tombol "Siap Dibuat" agar kado segera dirangkai oleh tim atelier.'}
             {isReadyToCraft && 'Pesanan kamu sudah masuk antrean prioritas atelier tim FYA! Kami sedang merangkai tata letak ucapan dan estetika kado.'}
             {isDone && 'Kado kamu sudah terbit dan siap dinikmati! Kamu bisa melihat preview kado final lewat tombol di bawah.'}
           </p>
@@ -300,10 +300,10 @@ export default function CoordinatorTrackPage({ params }) {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.25rem' }}>
                 <Users size={18} color="#E11D48" />
-                <h2 style={{ fontSize: '1.05rem', fontWeight: 600, margin: 0 }}>Daftar Slot Undangan Teman</h2>
+                <h2 style={{ fontSize: '1.05rem', fontWeight: 600, margin: 0 }}>Daftar Link Undangan Teman</h2>
               </div>
               <p style={{ fontSize: '0.78rem', opacity: 0.65, margin: 0, lineHeight: 1.4 }}>
-                Setiap tautan memiliki token unik sekali pakai (one-time use) demi keamanan kado.
+                Setiap tautan bersifat privat dan hanya dapat diisi satu kali agar pesan ucapan tidak tertimpa.
               </p>
             </div>
 
@@ -328,7 +328,7 @@ export default function CoordinatorTrackPage({ params }) {
                 }}
               >
                 <Plus size={14} />
-                <span>{addingSlot ? 'Menambah...' : 'Tambah Slot Teman'}</span>
+                <span>{addingSlot ? 'Menambah...' : 'Tambah Undangan Teman'}</span>
               </button>
             )}
           </div>
