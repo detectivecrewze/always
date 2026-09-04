@@ -42,9 +42,9 @@ function formatBytes(bytes) {
 
 function countWords(str) {
   if (!str) return 0;
-  const trimmed = str.trim();
-  if (!trimmed) return 0;
-  return trimmed.split(/\s+/).filter(Boolean).length;
+  // Match genuine word tokens (letters/numbers, handles hyphens & apostrophes; excludes standalone punctuation and emojis)
+  const matches = str.match(/[\p{L}\p{N}]+(?:[-'’][\p{L}\p{N}]+)*/gu);
+  return matches ? matches.length : 0;
 }
 
 export default function ContributorForm({
