@@ -889,18 +889,18 @@ function TabCircleWishes({ data, set, slug }) {
 
   return (
     <>
-      <div style={S.sectionTitle}>Circle Wishes (Kado Keroyokan)</div>
+      <div style={S.sectionTitle}>Circle Wishes (Circle Edition)</div>
       <div style={S.sectionDesc}>
         Kumpulkan dan kurasi pesan ucapan serta foto kenangan dari sahabat dan kerabat.
       </div>
 
       <div style={S.sectionTitle}>Choose a Preset</div>
-      <div style={S.sectionDesc}>Pilih tema judul dan deskripsi kado keroyokan.</div>
+      <div style={S.sectionDesc}>Pilih tema judul dan deskripsi koleksi ucapan Circle Edition.</div>
       <PresetGrid presets={CIRCLE_WISHES_PRESETS} currentId={currentPreset} onApply={applyPreset} />
       <div className="w-full h-px bg-[#1a1a1a] mb-4" />
 
       <div style={S.sectionTitle}>Section Header</div>
-      <div style={S.sectionDesc}>Atur judul dan deskripsi section kado keroyokan.</div>
+      <div style={S.sectionDesc}>Atur judul dan deskripsi section Circle Wishes.</div>
       <Field
         label="Section Title 1"
         value={data.circleTitle1}

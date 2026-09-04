@@ -160,7 +160,7 @@ export async function validateSlotToken(slug, token) {
   }
 
   if (!order.isCircle) {
-    return { valid: false, reason: 'not_circle_order', message: 'Kado ini bukan kado keroyokan.' };
+    return { valid: false, reason: 'not_circle_order', message: 'Kado ini bukan varian Circle Edition.' };
   }
 
   const slots = Array.isArray(order.slots) ? order.slots : [];

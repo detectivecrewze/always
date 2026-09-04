@@ -518,7 +518,7 @@ export default function StudioDashboard() {
     if (!selectedOrder) return;
     const currentSlots = Array.isArray(selectedOrder.slots) ? selectedOrder.slots : [];
     if (currentSlots.length >= 20) {
-      alert('Maksimal kuota kado keroyokan adalah 20 slot.');
+      alert('Maksimal kuota Circle Edition adalah 20 slot.');
       return;
     }
     setModalAddingSlot(true);
@@ -593,7 +593,7 @@ export default function StudioDashboard() {
     }
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     const textLines = [
-      `Daftar Tautan Slot Kado Keroyokan untuk ${selectedOrder.recipient}:`,
+      `Daftar Tautan Slot Circle Edition untuk ${selectedOrder.recipient}:`,
       ...pendingSlots.map(s => `Slot #${s.index}: ${origin}/c/${selectedOrder.slug}?token=${s.token}`),
       `\nCatatan: Tiap tautan hanya berlaku untuk 1 orang (one-time use).`
     ];
@@ -875,7 +875,7 @@ export default function StudioDashboard() {
               {[
                 { id: 'all', label: 'Semua Pesanan', count: pendingOrders.length },
                 { id: 'personal', label: 'Personal / Couple', count: pendingOrders.filter(o => !o.isCircle).length },
-                { id: 'circle', label: 'Circle Keroyokan', count: pendingOrders.filter(o => Boolean(o.isCircle)).length },
+                { id: 'circle', label: 'Circle Edition', count: pendingOrders.filter(o => Boolean(o.isCircle)).length },
               ].map(f => (
                 <button
                   key={f.id}
@@ -1125,7 +1125,7 @@ export default function StudioDashboard() {
               {[
                 { id: 'all', label: 'Semua Riwayat', count: doneOrders.length },
                 { id: 'personal', label: 'Personal / Couple', count: doneOrders.filter(o => !o.isCircle).length },
-                { id: 'circle', label: 'Circle Keroyokan', count: doneOrders.filter(o => Boolean(o.isCircle)).length },
+                { id: 'circle', label: 'Circle Edition', count: doneOrders.filter(o => Boolean(o.isCircle)).length },
               ].map(f => (
                 <button
                   key={f.id}
@@ -1391,7 +1391,7 @@ export default function StudioDashboard() {
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <span style={{ fontSize: '1.2rem' }}>👥</span>
-                        <strong style={{ fontSize: '1rem', color: '#fff' }}>Kado Keroyokan (Circle Edition)</strong>
+                        <strong style={{ fontSize: '1rem', color: '#fff' }}>Memoria · Circle Edition</strong>
                       </div>
                       <p style={{ fontSize: '0.75rem', color: '#888', margin: '3px 0 0' }}>
                         Kelola kuota slot, tautan token privat teman, dan pesan ucapan yang masuk.

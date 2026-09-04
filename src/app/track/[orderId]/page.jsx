@@ -88,7 +88,7 @@ export default function CoordinatorTrackPage({ params }) {
   const handleAddSlot = async () => {
     const currentSlots = Array.isArray(order?.slots) ? order.slots : [];
     if (currentSlots.length >= 20) {
-      alert('Maksimal kuota kado keroyokan adalah 20 slot.');
+      alert('Maksimal kuota Circle Edition adalah 20 slot.');
       return;
     }
     setAddingSlot(true);
@@ -173,7 +173,7 @@ export default function CoordinatorTrackPage({ params }) {
       <div style={{ minHeight: '100vh', background: '#0d070b', color: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ width: '40px', height: '40px', border: '3px solid rgba(255,255,255,0.1)', borderTopColor: '#E11D48', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 1rem' }} />
-          <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>Memuat status kado keroyokan...</p>
+          <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>Memuat status Circle Edition...</p>
         </div>
         <style jsx>{`
           @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }

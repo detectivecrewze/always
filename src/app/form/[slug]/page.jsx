@@ -427,8 +427,8 @@ export default function OrderForm() {
                     border: `1px solid ${!data.isCircle ? currentTheme.text : currentTheme.text + '25'}`,
                   }}
                 >
-                  <div style={{ letterSpacing: '0.01em' }}>Kado Personal</div>
-                  <div style={{ fontSize: '0.68rem', opacity: !data.isCircle ? 0.8 : 0.5, marginTop: '4px' }}>Solo / Pasangan</div>
+                  <div style={{ letterSpacing: '0.01em' }}>Personal Edition</div>
+                  <div style={{ fontSize: '0.68rem', opacity: !data.isCircle ? 0.8 : 0.5, marginTop: '4px' }}>Pesan Intimate Personal</div>
                 </button>
 
                 <button
@@ -447,8 +447,8 @@ export default function OrderForm() {
                     border: `1px solid ${data.isCircle ? currentTheme.text : currentTheme.text + '25'}`,
                   }}
                 >
-                  <div style={{ letterSpacing: '0.01em' }}>Kado Keroyokan</div>
-                  <div style={{ fontSize: '0.68rem', opacity: data.isCircle ? 0.8 : 0.5, marginTop: '4px' }}>Circle / Bareng Teman</div>
+                  <div style={{ letterSpacing: '0.01em' }}>Circle Edition</div>
+                  <div style={{ fontSize: '0.68rem', opacity: data.isCircle ? 0.8 : 0.5, marginTop: '4px' }}>Koleksi Bersama Sahabat</div>
                 </button>
               </div>
               {data.isCircle && (
@@ -981,7 +981,7 @@ export default function OrderForm() {
             {data.isCircle && (
               <div style={{ padding: '0.85rem 1rem', borderRadius: '14px', background: 'rgba(0,0,0,0.04)', border: `1px solid ${currentTheme.text}20`, marginBottom: '2rem' }}>
                 <p style={{ fontSize: '0.8rem', lineHeight: 1.5, opacity: 0.85, margin: 0 }}>
-                  <strong>Mode Kado Keroyokan (Circle):</strong> Unggah foto di bawah ini <em>bersifat opsional</em>. Foto-foto teman geng akan otomatis terpasang di kartu ucapan masing-masing saat mereka mengisi link kontributor. Kamu bisa unggah foto kenangan bersama jika ingin ada galeri tambahan, atau langsung lewati ke bawah.
+                  <strong>Mode Circle Edition:</strong> Unggah foto di bawah ini <em>bersifat opsional</em>. Foto atau video teman-teman akan otomatis terpasang di kartu ucapan masing-masing saat mereka mengisi link kontributor. Kamu bisa unggah foto kenangan bersama jika ingin ada galeri tambahan, atau langsung lewati ke bawah.
                 </p>
               </div>
             )}
@@ -1328,7 +1328,7 @@ export default function OrderForm() {
             );
             const waAtelierCircleText = encodeURIComponent(
               `Halo Digital Atelier!\n\n` +
-              `Saya sudah mendaftarkan kado *Memoria Circle Edition (Kado Keroyokan)*.\n\n` +
+              `Saya sudah mendaftarkan kado *Memoria Circle Edition*.\n\n` +
               `*Detail Pesanan:*\n` +
               `• Order ID: ${orderId || slug}\n` +
               `• Koordinator: ${data.sender}\n` +
