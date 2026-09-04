@@ -445,10 +445,10 @@ export default function CircleWishesSection({
                               e.stopPropagation();
                               toggleMute();
                             }}
-                            className="absolute bottom-3 right-3 px-3.5 py-1.5 rounded-full text-xs font-medium border flex items-center gap-2 shadow-lg backdrop-blur-md transition-all duration-200 cursor-pointer z-10"
+                            className="absolute bottom-3 right-3 w-8 h-8 rounded-full border flex items-center justify-center shadow-lg backdrop-blur-md transition-all duration-200 cursor-pointer z-10 hover:scale-105 active:scale-95"
                             style={{
                               background: isMuted
-                                ? 'rgba(0, 0, 0, 0.75)'
+                                ? 'rgba(0, 0, 0, 0.7)'
                                 : 'color-mix(in srgb, var(--color-accent) 85%, transparent)',
                               borderColor: isMuted ? 'rgba(255, 255, 255, 0.25)' : 'var(--color-accent)',
                               color: '#ffffff',
@@ -457,17 +457,12 @@ export default function CircleWishesSection({
                                 : '0 4px 20px color-mix(in srgb, var(--color-accent) 50%, transparent)',
                             }}
                             aria-label={isMuted ? 'Dengarkan dengan Suara' : 'Bisukan Video'}
+                            title={isMuted ? 'Dengarkan dengan Suara' : 'Bisukan Video'}
                           >
                             {isMuted ? (
-                              <>
-                                <Volume2 size={15} />
-                                <span>Dengarkan dengan Suara</span>
-                              </>
+                              <VolumeX size={16} />
                             ) : (
-                              <>
-                                <VolumeX size={15} />
-                                <span>Bisukan Video</span>
-                              </>
+                              <Volume2 size={16} />
                             )}
                           </button>
                         </>
