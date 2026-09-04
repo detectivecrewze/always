@@ -49,12 +49,17 @@ export default function StudioDashboard() {
 
   // ── Derived data ────────────────────────────────────────────────
   const pendingOrders = useMemo(() => {
-    const pending = orders.filter(o => o.status === 'pending');
-    // Sort by deadline soonest first; orders without deadline go to end
+    const pending = orders.filter(o => o.status === 'pending' || o.status === 'ready_to_craft' || o.status === 'collecting');
+    // Priority: ready_to_craft first, then deadline soonest, then newest
     return pending.sort((a, b) => {
+      if (a.status === 'ready_to_craft' && b.status !== 'ready_to_craft') return -1;
+      if (b.status === 'ready_to_craft' && a.status !== 'ready_to_craft') return 1;
+
       const da = a.deadline ? new Date(a.deadline).getTime() : Infinity;
       const db = b.deadline ? new Date(b.deadline).getTime() : Infinity;
-      return da - db;
+      if (da !== db) return da - db;
+
+      return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
     });
   }, [orders]);
 
@@ -268,11 +273,38 @@ export default function StudioDashboard() {
         const foundSong = playlist.find(s => `${s.title} - ${s.artist}` === order.music);
         if (foundSong) newMusic = { title: foundSong.title, artist: foundSong.artist, file: foundSong.audioUrl, cover: foundSong.coverUrl };
       }
+      // Auto-fetch latest circle wishes if isCircle
+      let syncedWishes = existingGift.circleWishes || [];
+      if (order.isCircle) {
+        try {
+          const wishesRes = await fetch(`/api/circle-wishes/${order.slug}`);
+          if (wishesRes.ok) {
+            const wishesData = await wishesRes.json();
+            if (Array.isArray(wishesData.wishes) && wishesData.wishes.length > 0) {
+              syncedWishes = wishesData.wishes;
+            }
+          }
+        } catch (err) {
+          console.error('Failed to sync circle wishes:', err);
+        }
+      }
+
       const updatedGift = {
-        ...existingGift, theme: order.theme, music: newMusic,
+        ...existingGift,
+        theme: order.theme,
+        music: newMusic,
         photos: order.photos && order.photos.length > 0 ? order.photos.map(p => ({ url: p, caption: '' })) : existingGift.photos,
         secretPhoto: order.secretPhoto || existingGift.secretPhoto,
         introText: order.message ? [order.message] : existingGift.introText,
+        ...(order.isCircle ? {
+          isCircle: true,
+          circleWishes: syncedWishes,
+        } : {}),
+        ...(order.pinEnabled || order.pinCode ? {
+          pinEnabled: true,
+          pinCode: order.pinCode || '',
+          pinHint: order.pinHint || '',
+        } : {}),
         ...(order.specialDate && { 
           timeEnabled: true, 
           timeStartDate: order.specialDate,
@@ -434,9 +466,10 @@ export default function StudioDashboard() {
   };
 
   // ── Tab config ────────────────────────────────────────────────────
+  const hasReadyToCraft = pendingOrders.some(o => o.status === 'ready_to_craft');
   const tabs = [
     { id: 'gifts', label: 'Kado', badge: gifts.length, badgeColor: '#E11D48' },
-    { id: 'orders', label: 'Pesanan Masuk', badge: pendingOrders.length, badgeColor: '#3B82F6' },
+    { id: 'orders', label: 'Pesanan Masuk', badge: pendingOrders.length, badgeColor: hasReadyToCraft ? '#10B981' : '#3B82F6' },
     { id: 'drafts', label: 'Live Drafts', badge: liveDrafts.length, badgeColor: '#EAB308' },
     { id: 'history', label: 'Riwayat', badge: doneOrders.length, badgeColor: '#888' },
     { id: 'colors', label: 'Warna', badge: null, badgeColor: null },
@@ -636,9 +669,9 @@ export default function StudioDashboard() {
                   : null;
 
                 return (
-                  <div key={o.orderId} style={{ ...S.card, border: `1px solid ${deadlineValid ? deadlineColor + '40' : '#3B82F640'}` }}>
+                  <div key={o.orderId} style={{ ...S.card, border: `1px solid ${o.status === 'ready_to_craft' ? '#10B98180' : deadlineValid ? deadlineColor + '40' : '#3B82F640'}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-                      <div style={{ ...S.cardSlug, color: '#3B82F6' }}>{o.orderId}</div>
+                      <div style={{ ...S.cardSlug, color: o.status === 'ready_to_craft' ? '#10B981' : '#3B82F6' }}>{o.orderId}</div>
                       <div style={{ textAlign: 'right' }}>
                         <div style={{ fontSize: '0.7rem', color: '#888' }}>{dateStr}</div>
                         {timeStr && (
@@ -652,27 +685,47 @@ export default function StudioDashboard() {
                       </div>
                     </div>
 
-                    {/* ── Deadline badge ── */}
-                    {deadlineLabel && (
-                      <div style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
-                        background: deadlineColor + '18',
-                        border: `1px solid ${deadlineColor}55`,
-                        borderRadius: '6px',
-                        padding: '0.25rem 0.6rem',
-                        marginBottom: '0.75rem',
-                        fontSize: '0.72rem',
-                        color: deadlineColor,
-                        fontWeight: 600,
-                        letterSpacing: '0.02em',
-                      }}>
-                        <span>{deadlinePassed ? '🔴' : hoursUntil < 24 ? '🟡' : '🟢'}</span>
-                        <span>Deadline: {deadlineLabel}</span>
-                        {deadlineCountdown && (
-                          <span style={{ opacity: 0.75, fontWeight: 400 }}>· {deadlineCountdown}</span>
-                        )}
-                      </div>
-                    )}
+                    {/* ── Badges container ── */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '0.75rem' }}>
+                      {/* Deadline badge */}
+                      {deadlineLabel && (
+                        <div style={{
+                          display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+                          background: deadlineColor + '18',
+                          border: `1px solid ${deadlineColor}55`,
+                          borderRadius: '6px',
+                          padding: '0.25rem 0.6rem',
+                          fontSize: '0.72rem',
+                          color: deadlineColor,
+                          fontWeight: 600,
+                          letterSpacing: '0.02em',
+                        }}>
+                          <span>{deadlinePassed ? '🔴' : hoursUntil < 24 ? '🟡' : '🟢'}</span>
+                          <span>Deadline: {deadlineLabel}</span>
+                          {deadlineCountdown && (
+                            <span style={{ opacity: 0.75, fontWeight: 400 }}>· {deadlineCountdown}</span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Circle Edition Badge */}
+                      {o.isCircle && (
+                        <div style={{
+                          display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+                          background: o.status === 'ready_to_craft' ? '#10B98120' : '#3B82F620',
+                          border: `1px solid ${o.status === 'ready_to_craft' ? '#10B98160' : '#3B82F660'}`,
+                          borderRadius: '6px',
+                          padding: '0.25rem 0.6rem',
+                          fontSize: '0.72rem',
+                          color: o.status === 'ready_to_craft' ? '#34D399' : '#60A5FA',
+                          fontWeight: 600,
+                          letterSpacing: '0.02em',
+                        }}>
+                          <span>{o.status === 'ready_to_craft' ? '🔥' : '⏳'}</span>
+                          <span>{o.status === 'ready_to_craft' ? `Ready to Craft · ${o.circleWishesCount || 0} ucapan` : `Collecting · ${o.circleWishesCount || 0} ucapan`}</span>
+                        </div>
+                      )}
+                    </div>
 
                     <div style={S.cardName}>From: {o.sender}</div>
                     <div style={{ fontSize: '0.85rem', color: '#aaa', marginBottom: '0.2rem' }}>To: {o.recipient} (/{o.slug})</div>
@@ -693,8 +746,16 @@ export default function StudioDashboard() {
                     )}
                     <div style={S.actions}>
                       <button style={S.actionBtn('#8B5CF6')} onClick={() => setSelectedOrder(o)}>View Details</button>
-                      <button style={{ ...S.actionBtn('#22C55E'), background: '#22C55E20' }} onClick={() => handleApplyOrder(o)} disabled={processingOrder === o.orderId}>
-                        {processingOrder === o.orderId ? 'Processing...' : 'Apply to Gift'}
+                      <button
+                        style={{
+                          ...S.actionBtn(o.status === 'ready_to_craft' ? '#10B981' : '#22C55E'),
+                          background: o.status === 'ready_to_craft' ? '#10B98130' : '#22C55E20',
+                          fontWeight: o.status === 'ready_to_craft' ? 700 : 500,
+                        }}
+                        onClick={() => handleApplyOrder(o)}
+                        disabled={processingOrder === o.orderId}
+                      >
+                        {processingOrder === o.orderId ? 'Processing...' : o.status === 'ready_to_craft' ? '🔥 Craft Gift' : 'Apply to Gift'}
                       </button>
                       <button style={S.actionBtn('#EF4444')} onClick={async () => {
                         if (confirm('Mark as done?')) {
@@ -963,6 +1024,47 @@ export default function StudioDashboard() {
                   <div style={{ fontSize: '0.8rem', color: '#555' }}>Customer tidak menggunakan PIN untuk kado ini.</div>
                 )}
               </div>
+
+              {/* Circle Edition Details */}
+              {selectedOrder.isCircle && (
+                <div style={{
+                  gridColumn: 'span 2',
+                  background: selectedOrder.status === 'ready_to_craft' ? '#10B98115' : '#3B82F615',
+                  border: `1px solid ${selectedOrder.status === 'ready_to_craft' ? '#10B98150' : '#3B82F650'}`,
+                  borderRadius: '8px',
+                  padding: '0.85rem 1rem',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ fontSize: '1.1rem' }}>{selectedOrder.status === 'ready_to_craft' ? '🔥' : '👥'}</span>
+                      <strong style={{ fontSize: '0.9rem', color: selectedOrder.status === 'ready_to_craft' ? '#34D399' : '#60A5FA' }}>
+                        {selectedOrder.status === 'ready_to_craft' ? 'Circle Edition — Siap Dibuat!' : 'Circle Edition — Pengumpulan Aktif'}
+                      </strong>
+                    </div>
+                    <div style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem', borderRadius: '999px', background: selectedOrder.status === 'ready_to_craft' ? '#10B98130' : '#3B82F630', color: selectedOrder.status === 'ready_to_craft' ? '#34D399' : '#93C5FD', fontWeight: 600 }}>
+                      {selectedOrder.circleWishesCount || 0} ucapan terkumpul
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginTop: '0.6rem' }}>
+                    <a
+                      href={`/track/${selectedOrder.orderId}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ fontSize: '0.75rem', color: '#fff', background: '#333', padding: '0.35rem 0.75rem', borderRadius: '5px', textDecoration: 'none', border: '1px solid #555' }}
+                    >
+                      🔍 Buka Coordinator Tracker
+                    </a>
+                    <a
+                      href={`/c/${selectedOrder.slug}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ fontSize: '0.75rem', color: '#fff', background: '#1E293B', padding: '0.35rem 0.75rem', borderRadius: '5px', textDecoration: 'none', border: '1px solid #3B82F650' }}
+                    >
+                      🔗 Link Form Teman (/c/{selectedOrder.slug})
+                    </a>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* ── Message ── */}

@@ -90,7 +90,13 @@ export default function OrderForm() {
     pinEnabled: false,
     pinCode: '',
     pinHint: '',
+    isCircle: false,
   });
+
+  const [trackerWishes, setTrackerWishes] = useState([]);
+  const [trackerCopied, setTrackerCopied] = useState(false);
+  const [isOrderReady, setIsOrderReady] = useState(false);
+  const [markingReady, setMarkingReady] = useState(false);
 
   // Load from localStorage OR online draft on mount
   useEffect(() => {
@@ -263,6 +269,7 @@ export default function OrderForm() {
       const payload = {
         ...data,
         slug,
+        isCircle: Boolean(data.isCircle),
         photos,
         secretPhoto: secretPhotoUrl,
       };
@@ -390,8 +397,63 @@ export default function OrderForm() {
         {/* --- STEP 1: BASICS --- */}
         {step === 1 && (
           <div style={{ animation: 'fadeIn 0.5s ease-out' }}>
-            <h2 style={{ fontSize: '1.25rem', marginBottom: '2rem', fontWeight: 500 }}>Tentang Kalian</h2>
+            <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', fontWeight: 500 }}>Tentang Kalian</h2>
             
+            {/* Mode Selector: Personal vs Circle */}
+            <div style={{ marginBottom: '1.5rem', background: 'rgba(0,0,0,0.03)', border: `1px solid ${currentTheme.text}20`, borderRadius: '16px', padding: '1rem' }}>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, opacity: 0.8, marginBottom: '0.6rem' }}>
+                Tipe Kado
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => update('isCircle', false)}
+                  style={{
+                    padding: '0.75rem 0.6rem',
+                    borderRadius: '12px',
+                    fontSize: '0.82rem',
+                    fontWeight: !data.isCircle ? 600 : 400,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    textAlign: 'center',
+                    background: !data.isCircle ? currentTheme.text : 'transparent',
+                    color: !data.isCircle ? currentTheme.bg : currentTheme.text,
+                    border: `1px solid ${!data.isCircle ? currentTheme.text : currentTheme.text + '25'}`,
+                  }}
+                >
+                  <div style={{ fontSize: '1.1rem', marginBottom: '0.2rem' }}>💖</div>
+                  <div>Kado Personal</div>
+                  <div style={{ fontSize: '0.68rem', opacity: !data.isCircle ? 0.8 : 0.5, marginTop: '2px' }}>Solo / Pasangan</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => update('isCircle', true)}
+                  style={{
+                    padding: '0.75rem 0.6rem',
+                    borderRadius: '12px',
+                    fontSize: '0.82rem',
+                    fontWeight: data.isCircle ? 600 : 400,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    textAlign: 'center',
+                    background: data.isCircle ? currentTheme.text : 'transparent',
+                    color: data.isCircle ? currentTheme.bg : currentTheme.text,
+                    border: `1px solid ${data.isCircle ? currentTheme.text : currentTheme.text + '25'}`,
+                  }}
+                >
+                  <div style={{ fontSize: '1.1rem', marginBottom: '0.2rem' }}>👥</div>
+                  <div>Kado Keroyokan</div>
+                  <div style={{ fontSize: '0.68rem', opacity: data.isCircle ? 0.8 : 0.5, marginTop: '2px' }}>Circle / Bareng Teman</div>
+                </button>
+              </div>
+              {data.isCircle && (
+                <p style={{ fontSize: '0.74rem', opacity: 0.7, marginTop: '0.6rem', lineHeight: 1.4 }}>
+                  ✨ Kamu akan mendapatkan link khusus setelah form ini selesai untuk disebarkan ke teman-teman geng agar mereka bisa mengirimkan ucapan & foto masing-masing.
+                </p>
+              )}
+            </div>
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>Dari (Nama Anda)</label>
@@ -855,9 +917,17 @@ export default function OrderForm() {
         {step === 4 && (
           <div style={{ animation: 'fadeIn 0.5s ease-out' }}>
             <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', fontWeight: 500 }}>Galeri Kenangan</h2>
-            <p style={{ fontSize: '0.85rem', opacity: 0.7, marginBottom: '2rem', lineHeight: 1.6 }}>
+            <p style={{ fontSize: '0.85rem', opacity: 0.7, marginBottom: '1.5rem', lineHeight: 1.6 }}>
               Bagikan momen-momen terbaik kalian. Kami akan menatanya ke dalam galeri digital yang cantik.
             </p>
+
+            {data.isCircle && (
+              <div style={{ padding: '0.85rem 1rem', borderRadius: '14px', background: 'rgba(0,0,0,0.04)', border: `1px solid ${currentTheme.text}20`, marginBottom: '2rem' }}>
+                <p style={{ fontSize: '0.8rem', lineHeight: 1.5, opacity: 0.85, margin: 0 }}>
+                  💡 <strong>Mode Kado Keroyokan (Circle):</strong> Upload foto di bawah ini <em>bersifat opsional</em>. Foto-foto teman geng akan otomatis terpasang di kartu ucapan masing-masing saat mereka mengisi link kontributor. Kamu bisa upload foto kenangan bersama jika ingin ada galeri tambahan, atau langsung lewati ke bawah!
+                </p>
+              </div>
+            )}
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
               
@@ -1190,6 +1260,196 @@ export default function OrderForm() {
           const isUnbox = String(slug || '').toLowerCase().includes('unbox');
           const waNumber = '6281936109076';
 
+          // ── If this is a Circle Order, render the Coordinator Tracker Panel ──
+          if (data.isCircle) {
+            const contributorUrl = typeof window !== 'undefined' ? `${window.location.origin}/c/${slug}` : '';
+            const trackerUrl = typeof window !== 'undefined' ? `${window.location.origin}/track/${orderId || slug}` : '';
+            const waShareGroupText = encodeURIComponent(
+              `Guys! Tolong isi ucapan & upload foto kenangan kalian buat kado ultah ${data.recipient} di sini yaa (rahasia yaa jangan bilang orangnya! 🤫):\n\n` +
+              `👉 ${contributorUrl}\n\n` +
+              `Tinggal klik link-nya dan submit langsung dari HP. Makasihh yaa guys! ✨`
+            );
+            const waAtelierCircleText = encodeURIComponent(
+              `Halo Digital Atelier!\n\n` +
+              `Saya sudah mendaftarkan kado *Memoria Circle Edition (Kado Keroyokan)*.\n\n` +
+              `*Detail Pesanan:*\n` +
+              `• Order ID: ${orderId || slug}\n` +
+              `• Koordinator: ${data.sender}\n` +
+              `• Untuk: ${data.recipient}\n` +
+              `• Momen: ${data.moment}${data.milestoneNumber ? ` (ke-${data.milestoneNumber})` : ''}\n` +
+              `• Link Pengumpulan: ${contributorUrl}\n\n` +
+              `Saya sedang mengumpulkan ucapan dari teman-teman. Terima kasih!`
+            );
+
+            return (
+              <div style={{ textAlign: 'center', padding: '1.5rem 0', animation: 'fadeIn 0.8s ease-out' }}>
+                <div style={{ marginBottom: '1.25rem', display: 'flex', justifyContent: 'center' }}>
+                  <Sparkles size={56} strokeWidth={1} opacity={0.8} />
+                </div>
+                <span style={{ fontSize: '0.72rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: currentTheme.accent, fontWeight: 700 }}>
+                  Done For You · Memoria Circle Edition
+                </span>
+                <h2 style={{ fontSize: '1.75rem', marginBottom: '0.6rem', fontFamily: 'var(--font-serif)', fontStyle: 'italic', marginTop: '0.3rem' }}>
+                  Pendaftaran Berhasil!
+                </h2>
+                <p style={{ fontSize: '0.86rem', opacity: 0.8, marginBottom: '1.5rem', lineHeight: 1.6, maxWidth: '440px', margin: '0 auto 1.5rem' }}>
+                  Kado kejutan untuk <strong>{data.recipient}</strong> siap dikumpulkan. Sebarkan link berikut ke grup teman-teman agar mereka bisa mengirimkan ucapan & foto masing-masing.
+                </p>
+
+                {/* Share Box */}
+                <div style={{ background: 'rgba(0,0,0,0.04)', border: `1px solid ${currentTheme.text}20`, padding: '1.25rem', borderRadius: '18px', textAlign: 'left', marginBottom: '1.5rem' }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.3rem' }}>Link Portal Teman-Teman</div>
+                  <p style={{ fontSize: '0.74rem', opacity: 0.6, margin: '0 0 0.75rem' }}>Bagikan link ini ke grup teman-teman geng kamu:</p>
+                  
+                  <div style={{ background: 'rgba(0,0,0,0.08)', border: `1px solid ${currentTheme.text}15`, borderRadius: '10px', padding: '0.6rem 0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '0.8rem' }}>
+                    <span style={{ fontSize: '0.78rem', fontFamily: 'monospace', opacity: 0.85, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {contributorUrl}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (contributorUrl) {
+                          navigator.clipboard.writeText(contributorUrl);
+                          setTrackerCopied(true);
+                          setTimeout(() => setTrackerCopied(false), 2000);
+                        }
+                      }}
+                      style={{ background: trackerCopied ? '#22C55E' : currentTheme.text, color: currentTheme.bg, border: 'none', padding: '0.4rem 0.75rem', borderRadius: '8px', fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}
+                    >
+                      {trackerCopied ? 'Tersalin!' : 'Salin Link'}
+                    </button>
+                  </div>
+
+                  <a
+                    href={`https://wa.me/?text=${waShareGroupText}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%', background: '#25D366', color: '#fff', textDecoration: 'none', padding: '0.75rem', borderRadius: '10px', fontSize: '0.82rem', fontWeight: 700, boxSizing: 'border-box' }}
+                  >
+                    <span>Bagikan ke Grup WhatsApp</span>
+                  </a>
+                </div>
+
+                {/* Live Wishes Tracker */}
+                <div style={{ background: 'rgba(0,0,0,0.04)', border: `1px solid ${currentTheme.text}20`, padding: '1.25rem', borderRadius: '18px', textAlign: 'left', marginBottom: '1.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>
+                      Ucapan Teman Masuk ({trackerWishes.length})
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        fetch(`/api/circle-wishes/${slug}`)
+                          .then(r => r.ok ? r.json() : null)
+                          .then(d => { if (d && Array.isArray(d.wishes)) setTrackerWishes(d.wishes); })
+                          .catch(() => {});
+                      }}
+                      style={{ background: 'transparent', border: `1px solid ${currentTheme.text}30`, color: currentTheme.text, padding: '0.3rem 0.6rem', borderRadius: '6px', fontSize: '0.7rem', cursor: 'pointer' }}
+                    >
+                      Refresh
+                    </button>
+                  </div>
+
+                  {trackerWishes.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '180px', overflowY: 'auto' }}>
+                      {trackerWishes.map((w, idx) => (
+                        <div key={w.id || idx} style={{ background: 'rgba(0,0,0,0.05)', borderRadius: '8px', padding: '0.5rem 0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.8rem' }}>
+                          <span style={{ fontWeight: 600 }}>{idx + 1}. {w.name}</span>
+                          <span style={{ opacity: 0.5, fontSize: '0.7rem' }}>Terkirim</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p style={{ fontSize: '0.78rem', opacity: 0.6, margin: 0, textAlign: 'center', padding: '1rem 0' }}>
+                      Belum ada ucapan teman yang masuk.
+                    </p>
+                  )}
+                </div>
+
+                {/* Bookmark Tracker Link */}
+                <div style={{ marginBottom: '1.5rem', fontSize: '0.75rem', opacity: 0.75, background: 'rgba(0,0,0,0.03)', padding: '0.75rem 1rem', borderRadius: '12px', border: `1px dashed ${currentTheme.text}25` }}>
+                  📌 Simpan / bookmark link pelacak ini untuk cek progres kapan saja: <br />
+                  <a href={trackerUrl} style={{ color: currentTheme.text, fontWeight: 700, wordBreak: 'break-all', display: 'inline-block', marginTop: '4px' }}>
+                    {trackerUrl}
+                  </a>
+                </div>
+
+                {/* Action: Mark as Ready to Craft */}
+                {!isOrderReady ? (
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <button
+                      type="button"
+                      disabled={markingReady}
+                      onClick={async () => {
+                        if (!confirm('Apakah semua teman sudah selesai mengisi? Pesanan akan langsung masuk antrean pembuatan tim FYA.')) return;
+                        setMarkingReady(true);
+                        try {
+                          const res = await fetch(`/api/orders/${orderId || slug}/ready`, { method: 'POST' });
+                          if (res.ok) {
+                            setIsOrderReady(true);
+                          } else {
+                            alert('Gagal mengirim status. Silakan hubungi admin.');
+                          }
+                        } catch {
+                          alert('Gagal mengirim status.');
+                        } finally {
+                          setMarkingReady(false);
+                        }
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '1rem',
+                        borderRadius: '50px',
+                        border: 'none',
+                        background: currentTheme.text,
+                        color: currentTheme.bg,
+                        fontSize: '0.95rem',
+                        fontWeight: 700,
+                        cursor: markingReady ? 'not-allowed' : 'pointer',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      {markingReady ? 'Menyimpan...' : 'Semua Teman Sudah Isi — Siap Dibuat! 🚀'}
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ padding: '1rem', borderRadius: '16px', background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e', fontSize: '0.85rem', fontWeight: 600, marginBottom: '1.5rem' }}>
+                    🎉 Pesanan Berstatus "Siap Dibuat!"<br />
+                    <span style={{ fontSize: '0.78rem', fontWeight: 400, opacity: 0.9 }}>
+                      Tim FYA sedang merangkai kado finalnya. Kami akan menghubungi kamu lewat WhatsApp begitu selesai!
+                    </span>
+                  </div>
+                )}
+
+                {/* WhatsApp Atelier Button */}
+                <div>
+                  <a
+                    href={`https://wa.me/${waNumber}?text=${waAtelierCircleText}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '10px 24px',
+                      background: 'transparent',
+                      border: `1px solid ${currentTheme.text}30`,
+                      color: currentTheme.text,
+                      borderRadius: '50px',
+                      textDecoration: 'none',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Hubungi Tim FYA via WhatsApp
+                  </a>
+                </div>
+              </div>
+            );
+          }
+
+          // ── Regular Solo / Couple Order Screen ──
           const waMessage = isUnbox
             ? encodeURIComponent(
                 `Halo Digital Atelier!\n\n` +

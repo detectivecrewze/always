@@ -1,13 +1,18 @@
 import { NextResponse } from 'next/server';
 import { verifySession } from '@/lib/auth';
 import { isKVConfigured, putOrder, listOrders, getOrder } from '@/lib/kv';
+import { getWishesBySlug } from '@/lib/wishes';
 import fs from 'fs';
 import path from 'path';
 
 function readLocalOrders() {
   const filePath = path.join(process.cwd(), 'data', 'orders.json');
   if (!fs.existsSync(filePath)) return [];
-  return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+  } catch {
+    return [];
+  }
 }
 
 function writeLocalOrders(orders) {
@@ -32,10 +37,12 @@ export async function POST(request) {
     }
 
     const orderId = `ORD-${Date.now().toString(36).toUpperCase()}`;
+    const isCircle = Boolean(data.isCircle);
     const order = {
       ...data,
       orderId,
-      status: 'pending',
+      isCircle,
+      status: data.isCircle === true ? 'collecting' : 'pending',
       createdAt: new Date().toISOString(),
     };
 
@@ -47,7 +54,7 @@ export async function POST(request) {
       writeLocalOrders(orders);
     }
 
-    return NextResponse.json({ ok: true, orderId });
+    return NextResponse.json({ ok: true, success: true, orderId, order });
   } catch {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
@@ -59,15 +66,35 @@ export async function GET(request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  let rawOrders = [];
   if (isKVConfigured()) {
     const ids = await listOrders();
-    const orders = await Promise.all(ids.map(async (id) => {
+    const fetched = await Promise.all(ids.map(async (id) => {
       const o = await getOrder(id);
       return o || null;
     }));
-    return NextResponse.json(orders.filter(Boolean));
+    rawOrders = fetched.filter(Boolean);
+  } else {
+    rawOrders = readLocalOrders();
   }
 
-  const orders = readLocalOrders();
+  const orders = await Promise.all(rawOrders.map(async (order) => {
+    let circleWishesCount = 0;
+    if (order.slug) {
+      try {
+        const wishes = await getWishesBySlug(order.slug);
+        circleWishesCount = Array.isArray(wishes) ? wishes.length : 0;
+      } catch (err) {
+        console.error(`Error fetching wishes count for order slug ${order.slug}:`, err);
+        circleWishesCount = 0;
+      }
+    }
+    return {
+      ...order,
+      circleWishesCount,
+    };
+  }));
+
   return NextResponse.json(orders);
 }
+
