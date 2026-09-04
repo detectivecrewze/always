@@ -1712,11 +1712,27 @@ export default function StudioDashboard() {
 
                                   {(() => {
                                     const mediaUrl = w.mediaUrl || w.photoUrl || w.photo || '';
-                                    if (!mediaUrl) return null;
-                                    const isVideo = isVideoMedia(mediaUrl);
+                                    const audioUrl = w.audioUrl || (w.mediaType === 'audio' ? mediaUrl : '');
+                                    const isAudio = Boolean(audioUrl) || w.mediaType === 'audio' || /\.(mp3|m4a|wav|ogg|aac)(\?.*)?$/i.test(mediaUrl);
+                                    if (!mediaUrl && !audioUrl) return null;
+                                    const isVideo = !isAudio && isVideoMedia(mediaUrl);
                                     return (
                                       <div style={{ marginTop: '8px' }}>
-                                        {isVideo ? (
+                                        {isAudio ? (
+                                          <div style={{ padding: '8px 10px', borderRadius: '8px', background: 'rgba(225,29,72,0.1)', border: '1px solid rgba(225,29,72,0.25)', maxWidth: '300px' }}>
+                                            <div style={{ fontSize: '0.72rem', color: '#ff4d79', fontWeight: 600, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                              <span>🎙️</span> Pesan Suara (Voice Note) {w.audioDuration ? `· ${Math.round(w.audioDuration)}s` : ''}
+                                            </div>
+                                            <audio src={audioUrl || mediaUrl} controls style={{ width: '100%', height: '32px' }} />
+                                            {w.photoUrl && (
+                                              <div style={{ marginTop: '6px' }}>
+                                                <a href={w.photoUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.68rem', color: '#60A5FA', textDecoration: 'none' }}>
+                                                  Lihat Foto Lampiran ↗
+                                                </a>
+                                              </div>
+                                            )}
+                                          </div>
+                                        ) : isVideo ? (
                                           <div>
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
                                               <span style={{ fontSize: '0.7rem', color: '#C4B5FD', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>

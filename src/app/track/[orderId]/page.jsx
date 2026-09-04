@@ -18,7 +18,9 @@ import {
   X,
   Video,
   MessageSquare,
+  Mic,
 } from 'lucide-react';
+import { formatAudioTime } from '@/lib/audioRecorder';
 
 export default function CoordinatorTrackPage({ params }) {
   const unwrappedParams = use(params);
@@ -619,7 +621,12 @@ export default function CoordinatorTrackPage({ params }) {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                           <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', background: '#0a0508', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', padding: '0.75rem' }}>
                             {/* Media thumbnail */}
-                            {wish.mediaType === 'video' || (wish.mediaUrl && /\.(mp4|webm|mov)(\?.*)?$/i.test(wish.mediaUrl)) ? (
+                            {wish.mediaType === 'audio' || wish.audioUrl || (wish.mediaUrl && /\.(mp3|m4a|wav|ogg|aac)(\?.*)?$/i.test(wish.mediaUrl)) ? (
+                              <div style={{ position: 'relative', width: '56px', height: '56px', minWidth: '56px', borderRadius: '8px', background: 'rgba(225,29,72,0.15)', border: '1px solid rgba(225,29,72,0.3)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#ff4d79', gap: '2px' }}>
+                                <Mic size={18} />
+                                <span style={{ fontSize: '0.62rem', fontWeight: 600 }}>{formatAudioTime(wish.audioDuration) || 'VN'}</span>
+                              </div>
+                            ) : wish.mediaType === 'video' || (wish.mediaUrl && /\.(mp4|webm|mov)(\?.*)?$/i.test(wish.mediaUrl)) ? (
                               <div style={{ position: 'relative', width: '56px', height: '56px', minWidth: '56px', borderRadius: '8px', overflow: 'hidden', background: '#000' }}>
                                 <video src={wish.mediaUrl} muted playsInline autoPlay loop style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 <div style={{ position: 'absolute', bottom: 3, right: 3, background: 'rgba(0,0,0,0.65)', borderRadius: '4px', padding: '2px 4px', display: 'flex', alignItems: 'center' }}>
@@ -1042,7 +1049,34 @@ export default function CoordinatorTrackPage({ params }) {
               {/* Media display */}
               {selectedWishModal.wish && (
                 <>
-                  {selectedWishModal.wish.mediaType === 'video' ||
+                  {/* Voice Note Player */}
+                  {selectedWishModal.wish.mediaType === 'audio' ||
+                  selectedWishModal.wish.audioUrl ||
+                  (selectedWishModal.wish.mediaUrl && /\.(mp3|m4a|wav|ogg|aac)(\?.*)?$/i.test(selectedWishModal.wish.mediaUrl)) ? (
+                    <div style={{ marginBottom: '1.25rem', padding: '1rem', borderRadius: '14px', background: '#120810', border: '1px solid rgba(225,29,72,0.3)' }}>
+                      <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#ff4d79', marginBottom: '0.6rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Mic size={14} />
+                        <span>Rekaman Suara (Voice Note)</span>
+                        {selectedWishModal.wish.audioDuration && (
+                          <span style={{ fontSize: '0.72rem', opacity: 0.7 }}>· {formatAudioTime(selectedWishModal.wish.audioDuration)}</span>
+                        )}
+                      </div>
+                      <audio
+                        src={selectedWishModal.wish.audioUrl || selectedWishModal.wish.mediaUrl}
+                        controls
+                        style={{ width: '100%', height: '40px', outline: 'none' }}
+                      />
+                      {selectedWishModal.wish.photoUrl && (
+                        <div style={{ marginTop: '0.75rem', borderRadius: '10px', overflow: 'hidden', textAlign: 'center', background: '#000' }}>
+                          <img
+                            src={selectedWishModal.wish.photoUrl}
+                            alt=""
+                            style={{ width: '100%', maxHeight: '240px', objectFit: 'contain', display: 'block', margin: '0 auto' }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ) : selectedWishModal.wish.mediaType === 'video' ||
                   (selectedWishModal.wish.mediaUrl && /\.(mp4|webm|mov)(\?.*)?$/i.test(selectedWishModal.wish.mediaUrl)) ? (
                     <div style={{ marginBottom: '1.25rem', borderRadius: '14px', overflow: 'hidden', background: '#000', border: '1px solid rgba(255,255,255,0.08)' }}>
                       <video

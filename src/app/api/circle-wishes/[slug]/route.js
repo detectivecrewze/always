@@ -21,11 +21,24 @@ export async function POST(request, { params }) {
     const token = (body.token || '').trim();
     const name = (body.name || '').trim();
     const message = (body.message || '').trim();
-    const photoUrl = (body.photoUrl || body.mediaUrl || '').trim();
+    const photoUrl = (body.photoUrl || '').trim();
     const mediaUrl = (body.mediaUrl || body.photoUrl || '').trim();
-    const mediaType =
-      body.mediaType ||
-      (mediaUrl ? (/\.(mp4|webm|mov)(\?.*)?$/i.test(mediaUrl) ? 'video' : 'photo') : null);
+    const audioUrl = (body.audioUrl || '').trim();
+    const audioDuration = Number(body.audioDuration) || null;
+
+    let mediaType = body.mediaType;
+    if (!mediaType) {
+      if (audioUrl || /\.(mp3|m4a|wav|ogg|aac)(\?.*)?$/i.test(mediaUrl)) {
+        mediaType = 'audio';
+      } else if (mediaUrl && /\.(mp4|webm|mov)(\?.*)?$/i.test(mediaUrl)) {
+        mediaType = 'video';
+      } else if (photoUrl || mediaUrl) {
+        mediaType = 'photo';
+      } else {
+        mediaType = null;
+      }
+    }
+
     const createdAt = body.createdAt || new Date().toISOString();
 
     if (!token) {
@@ -41,8 +54,10 @@ export async function POST(request, { params }) {
     if (!name) {
       return NextResponse.json({ error: 'Nama pengirim wajib diisi' }, { status: 400 });
     }
-    if (!message) {
-      return NextResponse.json({ error: 'Pesan ucapan wajib diisi' }, { status: 400 });
+
+    const isAudioWish = mediaType === 'audio' || Boolean(audioUrl);
+    if (!message && !isAudioWish) {
+      return NextResponse.json({ error: 'Pesan ucapan atau rekaman suara wajib diisi' }, { status: 400 });
     }
     if (name.length > 80) {
       return NextResponse.json({ error: 'Nama maksimal 80 karakter' }, { status: 400 });
@@ -55,8 +70,10 @@ export async function POST(request, { params }) {
       name,
       message,
       photoUrl,
-      mediaUrl,
+      mediaUrl: isAudioWish ? (audioUrl || mediaUrl) : mediaUrl,
       mediaType,
+      audioUrl: audioUrl || (mediaType === 'audio' ? mediaUrl : ''),
+      audioDuration,
       createdAt,
     });
 

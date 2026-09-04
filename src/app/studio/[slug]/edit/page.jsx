@@ -1098,15 +1098,46 @@ function TabCircleWishes({ data, set, slug }) {
               </div>
             </div>
 
-            {/* Media Preview (Photo or Video) if present */}
+            {/* Media Preview (Photo, Video, or Audio) if present */}
             {(() => {
               const mediaUrl = (w.mediaUrl || w.photoUrl || w.photo || '').trim();
-              if (!mediaUrl) return null;
-              const isVideo = isVideoMedia(mediaUrl);
+              const audioUrl = (w.audioUrl || (w.mediaType === 'audio' ? mediaUrl : '')).trim();
+              const isAudio = Boolean(audioUrl) || w.mediaType === 'audio' || /\.(mp3|m4a|wav|ogg|aac)(\?.*)?$/i.test(mediaUrl);
+              if (!mediaUrl && !audioUrl) return null;
+              const isVideo = !isAudio && isVideoMedia(mediaUrl);
 
               return (
                 <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start', marginBottom: '0.75rem', background: '#0a0a0a', padding: '8px 12px', borderRadius: '8px', border: '1px solid #222' }}>
-                  {isVideo ? (
+                  {isAudio ? (
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                        <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#ff4d79' }}>
+                          🎙️ Rekaman Suara (Voice Note) {w.audioDuration ? `· ${Math.round(w.audioDuration)}s` : ''}
+                        </span>
+                        <a href={audioUrl || mediaUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.65rem', color: '#60A5FA', textDecoration: 'none' }}>
+                          Buka Audio ↗
+                        </a>
+                      </div>
+                      <audio src={audioUrl || mediaUrl} controls style={{ width: '100%', height: '32px' }} />
+                      {w.photoUrl && w.photoUrl !== (audioUrl || mediaUrl) && (
+                        <div style={{ marginTop: '6px' }}>
+                          <a href={w.photoUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.65rem', color: '#60A5FA', textDecoration: 'none' }}>
+                            Lihat Foto Lampiran ↗
+                          </a>
+                        </div>
+                      )}
+                      <button
+                        style={{ ...S.smallBtn('#EF4444'), fontSize: '0.65rem', padding: '0.1rem 0.4rem', marginTop: '0.35rem' }}
+                        onClick={() => {
+                          const next = [...wishes];
+                          next[i] = { ...next[i], photoUrl: '', mediaUrl: '', audioUrl: '', audioDuration: null, mediaType: null };
+                          set('circleWishes', next);
+                        }}
+                      >
+                        Hapus Audio
+                      </button>
+                    </div>
+                  ) : isVideo ? (
                     <div style={{ width: '120px', height: '80px', flexShrink: 0, borderRadius: '6px', overflow: 'hidden', background: '#000', border: '1px solid #333' }}>
                       <video
                         src={mediaUrl}
@@ -1130,29 +1161,31 @@ function TabCircleWishes({ data, set, slug }) {
                     />
                   )}
 
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '0.72rem', fontWeight: 600, color: isVideo ? '#A78BFA' : '#888' }}>
-                        {isVideo ? '🎥 Video Kenangan' : '🖼️ Foto Kenangan'}
-                      </span>
-                      <a href={mediaUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.65rem', color: '#60A5FA', textDecoration: 'none' }}>
-                        Buka Media ↗
-                      </a>
+                  {!isAudio && (
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '0.72rem', fontWeight: 600, color: isVideo ? '#A78BFA' : '#888' }}>
+                          {isVideo ? '🎥 Video Kenangan' : '🖼️ Foto Kenangan'}
+                        </span>
+                        <a href={mediaUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.65rem', color: '#60A5FA', textDecoration: 'none' }}>
+                          Buka Media ↗
+                        </a>
+                      </div>
+                      <div style={{ fontSize: '0.65rem', color: '#555', wordBreak: 'break-all', marginTop: '2px' }} className="truncate">
+                        {mediaUrl}
+                      </div>
+                      <button
+                        style={{ ...S.smallBtn('#EF4444'), fontSize: '0.65rem', padding: '0.1rem 0.4rem', marginTop: '0.35rem' }}
+                        onClick={() => {
+                          const next = [...wishes];
+                          next[i] = { ...next[i], photoUrl: '', mediaUrl: '', mediaType: null };
+                          set('circleWishes', next);
+                        }}
+                      >
+                        Hapus {isVideo ? 'Video' : 'Foto'}
+                      </button>
                     </div>
-                    <div style={{ fontSize: '0.65rem', color: '#555', wordBreak: 'break-all', marginTop: '2px' }} className="truncate">
-                      {mediaUrl}
-                    </div>
-                    <button
-                      style={{ ...S.smallBtn('#EF4444'), fontSize: '0.65rem', padding: '0.1rem 0.4rem', marginTop: '0.35rem' }}
-                      onClick={() => {
-                        const next = [...wishes];
-                        next[i] = { ...next[i], photoUrl: '', mediaUrl: '', mediaType: null };
-                        set('circleWishes', next);
-                      }}
-                    >
-                      Hapus {isVideo ? 'Video' : 'Foto'}
-                    </button>
-                  </div>
+                  )}
                 </div>
               );
             })()}

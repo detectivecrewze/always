@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Play, Pause, Mic, Volume2 } from 'lucide-react';
 import { isVideoMedia } from '@/lib/videoValidation';
+import { formatAudioTime } from '@/lib/audioRecorder';
 
 function formatDate(dateStr) {
   if (!dateStr) return '';
@@ -35,7 +37,11 @@ export default function CircleWishesSection({
 
   const [selectedWish, setSelectedWish] = useState(null);
   const [isMuted, setIsMuted] = useState(true);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [audioCurrentTime, setAudioCurrentTime] = useState(0);
+  const [audioDuration, setAudioDuration] = useState(0);
   const modalVideoRef = useRef(null);
+  const modalAudioRef = useRef(null);
 
   // Helper to render dynamic subtitle with {recipient} placeholder support
   const renderSubtitle = () => {
@@ -78,18 +84,55 @@ export default function CircleWishesSection({
     }
   }, [isMuted, onVideoAudioChange]);
 
-  // Unified modal close handler ensuring audio cleanup
+  // Unified modal close handler ensuring audio & video cleanup
   const closeModal = useCallback(() => {
     if (modalVideoRef.current) {
       modalVideoRef.current.pause();
       modalVideoRef.current.muted = true;
+    }
+    if (modalAudioRef.current) {
+      modalAudioRef.current.pause();
+      modalAudioRef.current.currentTime = 0;
+    }
+    if (isPlayingAudio) {
+      setIsPlayingAudio(false);
+      if (onVideoAudioChange) onVideoAudioChange(false);
     }
     if (!isMuted) {
       setIsMuted(true);
       if (onVideoAudioChange) onVideoAudioChange(false);
     }
     setSelectedWish(null);
-  }, [isMuted, onVideoAudioChange]);
+  }, [isMuted, isPlayingAudio, onVideoAudioChange]);
+
+  // Toggle voice note audio play/pause with background music sync
+  const toggleAudioPlay = useCallback(() => {
+    if (!modalAudioRef.current) return;
+    if (isPlayingAudio) {
+      modalAudioRef.current.pause();
+      setIsPlayingAudio(false);
+      if (onVideoAudioChange) onVideoAudioChange(false);
+    } else {
+      modalAudioRef.current.play().then(() => {
+        setIsPlayingAudio(true);
+        if (onVideoAudioChange) onVideoAudioChange(true);
+      }).catch(() => {});
+    }
+  }, [isPlayingAudio, onVideoAudioChange]);
+
+  const handleAudioEnded = useCallback(() => {
+    setIsPlayingAudio(false);
+    setAudioCurrentTime(0);
+    if (modalAudioRef.current) modalAudioRef.current.currentTime = 0;
+    if (onVideoAudioChange) onVideoAudioChange(false);
+  }, [onVideoAudioChange]);
+
+  const handleSeekAudio = (e) => {
+    if (!modalAudioRef.current || !audioDuration) return;
+    const seekVal = Number(e.target.value);
+    modalAudioRef.current.currentTime = seekVal;
+    setAudioCurrentTime(seekVal);
+  };
 
   // 1. Unmount cleanup only
   useEffect(() => {
@@ -98,10 +141,13 @@ export default function CircleWishesSection({
     };
   }, [onVideoAudioChange]);
 
-  // 2. Reset muted state only when selectedWish changes (new wish opened)
+  // 2. Reset media states when selectedWish changes (new wish opened)
   useEffect(() => {
     if (selectedWish) {
       setIsMuted(true);
+      setIsPlayingAudio(false);
+      setAudioCurrentTime(0);
+      setAudioDuration(selectedWish.audioDuration || 0);
     }
   }, [selectedWish]);
 
@@ -154,6 +200,7 @@ export default function CircleWishesSection({
           const isEven = index % 2 === 0;
           const tiltClass = isEven ? '-rotate-1 hover:rotate-0' : 'rotate-1 hover:rotate-0';
           const formattedDate = formatDate(wish.createdAt);
+          const isAudioWish = wish.mediaType === 'audio' || Boolean(wish.audioUrl);
 
           return (
             <motion.div
@@ -173,7 +220,7 @@ export default function CircleWishesSection({
             >
               {/* Card Body */}
               <div className="flex-1 flex flex-col justify-between">
-                {/* Photo or Video Display or Monogram */}
+                {/* Photo or Video Display or Audio Soundwave or Monogram */}
                 {wish.photoUrl ? (
                   <div className="aspect-[4/3] rounded-xl overflow-hidden mb-4 bg-black/20 border border-white/10 relative">
                     {isVideoMedia(wish.photoUrl) ? (
@@ -195,6 +242,50 @@ export default function CircleWishesSection({
                         loading="lazy"
                       />
                     )}
+
+                    {isAudioWish && (
+                      <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-full bg-black/75 border border-white/20 text-[10px] text-white flex items-center gap-1 backdrop-blur-sm shadow-md">
+                        <Mic size={10} className="text-accent" />
+                        <span>{formatAudioTime(wish.audioDuration)}</span>
+                      </div>
+                    )}
+                  </div>
+                ) : isAudioWish ? (
+                  <div
+                    className="rounded-xl p-3.5 mb-4 border flex items-center justify-between gap-3"
+                    style={{
+                      background: 'color-mix(in srgb, var(--color-accent) 10%, transparent)',
+                      borderColor: 'color-mix(in srgb, var(--color-accent) 25%, transparent)',
+                    }}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-accent shrink-0 border"
+                        style={{
+                          background: 'color-mix(in srgb, var(--color-accent) 20%, transparent)',
+                          borderColor: 'color-mix(in srgb, var(--color-accent) 40%, transparent)',
+                        }}
+                      >
+                        <Mic size={14} />
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-text">Voice Note</div>
+                        <div className="text-[10px] text-text-muted">
+                          {formatAudioTime(wish.audioDuration) || '0:30'}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Mini waveform bars */}
+                    <div className="flex items-center gap-1 h-5">
+                      {[10, 18, 14, 8, 16, 12, 20, 9].map((h, i) => (
+                        <span
+                          key={i}
+                          className="w-0.5 rounded-full bg-accent/60"
+                          style={{ height: `${h}px` }}
+                        />
+                      ))}
+                    </div>
                   </div>
                 ) : (
                   <div
@@ -210,9 +301,16 @@ export default function CircleWishesSection({
                 )}
 
                 {/* Wish Message Snippet */}
-                <p className="text-xs sm:text-sm text-text/90 italic leading-relaxed line-clamp-3 font-serif mb-4">
-                  &ldquo;{wish.message}&rdquo;
-                </p>
+                {wish.message ? (
+                  <p className="text-xs sm:text-sm text-text/90 italic leading-relaxed line-clamp-3 font-serif mb-4">
+                    &ldquo;{wish.message}&rdquo;
+                  </p>
+                ) : isAudioWish ? (
+                  <p className="text-xs sm:text-sm text-accent italic leading-relaxed font-serif mb-4 flex items-center gap-1.5">
+                    <span>🎙️</span>
+                    <span>Pesan suara dari {wish.name}</span>
+                  </p>
+                ) : null}
 
                 {/* Sign-Off Bar (Postcard / Letter Style) */}
                 <div className="flex items-center justify-between gap-2 mt-auto pt-1 mb-1">
@@ -233,7 +331,7 @@ export default function CircleWishesSection({
                 className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] font-medium transition-colors"
                 style={{ color: 'var(--color-accent)' }}
               >
-                <span>Buka ucapan lengkap</span>
+                <span>{isAudioWish ? 'Dengarkan pesan suara' : 'Buka ucapan lengkap'}</span>
                 <span className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
                   ↗
                 </span>
@@ -278,7 +376,7 @@ export default function CircleWishesSection({
               <div className="overflow-y-auto pr-1 space-y-5">
                 {/* Full-size Photo or Video if present */}
                 {selectedWish.photoUrl && (
-                  <div className="relative w-full max-h-[340px] rounded-xl overflow-hidden bg-black/40 border border-white/10 flex items-center justify-center">
+                  <div className="relative w-full max-h-[320px] rounded-xl overflow-hidden bg-black/40 border border-white/10 flex items-center justify-center">
                     {isVideoMedia(selectedWish.photoUrl) ? (
                       <>
                         <video
@@ -300,7 +398,7 @@ export default function CircleWishesSection({
                           onEnded={() => {
                             if (!isMuted && onVideoAudioChange) onVideoAudioChange(false);
                           }}
-                          className="w-full h-full max-h-[340px] object-contain mx-auto cursor-pointer"
+                          className="w-full h-full max-h-[320px] object-contain mx-auto cursor-pointer"
                         />
                         <button
                           type="button"
@@ -344,17 +442,128 @@ export default function CircleWishesSection({
                   </div>
                 )}
 
-                {/* Full Un-clamped Message with Postcard Sign-Off */}
-                <div
-                  className="rounded-xl p-5 sm:p-6 border border-white/10 text-text font-serif leading-relaxed whitespace-pre-line"
-                  style={{
-                    background: 'color-mix(in srgb, var(--color-bg) 40%, transparent)',
-                  }}
-                >
-                  <p className="italic text-sm sm:text-base leading-relaxed mb-4">
-                    &ldquo;{selectedWish.message}&rdquo;
-                  </p>
-                  <div className="pt-3 border-t border-white/10 flex items-center justify-between">
+                {/* Voice Note Player if this wish is audio */}
+                {(selectedWish.mediaType === 'audio' || selectedWish.audioUrl) && (
+                  <>
+                    <audio
+                      ref={modalAudioRef}
+                      src={selectedWish.audioUrl || selectedWish.mediaUrl}
+                      onTimeUpdate={(e) => setAudioCurrentTime(e.target.currentTime)}
+                      onLoadedMetadata={(e) => setAudioDuration(e.target.duration || selectedWish.audioDuration || 0)}
+                      onEnded={handleAudioEnded}
+                      onPause={() => {
+                        setIsPlayingAudio(false);
+                        if (onVideoAudioChange) onVideoAudioChange(false);
+                      }}
+                      onPlay={() => {
+                        setIsPlayingAudio(true);
+                        if (onVideoAudioChange) onVideoAudioChange(true);
+                      }}
+                      preload="auto"
+                      className="hidden"
+                    />
+
+                    <div
+                      className="rounded-xl p-4 sm:p-5 border flex flex-col gap-3.5 shadow-lg"
+                      style={{
+                        background: 'color-mix(in srgb, var(--color-surface) 95%, #000)',
+                        borderColor: 'color-mix(in srgb, var(--color-accent) 30%, transparent)',
+                      }}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <button
+                            type="button"
+                            onClick={toggleAudioPlay}
+                            className="w-12 h-12 rounded-full flex items-center justify-center text-white cursor-pointer transition-transform hover:scale-105 active:scale-95 shadow-lg shrink-0"
+                            style={{
+                              background: 'linear-gradient(135deg, var(--color-accent), color-mix(in srgb, var(--color-accent) 70%, #000))',
+                              boxShadow: '0 6px 20px color-mix(in srgb, var(--color-accent) 40%, transparent)',
+                            }}
+                            aria-label={isPlayingAudio ? 'Jeda Suara' : 'Dengarkan Suara'}
+                          >
+                            {isPlayingAudio ? <Pause size={20} /> : <Play size={20} className="translate-x-0.5" />}
+                          </button>
+                          <div className="min-w-0">
+                            <div className="text-sm font-semibold text-text flex items-center gap-1.5 truncate">
+                              <Mic size={14} className="text-accent shrink-0" />
+                              <span className="truncate">Pesan Suara · {selectedWish.name}</span>
+                            </div>
+                            <div className="text-xs text-text-muted mt-0.5">
+                              {isPlayingAudio ? 'Sedang memutar suara...' : 'Tekan tombol Play untuk mendengarkan'}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Animated equalizer waves */}
+                        <div className="flex items-center gap-1 h-6 pr-1 shrink-0">
+                          {[10, 22, 14, 8, 20, 16, 24, 12, 18].map((h, i) => (
+                            <motion.span
+                              key={i}
+                              animate={isPlayingAudio ? { height: [6, h, 6] } : { height: 6 }}
+                              transition={{
+                                duration: 0.5,
+                                repeat: isPlayingAudio ? Infinity : 0,
+                                delay: i * 0.05,
+                                ease: 'easeInOut',
+                              }}
+                              className="w-1 rounded-full bg-accent"
+                              style={{ height: '6px' }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Scrubber & Duration */}
+                      <div className="space-y-1 pt-1">
+                        <input
+                          type="range"
+                          min="0"
+                          max={audioDuration || selectedWish.audioDuration || 30}
+                          step="0.1"
+                          value={audioCurrentTime}
+                          onChange={handleSeekAudio}
+                          className="w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-accent bg-white/10"
+                        />
+                        <div className="flex justify-between text-[11px] font-mono text-text-muted">
+                          <span>{formatAudioTime(audioCurrentTime)}</span>
+                          <span>{formatAudioTime(audioDuration || selectedWish.audioDuration || 0)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Message Caption or Postcard Sign-Off */}
+                {selectedWish.message ? (
+                  <div
+                    className="rounded-xl p-5 sm:p-6 border border-white/10 text-text font-serif leading-relaxed whitespace-pre-line"
+                    style={{
+                      background: 'color-mix(in srgb, var(--color-bg) 40%, transparent)',
+                    }}
+                  >
+                    <p className="italic text-sm sm:text-base leading-relaxed mb-4">
+                      &ldquo;{selectedWish.message}&rdquo;
+                    </p>
+                    <div className="pt-3 border-t border-white/10 flex items-center justify-between">
+                      <div className="text-accent font-medium text-base tracking-wide flex items-center gap-1.5 font-serif">
+                        <span className="opacity-50 select-none font-normal">&mdash;</span>
+                        <span>{selectedWish.name}</span>
+                      </div>
+                      {formatDate(selectedWish.createdAt) && (
+                        <span className="text-xs text-text-muted font-sans">
+                          {formatDate(selectedWish.createdAt)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    className="rounded-xl p-4 border border-white/10 text-text flex items-center justify-between"
+                    style={{
+                      background: 'color-mix(in srgb, var(--color-bg) 40%, transparent)',
+                    }}
+                  >
                     <div className="text-accent font-medium text-base tracking-wide flex items-center gap-1.5 font-serif">
                       <span className="opacity-50 select-none font-normal">&mdash;</span>
                       <span>{selectedWish.name}</span>
@@ -365,7 +574,7 @@ export default function CircleWishesSection({
                       </span>
                     )}
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Bottom Close Button */}

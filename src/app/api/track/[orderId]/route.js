@@ -82,17 +82,29 @@ export async function GET(request, { params: paramsPromise }) {
         wishesCount: wishes.length,
         circleWishes: wishes.map((w) => {
           const resolvedMedia = (w.mediaUrl || w.photoUrl || '').trim();
-          const inferredMediaType =
-            w.mediaType ||
-            (resolvedMedia ? (/\.(mp4|webm|mov)(\?.*)?$/i.test(resolvedMedia) ? 'video' : 'photo') : null);
+          const resolvedAudio = (w.audioUrl || (w.mediaType === 'audio' ? w.mediaUrl : '') || '').trim();
+          let inferredMediaType = w.mediaType;
+          if (!inferredMediaType) {
+            if (resolvedAudio || /\.(mp3|m4a|wav|ogg|aac)(\?.*)?$/i.test(resolvedMedia)) {
+              inferredMediaType = 'audio';
+            } else if (resolvedMedia && /\.(mp4|webm|mov)(\?.*)?$/i.test(resolvedMedia)) {
+              inferredMediaType = 'video';
+            } else if (resolvedMedia) {
+              inferredMediaType = 'photo';
+            } else {
+              inferredMediaType = null;
+            }
+          }
 
           return {
             id: w.id,
             name: w.name,
             message: w.message || '',
-            photoUrl: resolvedMedia,
+            photoUrl: w.photoUrl || (inferredMediaType !== 'audio' ? resolvedMedia : ''),
             mediaUrl: resolvedMedia,
             mediaType: inferredMediaType,
+            audioUrl: resolvedAudio || (inferredMediaType === 'audio' ? resolvedMedia : ''),
+            audioDuration: w.audioDuration || null,
             createdAt: w.createdAt,
           };
         }),
