@@ -40,12 +40,6 @@ function formatBytes(bytes) {
   return `${(bytes / Math.pow(k, i)).toFixed(i === 2 ? 1 : 0)} ${sizes[i]}`;
 }
 
-function countWords(str) {
-  if (!str) return 0;
-  // Match genuine word tokens (letters/numbers, handles hyphens & apostrophes; excludes standalone punctuation and emojis)
-  const matches = str.match(/[\p{L}\p{N}]+(?:[-'’][\p{L}\p{N}]+)*/gu);
-  return matches ? matches.length : 0;
-}
 
 export default function ContributorForm({
   slug,
@@ -417,9 +411,9 @@ export default function ContributorForm({
       }
     }
 
-    const wordCount = countWords(cleanMessage);
-    if (wordCount > 200) {
-      setErrorMsg(`Pesan ucapan maksimal 200 kata (saat ini: ${wordCount} kata). Harap dipersingkat.`);
+    const maxChars = wishMode === 'voice' ? 150 : 250;
+    if (cleanMessage.length > maxChars) {
+      setErrorMsg(`Pesan ${wishMode === 'voice' ? 'catatan' : 'ucapan'} maksimal ${maxChars} karakter (saat ini: ${cleanMessage.length} karakter). Harap dipersingkat.`);
       return;
     }
 
@@ -703,18 +697,18 @@ export default function ContributorForm({
                         <label className="block text-xs font-semibold uppercase tracking-wider text-text-muted">
                           Pesan Ucapan <span className="text-accent">*</span>
                         </label>
-                        <span className={`text-[11px] ${countWords(message) > 200 ? 'text-red-400 font-semibold' : 'text-text-muted'}`}>
-                          {countWords(message)} / 200 kata
+                        <span className={`text-[11px] ${message.length >= 250 ? 'text-amber-400 font-semibold' : 'text-text-muted'}`}>
+                          {message.length} / 250 karakter
                         </span>
                       </div>
                       <textarea
                         required
-                        maxLength={2500}
+                        maxLength={250}
                         rows={4}
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         placeholder={`Selamat ulang tahun ${recipient}! Semoga sehat selalu, lancar segala impiannya, dan bahagia terus ya...`}
-                        className={`w-full px-4 py-3 rounded-xl border ${countWords(message) > 200 ? 'border-red-500/50 focus:border-red-500' : 'border-white/10 focus:border-accent'} bg-black/20 text-text placeholder:text-text-muted/50 focus:outline-none transition-colors text-sm resize-none`}
+                        className="w-full px-4 py-3 rounded-xl border border-white/10 focus:border-accent bg-black/20 text-text placeholder:text-text-muted/50 focus:outline-none transition-colors text-sm resize-none"
                         disabled={isSubmitting}
                       />
                     </div>
@@ -893,17 +887,17 @@ export default function ContributorForm({
                           <label className="block text-xs font-semibold uppercase tracking-wider text-text-muted">
                             Catatan / Teks Pengantar (Opsional)
                           </label>
-                          <span className={`text-[11px] ${countWords(message) > 200 ? 'text-red-400 font-semibold' : 'text-text-muted'}`}>
-                            {countWords(message)} / 200 kata
+                          <span className={`text-[11px] ${message.length >= 150 ? 'text-amber-400 font-semibold' : 'text-text-muted'}`}>
+                            {message.length} / 150 karakter
                           </span>
                         </div>
                         <input
                           type="text"
-                          maxLength={1500}
+                          maxLength={150}
                           value={message}
                           onChange={(e) => setMessage(e.target.value)}
                           placeholder={`Misal: Dengerin yaa ${recipient}! Selamat ulang tahun! 🤍`}
-                          className={`w-full px-4 py-2.5 rounded-xl border ${countWords(message) > 200 ? 'border-red-500/50 focus:border-red-500' : 'border-white/10 focus:border-accent'} bg-black/20 text-text placeholder:text-text-muted/50 focus:outline-none transition-colors text-sm`}
+                          className="w-full px-4 py-2.5 rounded-xl border border-white/10 focus:border-accent bg-black/20 text-text placeholder:text-text-muted/50 focus:outline-none transition-colors text-sm"
                           disabled={isSubmitting}
                         />
                       </div>

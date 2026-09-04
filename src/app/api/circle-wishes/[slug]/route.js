@@ -3,11 +3,7 @@ import { saveWish, getWishesBySlug, deleteWish } from '@/lib/wishes';
 import { validateSlotToken, claimSlotToken } from '@/lib/circleSlots';
 import { getGiftBySlug } from '@/lib/getData';
 
-function countWords(str) {
-  if (!str) return 0;
-  const matches = str.match(/[\p{L}\p{N}]+(?:[-'’][\p{L}\p{N}]+)*/gu);
-  return matches ? matches.length : 0;
-}
+
 
 // POST /api/circle-wishes/[slug]
 export async function POST(request, { params }) {
@@ -68,12 +64,12 @@ export async function POST(request, { params }) {
     if (name.length > 80) {
       return NextResponse.json({ error: 'Nama maksimal 80 karakter' }, { status: 400 });
     }
-    const words = countWords(message);
-    if (words > 200) {
-      return NextResponse.json({ error: 'Pesan ucapan maksimal 200 kata' }, { status: 400 });
-    }
-    if (message.length > 3000) {
-      return NextResponse.json({ error: 'Pesan maksimal 3000 karakter' }, { status: 400 });
+    const maxChars = isAudioWish ? 150 : 250;
+    if (message && message.length > maxChars) {
+      return NextResponse.json(
+        { error: `Pesan ${isAudioWish ? 'catatan' : 'ucapan'} maksimal ${maxChars} karakter` },
+        { status: 400 }
+      );
     }
 
     const wish = await saveWish(slug, {
@@ -191,9 +187,12 @@ export async function PUT(request, { params }) {
     if (!message && !isAudioWish) {
       return NextResponse.json({ error: 'Pesan ucapan wajib diisi' }, { status: 400 });
     }
-    const words = countWords(message);
-    if (words > 200) {
-      return NextResponse.json({ error: 'Pesan ucapan maksimal 200 kata' }, { status: 400 });
+    const maxChars = isAudioWish ? 150 : 250;
+    if (message && message.length > maxChars) {
+      return NextResponse.json(
+        { error: `Pesan ${isAudioWish ? 'catatan' : 'ucapan'} maksimal ${maxChars} karakter` },
+        { status: 400 }
+      );
     }
 
     const photoUrl = (body.photoUrl || '').trim();
