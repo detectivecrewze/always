@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Sparkles,
   Camera,
   Video,
   Zap,
@@ -286,10 +285,7 @@ export default function ContributorForm({
           transition={{ duration: 0.6 }}
           className="text-center mb-6"
         >
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium tracking-wide uppercase mb-3 border border-accent/20 bg-accent/10 text-accent">
-            <Sparkles size={13} />
-            <span>Circle of Wishes</span>
-          </div>
+
           <h1 className="font-serif text-3xl sm:text-4xl text-text font-normal leading-tight">
             Kado Ucapan untuk <span className="text-accent italic">{recipient}</span>
           </h1>
