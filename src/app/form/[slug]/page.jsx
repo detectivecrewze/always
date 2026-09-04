@@ -428,7 +428,7 @@ export default function OrderForm() {
                   }}
                 >
                   <div style={{ letterSpacing: '0.01em' }}>Personal Edition</div>
-                  <div style={{ fontSize: '0.68rem', opacity: !data.isCircle ? 0.8 : 0.5, marginTop: '4px' }}>Khusus dari Kamu Sendiri</div>
+                  <div style={{ fontSize: '0.68rem', opacity: !data.isCircle ? 0.8 : 0.5, marginTop: '4px' }}>Khusus dari Kamu</div>
                 </button>
 
                 <button
@@ -448,15 +448,15 @@ export default function OrderForm() {
                   }}
                 >
                   <div style={{ letterSpacing: '0.01em' }}>Circle Edition</div>
-                  <div style={{ fontSize: '0.68rem', opacity: data.isCircle ? 0.8 : 0.5, marginTop: '4px' }}>Bisa Titip Ucapan Teman</div>
+                  <div style={{ fontSize: '0.68rem', opacity: data.isCircle ? 0.8 : 0.5, marginTop: '4px' }}>Sertakan Ucapan Teman</div>
                 </button>
               </div>
               {data.isCircle && (
                 <div style={{ marginTop: '1rem', paddingTop: '0.85rem', borderTop: `1px solid ${currentTheme.text}15` }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                     <div>
-                      <div style={{ fontSize: '0.82rem', fontWeight: 600 }}>Jumlah Teman yang Titip Ucapan</div>
-                      <div style={{ fontSize: '0.7rem', opacity: 0.65 }}>Setiap teman akan mendapat link privat tersendiri</div>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 600 }}>Jumlah Teman</div>
+                      <div style={{ fontSize: '0.7rem', opacity: 0.65 }}>Pilih 3 – 20 teman</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <button
@@ -505,7 +505,7 @@ export default function OrderForm() {
                     </div>
                   </div>
                   <p style={{ fontSize: '0.72rem', opacity: 0.65, lineHeight: 1.4, margin: 0 }}>
-                    Pilih 3 sampai 20 teman. Nanti kamu akan mendapat link khusus untuk dibagikan ke teman-teman, agar mereka bisa langsung kirim pesan ucapan dan foto/video mereka tanpa perlu login.
+                    Tiap teman akan dapat 1 link khusus untuk kirim pesan & foto/video mereka.
                   </p>
                 </div>
               )}
