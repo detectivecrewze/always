@@ -144,8 +144,8 @@ export default function ContributorForm({
 
     try {
       if (isVideo) {
-        // Validate video duration: 1 to 15 seconds (tolerance up to 15.9s)
-        const dur = await checkVideoMetadata(file, 1, 15);
+        // Validate video duration: 1 to 30 seconds (tolerance up to 30.9s)
+        const dur = await checkVideoMetadata(file, 1, 30);
         if (previewUrl) URL.revokeObjectURL(previewUrl);
 
         const newPreview = URL.createObjectURL(file);
@@ -472,7 +472,7 @@ export default function ContributorForm({
                           {isProcessingMedia ? 'Memeriksa & memproses media...' : 'Pilih Foto atau Video Pendek'}
                         </span>
                         <span className="text-[11px] text-text-muted">
-                          Foto otomatis dioptimasi · Video maks 15 dtk &amp; 20 MB
+                          Foto otomatis dioptimasi · Video maks 30 dtk &amp; 20 MB
                         </span>
                       </button>
                     ) : (

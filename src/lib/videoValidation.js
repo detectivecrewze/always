@@ -20,10 +20,10 @@ export function isVideoMedia(url) {
  * Handles WebKit/iOS Infinity/NaN quirks, errors, and sets an 8s timeout safeguard.
  * @param {File} file
  * @param {number} minDuration Minimum duration in seconds (default 1)
- * @param {number} maxDuration Maximum duration in seconds (default 15)
+ * @param {number} maxDuration Maximum duration in seconds (default 30)
  * @returns {Promise<number>} Returns verified duration in seconds
  */
-export function checkVideoMetadata(file, minDuration = 1, maxDuration = 15) {
+export function checkVideoMetadata(file, minDuration = 1, maxDuration = 30) {
   return new Promise((resolve, reject) => {
     if (typeof window === 'undefined') {
       return resolve(minDuration);

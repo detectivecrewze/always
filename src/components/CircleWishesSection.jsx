@@ -210,6 +210,7 @@ export default function CircleWishesSection({
                     </div>
                     <div className="min-w-0 flex-1">
                       <h3 className="font-semibold text-sm text-text truncate">
+                        <span className="text-text-muted/80 text-xs font-sans font-normal mr-1.5 tracking-wider">From :</span>
                         {wish.name}
                       </h3>
                       {formattedDate && (
@@ -225,6 +226,7 @@ export default function CircleWishesSection({
                 {wish.photoUrl && (
                   <div className="flex items-center justify-between gap-2 mb-2">
                     <h3 className="font-semibold text-sm text-accent font-serif tracking-wide truncate">
+                      <span className="text-text-muted/80 text-xs font-sans font-normal mr-1.5 tracking-wider">From :</span>
                       {wish.name}
                     </h3>
                     {formattedDate && (
@@ -370,6 +372,7 @@ export default function CircleWishesSection({
                   )}
                   <div>
                     <h4 className="font-serif text-lg sm:text-xl text-text font-medium">
+                      <span className="text-text-muted/80 text-sm font-sans font-normal mr-2 tracking-wider">From :</span>
                       {selectedWish.name}
                     </h4>
                     {formatDate(selectedWish.createdAt) && (
