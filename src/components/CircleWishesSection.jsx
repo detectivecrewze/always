@@ -322,7 +322,7 @@ export default function CircleWishesSection({
                 ) : isAudioWish ? (
                   <p className="text-xs sm:text-sm text-accent italic leading-relaxed font-serif mb-4 flex items-center gap-1.5">
                     <span>🎙️</span>
-                    <span>Pesan suara dari {wish.name}</span>
+                    <span>A voice message from {wish.name}</span>
                   </p>
                 ) : null}
 
@@ -345,7 +345,7 @@ export default function CircleWishesSection({
                 className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] font-medium transition-colors"
                 style={{ color: 'var(--color-accent)' }}
               >
-                <span>{isAudioWish ? 'Dengarkan pesan suara' : 'Buka ucapan lengkap'}</span>
+                <span>{isAudioWish ? 'Listen to voice note' : 'Open full message'}</span>
                 <span className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
                   ↗
                 </span>
@@ -506,10 +506,10 @@ export default function CircleWishesSection({
                           <div className="min-w-0">
                             <div className="text-sm font-semibold text-text flex items-center gap-1.5 truncate">
                               <Mic size={14} className="text-accent shrink-0" />
-                              <span className="truncate">Pesan Suara · {selectedWish.name}</span>
+                              <span className="truncate">Voice Note · {selectedWish.name}</span>
                             </div>
                             <div className="text-xs text-text-muted mt-0.5">
-                              {isPlayingAudio ? 'Sedang memutar suara...' : 'Tekan tombol Play untuk mendengarkan'}
+                              {isPlayingAudio ? 'Now playing...' : 'Press play to listen'}
                             </div>
                           </div>
                         </div>
