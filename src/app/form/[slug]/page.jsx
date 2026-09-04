@@ -505,7 +505,7 @@ export default function OrderForm() {
                     </div>
                   </div>
                   <p style={{ fontSize: '0.72rem', opacity: 0.65, lineHeight: 1.4, margin: 0 }}>
-                    Tiap teman akan dapat 1 link khusus untuk kirim pesan & foto/video mereka.
+                    Tiap teman akan dapat 1 link khusus untuk kirim pesan & 1 foto/video mereka.
                   </p>
                 </div>
               )}
