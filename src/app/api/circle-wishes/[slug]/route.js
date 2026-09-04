@@ -64,7 +64,7 @@ export async function POST(request, { params }) {
     if (name.length > 80) {
       return NextResponse.json({ error: 'Nama maksimal 80 karakter' }, { status: 400 });
     }
-    const maxChars = isAudioWish ? 150 : 250;
+    const maxChars = isAudioWish ? 150 : 300;
     if (message && message.length > maxChars) {
       return NextResponse.json(
         { error: `Pesan ${isAudioWish ? 'catatan' : 'ucapan'} maksimal ${maxChars} karakter` },
@@ -187,7 +187,7 @@ export async function PUT(request, { params }) {
     if (!message && !isAudioWish) {
       return NextResponse.json({ error: 'Pesan ucapan wajib diisi' }, { status: 400 });
     }
-    const maxChars = isAudioWish ? 150 : 250;
+    const maxChars = isAudioWish ? 150 : 300;
     if (message && message.length > maxChars) {
       return NextResponse.json(
         { error: `Pesan ${isAudioWish ? 'catatan' : 'ucapan'} maksimal ${maxChars} karakter` },

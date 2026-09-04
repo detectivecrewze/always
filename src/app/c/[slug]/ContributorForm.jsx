@@ -411,7 +411,7 @@ export default function ContributorForm({
       }
     }
 
-    const maxChars = wishMode === 'voice' ? 150 : 250;
+    const maxChars = wishMode === 'voice' ? 150 : 300;
     if (cleanMessage.length > maxChars) {
       setErrorMsg(`Pesan ${wishMode === 'voice' ? 'catatan' : 'ucapan'} maksimal ${maxChars} karakter (saat ini: ${cleanMessage.length} karakter). Harap dipersingkat.`);
       return;
@@ -697,13 +697,13 @@ export default function ContributorForm({
                         <label className="block text-xs font-semibold uppercase tracking-wider text-text-muted">
                           Pesan Ucapan <span className="text-accent">*</span>
                         </label>
-                        <span className={`text-[11px] ${message.length >= 250 ? 'text-amber-400 font-semibold' : 'text-text-muted'}`}>
-                          {message.length} / 250 karakter
+                        <span className={`text-[11px] ${message.length >= 300 ? 'text-amber-400 font-semibold' : 'text-text-muted'}`}>
+                          {message.length} / 300 karakter
                         </span>
                       </div>
                       <textarea
                         required
-                        maxLength={250}
+                        maxLength={300}
                         rows={4}
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
