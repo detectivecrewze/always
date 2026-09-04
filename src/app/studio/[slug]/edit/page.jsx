@@ -541,12 +541,19 @@ const REASONS_PRESETS = [
 
 function TabReasons({ data, set }) {
   const reasons = data.reasons || [];
+  const reasonsEnabled = data.reasonsEnabled !== undefined
+    ? Boolean(data.reasonsEnabled)
+    : Boolean(data.reasons && data.reasons.length > 0);
+
   const setReason = (idx, key, val) => {
     const next = [...reasons];
     next[idx] = { ...next[idx], [key]: val };
     set('reasons', next);
   };
-  const addReason = () => set('reasons', [...reasons, { title: '', desc: '' }]);
+  const addReason = () => {
+    set('reasons', [...reasons, { title: '', desc: '' }]);
+    if (!reasonsEnabled) set('reasonsEnabled', true);
+  };
   const removeReason = (idx) => set('reasons', reasons.filter((_, i) => i !== idx));
 
   const currentPreset = REASONS_PRESETS.find(p => p.title1 === data.reasonsTitle1 && p.title2 === data.reasonsTitle2)?.id || null;
@@ -555,28 +562,66 @@ function TabReasons({ data, set }) {
     set('reasonsTitle1', preset.title1);
     set('reasonsTitle2', preset.title2);
     set('reasons', preset.cards.map(c => ({ ...c })));
+    if (!reasonsEnabled) set('reasonsEnabled', true);
   };
 
   return (<>
-    <div style={S.sectionTitle}>Choose a Preset</div>
-    <div style={S.sectionDesc}>Pick a theme for the reason cards.</div>
-    <PresetGrid presets={REASONS_PRESETS} currentId={currentPreset} onApply={applyPreset} />
-    <div className="w-full h-px bg-[#1a1a1a] mb-4" />
-    <div style={S.sectionTitle}>Reasons I Love You</div>
-    <div style={S.sectionDesc}>Tap-to-reveal cards. Each has a title and description.</div>
-    <Field label="Section Title 1" value={data.reasonsTitle1} onChange={(v) => set('reasonsTitle1', v)} placeholder="The Reasons" />
-    <Field label="Section Title 2" value={data.reasonsTitle2} onChange={(v) => set('reasonsTitle2', v)} placeholder="I Love You" />
-    {reasons.map((r, i) => (
-      <div key={i} style={S.cardWrap}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-          <span style={{ fontSize: '0.7rem', color: '#555' }}>Reason {i + 1}</span>
-          <button style={S.smallBtn('#EF4444')} onClick={() => removeReason(i)}>Remove</button>
-        </div>
-        <Field label="Title" value={r.title} onChange={(v) => setReason(i, 'title', v)} placeholder="Your Smile" />
-        <Field label="Description" value={r.desc} onChange={(v) => setReason(i, 'desc', v)} placeholder="It lights up my world." />
+    <div style={S.sectionTitle}>Reasons Section</div>
+    <div style={S.sectionDesc}>Tap-to-reveal cards detailing reasons why you love or appreciate them.</div>
+
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem', background: '#111', padding: '1rem', borderRadius: '8px', border: '1px solid #333' }}>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: '0.9rem', color: '#fff', marginBottom: '0.25rem' }}>Enable Section</div>
+        <div style={{ fontSize: '0.75rem', color: '#888' }}>Show or hide this section on the live page</div>
       </div>
-    ))}
-    <button style={S.smallBtn('#22C55E')} onClick={addReason}>+ Add Reason</button>
+      <button 
+        type="button"
+        onClick={() => {
+          const next = !reasonsEnabled;
+          set('reasonsEnabled', next);
+          if (next && (!data.reasons || data.reasons.length === 0)) {
+            applyPreset(REASONS_PRESETS[0]);
+          }
+        }}
+        style={{
+          width: '48px', height: '24px', borderRadius: '12px',
+          background: reasonsEnabled ? '#22C55E' : '#333',
+          position: 'relative', transition: 'all 0.2s',
+          cursor: 'pointer', border: 'none', padding: 0
+        }}
+        aria-label="Toggle Reasons Section"
+      >
+        <div style={{
+          width: '20px', height: '20px', borderRadius: '50%', background: '#fff',
+          position: 'absolute', top: '2px', left: reasonsEnabled ? '26px' : '2px',
+          transition: 'all 0.2s'
+        }} />
+      </button>
+    </div>
+
+    <div className="w-full h-px bg-[#1a1a1a] mb-4" />
+
+    <div style={{ opacity: reasonsEnabled ? 1 : 0.5, pointerEvents: reasonsEnabled ? 'auto' : 'none' }}>
+      <div style={S.sectionTitle}>Choose a Preset</div>
+      <div style={S.sectionDesc}>Pick a theme for the reason cards.</div>
+      <PresetGrid presets={REASONS_PRESETS} currentId={currentPreset} onApply={applyPreset} />
+      <div className="w-full h-px bg-[#1a1a1a] mb-4" />
+      <div style={S.sectionTitle}>Reason Cards Details</div>
+      <div style={S.sectionDesc}>Tap-to-reveal cards. Each has a title and description.</div>
+      <Field label="Section Title 1" value={data.reasonsTitle1} onChange={(v) => set('reasonsTitle1', v)} placeholder="The Reasons" />
+      <Field label="Section Title 2" value={data.reasonsTitle2} onChange={(v) => set('reasonsTitle2', v)} placeholder="I Love You" />
+      {reasons.map((r, i) => (
+        <div key={i} style={S.cardWrap}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+            <span style={{ fontSize: '0.7rem', color: '#555' }}>Reason {i + 1}</span>
+            <button style={S.smallBtn('#EF4444')} onClick={() => removeReason(i)}>Remove</button>
+          </div>
+          <Field label="Title" value={r.title} onChange={(v) => setReason(i, 'title', v)} placeholder="Your Smile" />
+          <Field label="Description" value={r.desc} onChange={(v) => setReason(i, 'desc', v)} placeholder="It lights up my world." />
+        </div>
+      ))}
+      <button style={S.smallBtn('#22C55E')} onClick={addReason}>+ Add Reason</button>
+    </div>
   </>);
 }
 

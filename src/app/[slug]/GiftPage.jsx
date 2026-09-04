@@ -205,14 +205,16 @@ export default function GiftPage({ data }) {
             />
 
 
-            <ReasonCards 
-              reasons={data.reasons} 
-              reasonsTitle1={data.reasonsTitle1}
-              reasonsTitle2={data.reasonsTitle2}
-              reasonsHintTap={data.reasonsHintTap}
-              reasonsHintAll={data.reasonsHintAll}
-              freeCount={isPreview ? 2 : undefined}
-            />
+            {(data.reasonsEnabled !== undefined ? data.reasonsEnabled : Boolean(data.reasons && data.reasons.length > 0)) && data.reasons && data.reasons.length > 0 && (
+              <ReasonCards 
+                reasons={data.reasons} 
+                reasonsTitle1={data.reasonsTitle1}
+                reasonsTitle2={data.reasonsTitle2}
+                reasonsHintTap={data.reasonsHintTap}
+                reasonsHintAll={data.reasonsHintAll}
+                freeCount={isPreview ? 2 : undefined}
+              />
+            )}
 
             {(data.seasonsEnabled !== undefined ? data.seasonsEnabled : Boolean(data.seasons && data.seasons.length > 0)) && data.seasons && data.seasons.length > 0 && (
               <SeasonsSection 
