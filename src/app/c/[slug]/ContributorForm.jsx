@@ -102,6 +102,8 @@ export default function ContributorForm({
   const recordingTimerRef = useRef(null);
   const audioStreamRef = useRef(null);
   const audioPreviewElRef = useRef(null);
+  // Ref to track recordingSeconds inside MediaRecorder onstop callback (avoids stale closure)
+  const recordingSecondsRef = useRef(0);
 
   // Clean up object URLs and recording resources on unmount
   useEffect(() => {
@@ -279,7 +281,8 @@ export default function ContributorForm({
 
         try {
           const detectedDur = await getAudioDuration(blob, 30);
-          const finalDur = detectedDur > 0 ? detectedDur : recordingSeconds;
+          // getAudioDuration returns 0 for live WebM blobs (Infinity duration) — use ref as fallback
+          const finalDur = (detectedDur > 0) ? detectedDur : recordingSecondsRef.current;
           if (audioUrl) URL.revokeObjectURL(audioUrl);
           const preview = URL.createObjectURL(blob);
           setAudioFile(blob);
@@ -293,15 +296,18 @@ export default function ContributorForm({
       recorder.start(200);
       setIsRecording(true);
       setRecordingSeconds(0);
+      recordingSecondsRef.current = 0;
 
       if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
       recordingTimerRef.current = setInterval(() => {
         setRecordingSeconds((prev) => {
-          if (prev >= 29) {
+          const next = prev + 1;
+          recordingSecondsRef.current = next; // keep ref in sync
+          if (next >= 30) {
             stopRecording();
             return 30;
           }
-          return prev + 1;
+          return next;
         });
       }, 1000);
     } catch (err) {

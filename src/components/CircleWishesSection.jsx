@@ -6,6 +6,20 @@ import { Play, Pause, Mic, Volume2 } from 'lucide-react';
 import { isVideoMedia } from '@/lib/videoValidation';
 import { formatAudioTime } from '@/lib/audioRecorder';
 
+// Helper: detect if a URL points to an audio file (not a photo or video)
+function isAudioUrl(url) {
+  if (!url) return false;
+  return /\.(mp3|m4a|ogg|aac|wav|opus|flac|webm)(\?.*)?$/i.test(url)
+    && !/\.(mp4|mov)(\?.*)?$/i.test(url);
+}
+
+// Helper: check if a photoUrl is a valid displayable image/video (not an audio file)
+function isDisplayableMedia(url) {
+  if (!url) return false;
+  if (isAudioUrl(url)) return false;
+  return true;
+}
+
 function formatDate(dateStr) {
   if (!dateStr) return '';
   try {
@@ -221,7 +235,7 @@ export default function CircleWishesSection({
               {/* Card Body */}
               <div className="flex-1 flex flex-col justify-between">
                 {/* Photo or Video Display or Audio Soundwave or Monogram */}
-                {wish.photoUrl ? (
+                {isDisplayableMedia(wish.photoUrl) ? (
                   <div className="aspect-[4/3] rounded-xl overflow-hidden mb-4 bg-black/20 border border-white/10 relative">
                     {isVideoMedia(wish.photoUrl) ? (
                       <video
@@ -375,7 +389,7 @@ export default function CircleWishesSection({
 
               <div className="overflow-y-auto pr-1 space-y-5">
                 {/* Full-size Photo or Video if present */}
-                {selectedWish.photoUrl && (
+                {isDisplayableMedia(selectedWish.photoUrl) && (
                   <div className="relative w-full max-h-[320px] rounded-xl overflow-hidden bg-black/40 border border-white/10 flex items-center justify-center">
                     {isVideoMedia(selectedWish.photoUrl) ? (
                       <>
