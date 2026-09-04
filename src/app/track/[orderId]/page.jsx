@@ -367,45 +367,45 @@ export default function CoordinatorTrackPage({ params }) {
   const progressPercent = Math.min(100, Math.round((usedSlotsCount / (totalSlotsCount || 1)) * 100));
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0d070b', color: '#f5f5f5', padding: '2rem 1rem', fontFamily: 'system-ui, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: '#0d070b', color: '#f5f5f5', padding: 'clamp(1rem, 4vw, 2rem) clamp(0.75rem, 4vw, 1rem)', fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ maxWidth: '640px', margin: '0 auto' }}>
         
         {/* Top Branding */}
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <span style={{ fontSize: '0.75rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#E11D48', fontWeight: 600 }}>
+        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+          <span style={{ fontSize: '0.7rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#E11D48', fontWeight: 600 }}>
             Done For You · Memoria Circle Edition
           </span>
-          <h1 style={{ fontSize: '1.8rem', fontWeight: 600, marginTop: '0.5rem', letterSpacing: '-0.02em' }}>
+          <h1 style={{ fontSize: 'clamp(1.4rem, 5vw, 1.8rem)', fontWeight: 600, marginTop: '0.4rem', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
             Hub Pantauan Koordinator
           </h1>
-          <p style={{ fontSize: '0.85rem', opacity: 0.7, marginTop: '0.3rem' }}>
+          <p style={{ fontSize: '0.82rem', opacity: 0.7, marginTop: '0.3rem' }}>
             Kado Kejutan untuk <strong style={{ color: '#fff' }}>{order.recipient}</strong>
           </p>
         </div>
 
         {/* Order Status Badge & Info */}
-        <div style={{ background: '#160d13', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '1.5rem', marginBottom: '1.5rem', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
-            <div>
-              <div style={{ fontSize: '0.7rem', opacity: 0.5, textTransform: 'uppercase', letterSpacing: '0.05em' }}>ID Pesanan</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: 700, fontFamily: 'monospace', color: '#E11D48' }}>{order.orderId}</div>
+        <div style={{ background: '#160d13', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: 'clamp(1rem, 4vw, 1.5rem)', marginBottom: '1.5rem', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: '0.65rem', opacity: 0.5, textTransform: 'uppercase', letterSpacing: '0.05em' }}>ID Pesanan</div>
+              <div style={{ fontSize: 'clamp(0.85rem, 3vw, 1.1rem)', fontWeight: 700, fontFamily: 'monospace', color: '#E11D48', wordBreak: 'break-all' }}>{order.orderId}</div>
             </div>
 
             {/* Live Status Pill */}
-            <div>
+            <div style={{ flexShrink: 0 }}>
               {isCollecting && (
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', padding: '0.35rem 0.8rem', borderRadius: '50px', color: '#FBBF24', fontSize: '0.78rem', fontWeight: 600 }}>
-                  Sedang Mengumpulkan Ucapan
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', padding: '0.3rem 0.7rem', borderRadius: '50px', color: '#FBBF24', fontSize: '0.74rem', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                  Mengumpulkan Ucapan
                 </div>
               )}
               {isReadyToCraft && (
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', padding: '0.35rem 0.8rem', borderRadius: '50px', color: '#4ADE80', fontSize: '0.78rem', fontWeight: 600 }}>
-                  Siap Dikerjakan Atelier
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', padding: '0.3rem 0.7rem', borderRadius: '50px', color: '#4ADE80', fontSize: '0.74rem', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                  Siap Dikerjakan
                 </div>
               )}
               {isDone && (
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)', padding: '0.35rem 0.8rem', borderRadius: '50px', color: '#60A5FA', fontSize: '0.78rem', fontWeight: 600 }}>
-                  Kado Selesai Dibuat
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)', padding: '0.3rem 0.7rem', borderRadius: '50px', color: '#60A5FA', fontSize: '0.74rem', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                  Kado Selesai
                 </div>
               )}
             </div>
@@ -454,15 +454,15 @@ export default function CoordinatorTrackPage({ params }) {
         )}
 
         {/* Slot Management Section */}
-        <div style={{ background: '#160d13', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '1.5rem', marginBottom: '1.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-            <div>
+        <div style={{ background: '#160d13', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: 'clamp(1rem, 4vw, 1.5rem)', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: '180px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.25rem' }}>
                 <Users size={18} color="#E11D48" />
-                <h2 style={{ fontSize: '1.05rem', fontWeight: 600, margin: 0 }}>Daftar Link Undangan Teman</h2>
+                <h2 style={{ fontSize: '1rem', fontWeight: 600, margin: 0 }}>Daftar Link Undangan Teman</h2>
               </div>
-              <p style={{ fontSize: '0.78rem', opacity: 0.65, margin: 0, lineHeight: 1.4 }}>
-                Setiap tautan bersifat privat dan hanya dapat diisi satu kali agar pesan ucapan tidak tertimpa.
+              <p style={{ fontSize: '0.76rem', opacity: 0.65, margin: 0, lineHeight: 1.4 }}>
+                Setiap tautan privat & hanya bisa diisi satu kali.
               </p>
             </div>
 
@@ -477,27 +477,29 @@ export default function CoordinatorTrackPage({ params }) {
                   color: '#FB7185',
                   padding: '0.45rem 0.85rem',
                   borderRadius: '8px',
-                  fontSize: '0.78rem',
+                  fontSize: '0.76rem',
                   fontWeight: 600,
                   cursor: addingSlot ? 'not-allowed' : 'pointer',
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '5px',
                   transition: 'all 0.2s',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
                 }}
               >
                 <Plus size={14} />
-                <span>{addingSlot ? 'Menambah...' : 'Tambah Undangan Teman'}</span>
+                <span>{addingSlot ? 'Menambah...' : 'Tambah Slot'}</span>
               </button>
             )}
           </div>
 
           {/* Slot Progress Bar */}
           <div style={{ background: '#0a0508', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', padding: '0.85rem 1rem', marginBottom: '1.25rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', fontSize: '0.78rem' }}>
-              <span style={{ opacity: 0.7 }}>Kemajuan Pengisian Slot</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', fontSize: '0.75rem', flexWrap: 'wrap', gap: '4px' }}>
+              <span style={{ opacity: 0.7 }}>Kemajuan Pengisian</span>
               <strong style={{ color: '#fff' }}>
-                {usedSlotsCount} dari {totalSlotsCount} Slot Terisi ({progressPercent}%)
+                {usedSlotsCount}/{totalSlotsCount} Slot · {progressPercent}%
               </strong>
             </div>
             <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.08)', borderRadius: '999px', overflow: 'hidden' }}>
@@ -531,83 +533,85 @@ export default function CoordinatorTrackPage({ params }) {
                     padding: '1rem',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.65rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fff' }}>
-                        Slot #{slot.index}
-                      </span>
-                      {isUsed ? (
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', color: '#4ADE80', padding: '0.15rem 0.55rem', borderRadius: '50px', fontWeight: 600 }}>
-                            <Check size={11} />
-                            <span>Terisi oleh {slot.claimedBy || wish?.name || 'Teman'}</span>
+                  {/* Row 1: Slot label + status pill */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap' }}>
+                      Slot #{slot.index}
+                    </span>
+                    {isUsed ? (
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', color: '#4ADE80', padding: '0.15rem 0.55rem', borderRadius: '50px', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                          <Check size={11} />
+                          <span>Terisi · {slot.claimedBy || wish?.name || 'Teman'}</span>
+                        </span>
+                        {slot.nickname && slot.claimedBy && slot.nickname.trim().toLowerCase() !== slot.claimedBy.trim().toLowerCase() && (
+                          <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.45)', whiteSpace: 'nowrap' }}>
+                            (Slot: {slot.nickname})
                           </span>
-                          {slot.nickname && slot.claimedBy && slot.nickname.trim().toLowerCase() !== slot.claimedBy.trim().toLowerCase() && (
-                            <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)' }}>
-                              (Slot: {slot.nickname})
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ fontSize: '0.72rem', background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', color: '#FBBF24', padding: '0.15rem 0.55rem', borderRadius: '50px', fontWeight: 600 }}>
-                            Belum Terisi
+                        )}
+                      </div>
+                    ) : (
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '0.72rem', background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', color: '#FBBF24', padding: '0.15rem 0.55rem', borderRadius: '50px', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                          Belum Terisi
+                        </span>
+                        {slotNicknames[slot.id] && (
+                          <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)', whiteSpace: 'nowrap' }}>
+                            · untuk {slotNicknames[slot.id]}
                           </span>
-                          {slotNicknames[slot.id] && (
-                            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)' }}>
-                              · untuk {slotNicknames[slot.id]}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {!isUsed && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <button
-                          onClick={() => handleResetSlot(slot)}
-                          disabled={resettingSlotId === slot.id}
-                          title="Reset token jika salah kirim link"
-                          style={{
-                            background: 'transparent',
-                            border: '1px solid rgba(255,255,255,0.12)',
-                            color: 'rgba(255,255,255,0.6)',
-                            padding: '0.2rem 0.5rem',
-                            borderRadius: '6px',
-                            fontSize: '0.7rem',
-                            cursor: resettingSlotId === slot.id ? 'not-allowed' : 'pointer',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                          }}
-                        >
-                          <RefreshCw size={11} style={{ animation: resettingSlotId === slot.id ? 'spin 1s linear infinite' : 'none' }} />
-                          <span>Reset Link</span>
-                        </button>
-
-                        <button
-                          onClick={() => setSlotToDelete(slot)}
-                          title="Hapus slot kosong ini"
-                          style={{
-                            background: 'rgba(239,68,68,0.1)',
-                            border: '1px solid rgba(239,68,68,0.25)',
-                            color: '#F87171',
-                            padding: '0.2rem 0.5rem',
-                            borderRadius: '6px',
-                            fontSize: '0.7rem',
-                            cursor: 'pointer',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            transition: 'all 0.15s',
-                          }}
-                        >
-                          <Trash2 size={11} />
-                          <span>Hapus Slot</span>
-                        </button>
+                        )}
                       </div>
                     )}
                   </div>
+
+                  {/* Row 2: Action buttons (only for unused slots) */}
+                  {!isUsed && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'nowrap', marginBottom: '0.65rem' }}>
+                      <button
+                        onClick={() => handleResetSlot(slot)}
+                        disabled={resettingSlotId === slot.id}
+                        title="Reset token jika salah kirim link"
+                        style={{
+                          background: 'transparent',
+                          border: '1px solid rgba(255,255,255,0.12)',
+                          color: 'rgba(255,255,255,0.6)',
+                          padding: '0.25rem 0.6rem',
+                          borderRadius: '6px',
+                          fontSize: '0.72rem',
+                          cursor: resettingSlotId === slot.id ? 'not-allowed' : 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        <RefreshCw size={11} style={{ animation: resettingSlotId === slot.id ? 'spin 1s linear infinite' : 'none' }} />
+                        <span>Reset Link</span>
+                      </button>
+
+                      <button
+                        onClick={() => setSlotToDelete(slot)}
+                        title="Hapus slot kosong ini"
+                        style={{
+                          background: 'rgba(239,68,68,0.1)',
+                          border: '1px solid rgba(239,68,68,0.25)',
+                          color: '#F87171',
+                          padding: '0.25rem 0.6rem',
+                          borderRadius: '6px',
+                          fontSize: '0.72rem',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          transition: 'all 0.15s',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        <Trash2 size={11} />
+                        <span>Hapus Slot</span>
+                      </button>
+                    </div>
+                  )}
 
                   {isUsed ? (
                     <div>
@@ -843,18 +847,18 @@ export default function CoordinatorTrackPage({ params }) {
         </div>
 
         {/* Live Contributor Progress Tracker */}
-        <div style={{ background: '#160d13', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '1.5rem', marginBottom: '1.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-            <div>
-              <h2 style={{ fontSize: '1rem', fontWeight: 600, margin: 0 }}>
+        <div style={{ background: '#160d13', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: 'clamp(1rem, 4vw, 1.5rem)', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', gap: '8px', flexWrap: 'wrap' }}>
+            <div style={{ minWidth: 0 }}>
+              <h2 style={{ fontSize: '0.95rem', fontWeight: 600, margin: 0 }}>
                 Teman yang Sudah Mengisi ({order.wishesCount || 0})
               </h2>
-              <p style={{ fontSize: '0.75rem', opacity: 0.5, margin: '2px 0 0' }}>Diperbarui secara langsung</p>
+              <p style={{ fontSize: '0.72rem', opacity: 0.5, margin: '2px 0 0' }}>Diperbarui secara langsung</p>
             </div>
             <button
               onClick={handleRefresh}
               disabled={refreshing}
-              style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '0.4rem 0.75rem', borderRadius: '8px', fontSize: '0.75rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+              style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '0.4rem 0.75rem', borderRadius: '8px', fontSize: '0.72rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}
             >
               <RefreshCw size={13} style={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }} />
               <span>Refresh</span>
