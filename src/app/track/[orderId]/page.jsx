@@ -70,11 +70,16 @@ export default function CoordinatorTrackPage({ params }) {
 
   useEffect(() => {
     if (Array.isArray(order?.slots)) {
-      const initialNicknames = {};
-      order.slots.forEach((s) => {
-        initialNicknames[s.id] = s.nickname || '';
+      setSlotNicknames((prev) => {
+        const merged = { ...prev };
+        order.slots.forEach((s) => {
+          // Only initialize if not yet tracked locally (avoids overwriting in-progress input)
+          if (!(s.id in merged)) {
+            merged[s.id] = s.nickname || '';
+          }
+        });
+        return merged;
       });
-      setSlotNicknames(initialNicknames);
     }
   }, [order?.slots]);
 
