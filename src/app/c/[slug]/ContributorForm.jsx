@@ -462,10 +462,7 @@ export default function ContributorForm({
                           {isProcessingMedia ? (
                             <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
                           ) : (
-                            <div className="flex items-center gap-1">
-                              <Camera size={16} />
-                              <Video size={16} />
-                            </div>
+                            <Camera size={18} />
                           )}
                         </div>
                         <span className="text-xs font-medium text-text">
