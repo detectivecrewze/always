@@ -434,9 +434,12 @@ export default function ContributorForm({
 
                   {/* Memory Media (Photo or Short Video) */}
                   <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-text-muted mb-1">
                       Foto Kenangan / Video Pendek (Opsional)
                     </label>
+                    <p className="text-[11.5px] text-text-muted/70 mb-2.5 leading-relaxed">
+                      Bisa foto {recipient || 'si penerima'} saja atau momen kenangan kalian bersama.
+                    </p>
 
                     <input
                       type="file"
