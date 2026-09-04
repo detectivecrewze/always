@@ -341,3 +341,71 @@ export async function deleteWishAndResetSlot(orderId, slotId, targetWishId) {
 
   return { order, slot, deletedWishId: resolvedWishId };
 }
+
+/**
+ * Delete an unused slot from an order and re-index remaining slots.
+ */
+export async function deleteUnusedSlot(orderId, slotId) {
+  const order = await findOrder(orderId);
+  if (!order) {
+    throw new Error('Pesanan tidak ditemukan');
+  }
+
+  const slots = Array.isArray(order.slots) ? order.slots : [];
+  const slotIndex = slots.findIndex((s) => s.id === slotId);
+
+  if (slotIndex < 0) {
+    throw new Error('Slot tidak ditemukan');
+  }
+
+  const slot = slots[slotIndex];
+  if (slot.status === 'used') {
+    throw new Error('Slot yang sudah terisi tidak dapat dihapus dengan cara ini');
+  }
+
+  const usedCount = slots.filter((s) => s.status === 'used').length;
+  const minAllowed = Math.max(1, usedCount);
+
+  if (slots.length <= minAllowed) {
+    throw new Error(`Tidak dapat menghapus slot. Minimal tersisa ${minAllowed} slot.`);
+  }
+
+  // Remove the slot
+  slots.splice(slotIndex, 1);
+
+  // Re-index remaining slots sequentially
+  slots.forEach((s, idx) => {
+    s.index = idx + 1;
+  });
+
+  order.slots = slots;
+  order.circleQuota = slots.length;
+
+  await saveOrder(order);
+
+  return { order, slots };
+}
+
+/**
+ * Update the coordinator-assigned nickname / note for a slot.
+ */
+export async function updateSlotNickname(orderId, slotId, nickname) {
+  const order = await findOrder(orderId);
+  if (!order) {
+    throw new Error('Pesanan tidak ditemukan');
+  }
+
+  const slots = Array.isArray(order.slots) ? order.slots : [];
+  const slot = slots.find((s) => s.id === slotId);
+
+  if (!slot) {
+    throw new Error('Slot tidak ditemukan');
+  }
+
+  slot.nickname = (nickname || '').trim();
+
+  order.slots = slots;
+  await saveOrder(order);
+
+  return { order, slot };
+}

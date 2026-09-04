@@ -36,6 +36,10 @@ export default function CoordinatorTrackPage({ params }) {
   const [selectedWishModal, setSelectedWishModal] = useState(null);
   const [wishToDelete, setWishToDelete] = useState(null);
   const [deletingWish, setDeletingWish] = useState(false);
+  const [slotNicknames, setSlotNicknames] = useState({});
+  const [savingNicknameId, setSavingNicknameId] = useState(null);
+  const [slotToDelete, setSlotToDelete] = useState(null);
+  const [deletingSlot, setDeletingSlot] = useState(false);
 
   const fetchTracking = useCallback(async (isSilent = false) => {
     if (!orderId) return;
@@ -64,6 +68,16 @@ export default function CoordinatorTrackPage({ params }) {
     fetchTracking();
   }, [fetchTracking]);
 
+  useEffect(() => {
+    if (Array.isArray(order?.slots)) {
+      const initialNicknames = {};
+      order.slots.forEach((s) => {
+        initialNicknames[s.id] = s.nickname || '';
+      });
+      setSlotNicknames(initialNicknames);
+    }
+  }, [order?.slots]);
+
   const handleRefresh = () => {
     setRefreshing(true);
     fetchTracking(true);
@@ -85,12 +99,86 @@ export default function CoordinatorTrackPage({ params }) {
   const getSlotWaUrl = (slot) => {
     const url = getSlotUrl(slot);
     if (!url) return '#';
+    const friendName = (slotNicknames[slot.id] ?? slot.nickname ?? '').trim();
+    const greeting = friendName ? `Halo ${friendName}!` : 'Halo!';
     const text = encodeURIComponent(
-      `Halo! Ini tautan khusus kamu untuk mengisi ucapan dan foto kenangan kado kejutan ${order.recipient}:\n\n` +
+      `${greeting} Ini tautan khusus kamu untuk mengisi ucapan dan foto kenangan kado kejutan ${order.recipient}:\n\n` +
       `${url}\n\n` +
       `Catatan: Tautan ini bersifat privat dan hanya dapat digunakan 1 kali demi keamanan kado. Terima kasih banyak!`
     );
     return `https://wa.me/?text=${text}`;
+  };
+
+  const handleNicknameChange = (slotId, value) => {
+    setSlotNicknames((prev) => ({ ...prev, [slotId]: value }));
+  };
+
+  const handleNicknameBlur = async (slot) => {
+    const currentVal = (slotNicknames[slot.id] ?? '').trim();
+    const originalVal = (slot.nickname ?? '').trim();
+    if (currentVal === originalVal) return;
+
+    setSavingNicknameId(slot.id);
+    try {
+      const res = await fetch(`/api/orders/${encodeURIComponent(orderId)}/slots`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update-nickname',
+          slotId: slot.id,
+          nickname: currentVal,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setOrder((prev) => (prev ? { ...prev, slots: data.slots } : prev));
+      }
+    } catch (err) {
+      console.error('Failed to auto-save nickname:', err);
+    } finally {
+      setSavingNicknameId(null);
+    }
+  };
+
+  const handleDeleteUnusedSlot = async () => {
+    if (!slotToDelete) return;
+    const targetSlot = slotToDelete;
+    setDeletingSlot(true);
+    setActionNotice(null);
+    try {
+      const res = await fetch(`/api/orders/${encodeURIComponent(orderId)}/slots`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'delete-slot',
+          slotId: targetSlot.id,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setOrder((prev) =>
+          prev
+            ? {
+                ...prev,
+                slots: data.slots,
+                circleQuota: data.circleQuota || data.slots.length,
+              }
+            : prev
+        );
+        setActionNotice({
+          type: 'success',
+          text: `Slot #${targetSlot.index} berhasil dihapus. Nomor urut slot telah dirapikan.`,
+        });
+        setTimeout(() => setActionNotice(null), 3500);
+        setSlotToDelete(null);
+      } else {
+        setActionNotice({ type: 'error', text: data.error || 'Gagal menghapus slot.' });
+      }
+    } catch {
+      setActionNotice({ type: 'error', text: 'Terjadi kesalahan saat menghapus slot.' });
+    } finally {
+      setDeletingSlot(false);
+    }
   };
 
   const handleAddSlot = async () => {
@@ -444,38 +532,75 @@ export default function CoordinatorTrackPage({ params }) {
                         Slot #{slot.index}
                       </span>
                       {isUsed ? (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', color: '#4ADE80', padding: '0.15rem 0.55rem', borderRadius: '50px', fontWeight: 600 }}>
-                          <Check size={11} />
-                          <span>Terisi oleh {slot.claimedBy || wish?.name || 'Teman'}</span>
-                        </span>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', color: '#4ADE80', padding: '0.15rem 0.55rem', borderRadius: '50px', fontWeight: 600 }}>
+                            <Check size={11} />
+                            <span>Terisi oleh {slot.claimedBy || wish?.name || 'Teman'}</span>
+                          </span>
+                          {slot.nickname && slot.claimedBy && slot.nickname.trim().toLowerCase() !== slot.claimedBy.trim().toLowerCase() && (
+                            <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)' }}>
+                              (Slot: {slot.nickname})
+                            </span>
+                          )}
+                        </div>
                       ) : (
-                        <span style={{ fontSize: '0.72rem', background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', color: '#FBBF24', padding: '0.15rem 0.55rem', borderRadius: '50px', fontWeight: 600 }}>
-                          Belum Terisi
-                        </span>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontSize: '0.72rem', background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', color: '#FBBF24', padding: '0.15rem 0.55rem', borderRadius: '50px', fontWeight: 600 }}>
+                            Belum Terisi
+                          </span>
+                          {slotNicknames[slot.id] && (
+                            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)' }}>
+                              · untuk {slotNicknames[slot.id]}
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
 
                     {!isUsed && (
-                      <button
-                        onClick={() => handleResetSlot(slot)}
-                        disabled={resettingSlotId === slot.id}
-                        title="Reset token jika salah kirim link"
-                        style={{
-                          background: 'transparent',
-                          border: '1px solid rgba(255,255,255,0.12)',
-                          color: 'rgba(255,255,255,0.6)',
-                          padding: '0.2rem 0.5rem',
-                          borderRadius: '6px',
-                          fontSize: '0.7rem',
-                          cursor: resettingSlotId === slot.id ? 'not-allowed' : 'pointer',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                        }}
-                      >
-                        <RefreshCw size={11} style={{ animation: resettingSlotId === slot.id ? 'spin 1s linear infinite' : 'none' }} />
-                        <span>Reset Link</span>
-                      </button>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <button
+                          onClick={() => handleResetSlot(slot)}
+                          disabled={resettingSlotId === slot.id}
+                          title="Reset token jika salah kirim link"
+                          style={{
+                            background: 'transparent',
+                            border: '1px solid rgba(255,255,255,0.12)',
+                            color: 'rgba(255,255,255,0.6)',
+                            padding: '0.2rem 0.5rem',
+                            borderRadius: '6px',
+                            fontSize: '0.7rem',
+                            cursor: resettingSlotId === slot.id ? 'not-allowed' : 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                          }}
+                        >
+                          <RefreshCw size={11} style={{ animation: resettingSlotId === slot.id ? 'spin 1s linear infinite' : 'none' }} />
+                          <span>Reset Link</span>
+                        </button>
+
+                        <button
+                          onClick={() => setSlotToDelete(slot)}
+                          title="Hapus slot kosong ini"
+                          style={{
+                            background: 'rgba(239,68,68,0.1)',
+                            border: '1px solid rgba(239,68,68,0.25)',
+                            color: '#F87171',
+                            padding: '0.2rem 0.5rem',
+                            borderRadius: '6px',
+                            fontSize: '0.7rem',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            transition: 'all 0.15s',
+                          }}
+                        >
+                          <Trash2 size={11} />
+                          <span>Hapus Slot</span>
+                        </button>
+                      </div>
                     )}
                   </div>
 
@@ -609,6 +734,48 @@ export default function CoordinatorTrackPage({ params }) {
                     </div>
                   ) : (
                     <div>
+                      {/* Nickname note input */}
+                      <div style={{ marginBottom: '0.65rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                          <label style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>
+                            Nama Teman (Catatan Khusus Kamu)
+                          </label>
+                          {savingNicknameId === slot.id && (
+                            <span style={{ fontSize: '0.68rem', color: '#E11D48', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <RefreshCw size={10} style={{ animation: 'spin 1s linear infinite' }} />
+                              <span>Menyimpan...</span>
+                            </span>
+                          )}
+                        </div>
+                        <input
+                          type="text"
+                          maxLength={60}
+                          placeholder="Tulis nama teman (opsional, misal: Budi, Sarah)..."
+                          value={slotNicknames[slot.id] ?? slot.nickname ?? ''}
+                          onChange={(e) => handleNicknameChange(slot.id, e.target.value)}
+                          onBlur={() => handleNicknameBlur(slot)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.currentTarget.blur();
+                            }
+                          }}
+                          style={{
+                            width: '100%',
+                            boxSizing: 'border-box',
+                            background: '#070406',
+                            border: '1px solid rgba(255,255,255,0.08)',
+                            borderRadius: '8px',
+                            padding: '0.45rem 0.75rem',
+                            fontSize: '0.78rem',
+                            color: '#fff',
+                            outline: 'none',
+                            transition: 'border-color 0.2s',
+                          }}
+                          onFocus={(e) => (e.currentTarget.style.borderColor = 'rgba(225,29,72,0.6)')}
+                          onBlurCapture={(e) => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)')}
+                        />
+                      </div>
+
                       {/* URL preview */}
                       <div style={{ background: '#070406', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', padding: '0.45rem 0.75rem', fontFamily: 'monospace', fontSize: '0.75rem', color: 'rgba(255,255,255,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '0.65rem' }}>
                         {slotUrl}
@@ -1042,6 +1209,118 @@ export default function CoordinatorTrackPage({ params }) {
                   }}
                 >
                   {deletingWish ? (
+                    <>
+                      <RefreshCw size={13} style={{ animation: 'spin 1s linear infinite' }} />
+                      <span>Menghapus...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={13} />
+                      <span>Ya, Hapus</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Dialog Konfirmasi Hapus Slot Kosong */}
+        {slotToDelete && (
+          <div
+            onClick={() => !deletingSlot && setSlotToDelete(null)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0,0,0,0.85)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              zIndex: 120,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '1rem',
+            }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: '#1a0e16',
+                border: '1px solid rgba(225,29,72,0.3)',
+                borderRadius: '20px',
+                maxWidth: '420px',
+                width: '100%',
+                padding: '1.75rem',
+                textAlign: 'center',
+                boxShadow: '0 20px 50px rgba(0,0,0,0.8)',
+              }}
+            >
+              <div
+                style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '50%',
+                  background: 'rgba(225,29,72,0.15)',
+                  border: '1px solid rgba(225,29,72,0.3)',
+                  color: '#FB7185',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 1rem',
+                }}
+              >
+                <Trash2 size={22} />
+              </div>
+
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 600, marginBottom: '0.5rem', color: '#fff' }}>
+                Hapus Slot Kosong?
+              </h3>
+
+              <p style={{ fontSize: '0.82rem', opacity: 0.75, lineHeight: 1.5, marginBottom: '1.5rem', color: '#f5f5f5' }}>
+                Slot #{slotToDelete.index}
+                {slotNicknames[slotToDelete.id] || slotToDelete.nickname ? ` (${slotNicknames[slotToDelete.id] || slotToDelete.nickname})` : ''} akan dihapus dari daftar kado.
+                <br /><br />
+                Nomor urut slot lainnya akan otomatis dirapikan secara berurutan.
+              </p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <button
+                  onClick={() => setSlotToDelete(null)}
+                  disabled={deletingSlot}
+                  style={{
+                    background: 'transparent',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    color: '#fff',
+                    padding: '0.75rem',
+                    borderRadius: '10px',
+                    fontSize: '0.82rem',
+                    fontWeight: 600,
+                    cursor: deletingSlot ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  Batal
+                </button>
+
+                <button
+                  onClick={handleDeleteUnusedSlot}
+                  disabled={deletingSlot}
+                  style={{
+                    background: 'linear-gradient(135deg, #E11D48, #BE123C)',
+                    border: 'none',
+                    color: '#fff',
+                    padding: '0.75rem',
+                    borderRadius: '10px',
+                    fontSize: '0.82rem',
+                    fontWeight: 600,
+                    cursor: deletingSlot ? 'not-allowed' : 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    boxShadow: '0 4px 14px rgba(225,29,72,0.3)',
+                  }}
+                >
+                  {deletingSlot ? (
                     <>
                       <RefreshCw size={13} style={{ animation: 'spin 1s linear infinite' }} />
                       <span>Menghapus...</span>

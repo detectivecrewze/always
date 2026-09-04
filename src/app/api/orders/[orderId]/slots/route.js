@@ -1,5 +1,12 @@
 import { NextResponse } from 'next/server';
-import { addSlotToOrder, resetSlotToken, deleteWishAndResetSlot, findOrder } from '@/lib/circleSlots';
+import {
+  addSlotToOrder,
+  resetSlotToken,
+  deleteWishAndResetSlot,
+  deleteUnusedSlot,
+  updateSlotNickname,
+  findOrder,
+} from '@/lib/circleSlots';
 
 // POST /api/orders/[orderId]/slots — Coordinator slot management
 export async function POST(request, { params: paramsPromise }) {
@@ -64,7 +71,44 @@ export async function POST(request, { params: paramsPromise }) {
       }
     }
 
-    return NextResponse.json({ error: 'Invalid action. Supported: add, reset, delete-wish' }, { status: 400 });
+    if (action === 'delete-slot') {
+      const slotId = body?.slotId;
+      if (!slotId) {
+        return NextResponse.json({ error: 'slotId is required for delete-slot action' }, { status: 400 });
+      }
+
+      try {
+        const result = await deleteUnusedSlot(order.orderId, slotId);
+        return NextResponse.json({
+          success: true,
+          slots: result.slots,
+          circleQuota: result.order.circleQuota,
+        });
+      } catch (err) {
+        return NextResponse.json({ error: err.message || 'Gagal menghapus slot' }, { status: 400 });
+      }
+    }
+
+    if (action === 'update-nickname') {
+      const slotId = body?.slotId;
+      const nickname = body?.nickname;
+      if (!slotId) {
+        return NextResponse.json({ error: 'slotId is required for update-nickname action' }, { status: 400 });
+      }
+
+      try {
+        const result = await updateSlotNickname(order.orderId, slotId, nickname);
+        return NextResponse.json({
+          success: true,
+          slot: result.slot,
+          slots: result.order.slots,
+        });
+      } catch (err) {
+        return NextResponse.json({ error: err.message || 'Gagal memperbarui nama teman' }, { status: 400 });
+      }
+    }
+
+    return NextResponse.json({ error: 'Invalid action. Supported: add, reset, delete-wish, delete-slot, update-nickname' }, { status: 400 });
   } catch (err) {
     console.error('Error managing order slots:', err);
     return NextResponse.json({ error: 'Terjadi kesalahan pada server' }, { status: 500 });
