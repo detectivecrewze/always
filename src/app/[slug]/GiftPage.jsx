@@ -234,6 +234,8 @@ export default function GiftPage({ data }) {
                 circleTitle2={data.circleTitle2}
                 circleSubtitle={data.circleSubtitle}
                 onVideoAudioChange={handleWishVideoAudioChange}
+                themeStyles={themeStyles}
+                theme={currentThemeId}
               />
             )}
 

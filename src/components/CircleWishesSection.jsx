@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, Mic, Volume2 } from 'lucide-react';
+import { Play, Pause, Mic, Volume2, VolumeX, ArrowUpRight, X } from 'lucide-react';
+import { themes, defaultTheme } from '@/lib/themes';
 import { isVideoMedia } from '@/lib/videoValidation';
 import { formatAudioTime } from '@/lib/audioRecorder';
 
@@ -43,12 +45,15 @@ export default function CircleWishesSection({
   circleTitle2,
   circleSubtitle,
   onVideoAudioChange,
+  themeStyles,
+  theme,
 }) {
   // Strict non-breaking guard
   if (!wishes || wishes.length === 0) {
     return null;
   }
 
+  const [mounted, setMounted] = useState(false);
   const [selectedWish, setSelectedWish] = useState(null);
   const [isMuted, setIsMuted] = useState(true);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
@@ -56,6 +61,20 @@ export default function CircleWishesSection({
   const [audioDuration, setAudioDuration] = useState(0);
   const modalVideoRef = useRef(null);
   const modalAudioRef = useRef(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const t = themes[theme || defaultTheme] || themes[defaultTheme];
+  const computedThemeStyles = themeStyles || {
+    '--color-bg': t.bg,
+    '--color-surface': t.surface,
+    '--color-text': t.text,
+    '--color-text-muted': t.textMuted,
+    '--color-accent': t.accent,
+    '--color-particle': t.particle,
+  };
 
   // Helper to render dynamic subtitle with {recipient} placeholder support
   const renderSubtitle = () => {
@@ -321,7 +340,7 @@ export default function CircleWishesSection({
                   </p>
                 ) : isAudioWish ? (
                   <p className="text-xs sm:text-sm text-accent italic leading-relaxed font-serif mb-4 flex items-center gap-1.5">
-                    <span>🎙️</span>
+                    <Mic size={13} className="text-accent shrink-0" />
                     <span>A voice message from {wish.name}</span>
                   </p>
                 ) : null}
@@ -346,108 +365,114 @@ export default function CircleWishesSection({
                 style={{ color: 'var(--color-accent)' }}
               >
                 <span>{isAudioWish ? 'Listen to voice note' : 'Open full message'}</span>
-                <span className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
-                  ↗
-                </span>
+                <ArrowUpRight
+                  size={14}
+                  className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                />
               </div>
             </motion.div>
           );
         })}
       </div>
 
-      {/* Expandable Modal Dialog with Framer Motion */}
-      <AnimatePresence>
-        {selectedWish && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={closeModal}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md"
-          >
+      {/* Expandable Modal Dialog with Framer Motion — Portaled to document.body to isolate stacking context */}
+      {mounted && typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {selectedWish && (
             <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 15 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-lg rounded-2xl p-6 sm:p-8 border border-white/15 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={closeModal}
+              className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md"
               style={{
-                background: 'color-mix(in srgb, var(--color-surface) 92%, #000)',
-                boxShadow: '0 25px 60px rgba(0,0,0,0.6)',
+                ...computedThemeStyles,
+                isolation: 'isolate',
               }}
             >
-              {/* Close Button */}
-              <button
-                type="button"
-                onClick={closeModal}
-                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-text flex items-center justify-center transition-colors z-10 text-xs font-semibold cursor-pointer"
-                aria-label="Tutup dialog ucapan"
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.95, opacity: 0, y: 15 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                onClick={(e) => e.stopPropagation()}
+                className="relative w-full max-w-lg rounded-2xl p-6 sm:p-8 border border-white/15 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+                style={{
+                  background: 'color-mix(in srgb, var(--color-surface) 92%, #000)',
+                  boxShadow: '0 25px 60px rgba(0,0,0,0.6)',
+                }}
               >
-                ✕
-              </button>
+                {/* Close Button */}
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-text flex items-center justify-center transition-colors z-10 cursor-pointer"
+                  aria-label="Tutup dialog ucapan"
+                >
+                  <X size={16} />
+                </button>
 
-              <div className="overflow-y-auto pr-1 space-y-5">
-                {/* Full-size Photo or Video if present */}
-                {isDisplayableMedia(selectedWish.photoUrl) && (
-                  <div className="relative w-full max-h-[320px] rounded-xl overflow-hidden bg-black/40 border border-white/10 flex items-center justify-center">
-                    {isVideoMedia(selectedWish.photoUrl) ? (
-                      <>
-                        <video
-                          ref={modalVideoRef}
-                          src={selectedWish.photoUrl}
-                          autoPlay
-                          loop
-                          playsInline
-                          webkit-playsinline=""
-                          muted={isMuted}
-                          preload="auto"
-                          onClick={toggleMute}
-                          onPlay={() => {
-                            if (!isMuted && onVideoAudioChange) onVideoAudioChange(true);
-                          }}
-                          onPause={() => {
-                            if (!isMuted && onVideoAudioChange) onVideoAudioChange(false);
-                          }}
-                          onEnded={() => {
-                            if (!isMuted && onVideoAudioChange) onVideoAudioChange(false);
-                          }}
-                          className="w-full h-full max-h-[320px] object-contain mx-auto cursor-pointer"
-                        />
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleMute();
-                          }}
-                          className="absolute bottom-3 right-3 px-3.5 py-1.5 rounded-full text-xs font-medium border flex items-center gap-2 shadow-lg backdrop-blur-md transition-all duration-200 cursor-pointer z-10"
-                          style={{
-                            background: isMuted
-                              ? 'rgba(0, 0, 0, 0.75)'
-                              : 'color-mix(in srgb, var(--color-accent) 85%, transparent)',
-                            borderColor: isMuted ? 'rgba(255, 255, 255, 0.25)' : 'var(--color-accent)',
-                            color: '#ffffff',
-                            boxShadow: isMuted
-                              ? '0 4px 16px rgba(0,0,0,0.5)'
-                              : '0 4px 20px color-mix(in srgb, var(--color-accent) 50%, transparent)',
-                          }}
-                          aria-label={isMuted ? 'Dengarkan dengan Suara' : 'Bisukan Video'}
-                        >
-                          {isMuted ? (
-                            <>
-                              <span className="text-sm">🔊</span>
-                              <span>Dengarkan dengan Suara</span>
-                            </>
-                          ) : (
-                            <>
-                              <span className="text-sm">🔇</span>
-                              <span>Bisukan Video</span>
-                            </>
-                          )}
-                        </button>
-                      </>
-                    ) : (
-                      <img
+                <div className="overflow-y-auto pr-1 space-y-5">
+                  {/* Full-size Photo or Video if present */}
+                  {isDisplayableMedia(selectedWish.photoUrl) && (
+                    <div className="relative w-full max-h-[320px] rounded-xl overflow-hidden bg-black/40 border border-white/10 flex items-center justify-center">
+                      {isVideoMedia(selectedWish.photoUrl) ? (
+                        <>
+                          <video
+                            ref={modalVideoRef}
+                            src={selectedWish.photoUrl}
+                            autoPlay
+                            loop
+                            playsInline
+                            webkit-playsinline=""
+                            muted={isMuted}
+                            preload="auto"
+                            onClick={toggleMute}
+                            onPlay={() => {
+                              if (!isMuted && onVideoAudioChange) onVideoAudioChange(true);
+                            }}
+                            onPause={() => {
+                              if (!isMuted && onVideoAudioChange) onVideoAudioChange(false);
+                            }}
+                            onEnded={() => {
+                              if (!isMuted && onVideoAudioChange) onVideoAudioChange(false);
+                            }}
+                            className="w-full h-full max-h-[320px] object-contain mx-auto cursor-pointer"
+                          />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleMute();
+                            }}
+                            className="absolute bottom-3 right-3 px-3.5 py-1.5 rounded-full text-xs font-medium border flex items-center gap-2 shadow-lg backdrop-blur-md transition-all duration-200 cursor-pointer z-10"
+                            style={{
+                              background: isMuted
+                                ? 'rgba(0, 0, 0, 0.75)'
+                                : 'color-mix(in srgb, var(--color-accent) 85%, transparent)',
+                              borderColor: isMuted ? 'rgba(255, 255, 255, 0.25)' : 'var(--color-accent)',
+                              color: '#ffffff',
+                              boxShadow: isMuted
+                                ? '0 4px 16px rgba(0,0,0,0.5)'
+                                : '0 4px 20px color-mix(in srgb, var(--color-accent) 50%, transparent)',
+                            }}
+                            aria-label={isMuted ? 'Dengarkan dengan Suara' : 'Bisukan Video'}
+                          >
+                            {isMuted ? (
+                              <>
+                                <Volume2 size={15} />
+                                <span>Dengarkan dengan Suara</span>
+                              </>
+                            ) : (
+                              <>
+                                <VolumeX size={15} />
+                                <span>Bisukan Video</span>
+                              </>
+                            )}
+                          </button>
+                        </>
+                      ) : (
+                        <img
                         src={selectedWish.photoUrl}
                         alt={selectedWish.name}
                         className="w-full h-full object-contain mx-auto"
@@ -613,8 +638,10 @@ export default function CircleWishesSection({
               </div>
             </motion.div>
           </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </section>
   );
 }

@@ -62,8 +62,12 @@ export async function POST(request, { params }) {
     if (name.length > 80) {
       return NextResponse.json({ error: 'Nama maksimal 80 karakter' }, { status: 400 });
     }
-    if (message.length > 1000) {
-      return NextResponse.json({ error: 'Pesan maksimal 1000 karakter' }, { status: 400 });
+    const words = message ? message.trim().split(/\s+/).filter(Boolean).length : 0;
+    if (words > 200) {
+      return NextResponse.json({ error: 'Pesan ucapan maksimal 200 kata' }, { status: 400 });
+    }
+    if (message.length > 3000) {
+      return NextResponse.json({ error: 'Pesan maksimal 3000 karakter' }, { status: 400 });
     }
 
     const wish = await saveWish(slug, {
@@ -180,6 +184,10 @@ export async function PUT(request, { params }) {
     }
     if (!message && !isAudioWish) {
       return NextResponse.json({ error: 'Pesan ucapan wajib diisi' }, { status: 400 });
+    }
+    const words = message ? message.trim().split(/\s+/).filter(Boolean).length : 0;
+    if (words > 200) {
+      return NextResponse.json({ error: 'Pesan ucapan maksimal 200 kata' }, { status: 400 });
     }
 
     const photoUrl = (body.photoUrl || '').trim();

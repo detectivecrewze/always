@@ -40,6 +40,13 @@ function formatBytes(bytes) {
   return `${(bytes / Math.pow(k, i)).toFixed(i === 2 ? 1 : 0)} ${sizes[i]}`;
 }
 
+function countWords(str) {
+  if (!str) return 0;
+  const trimmed = str.trim();
+  if (!trimmed) return 0;
+  return trimmed.split(/\s+/).filter(Boolean).length;
+}
+
 export default function ContributorForm({
   slug,
   recipient,
@@ -410,6 +417,12 @@ export default function ContributorForm({
       }
     }
 
+    const wordCount = countWords(cleanMessage);
+    if (wordCount > 200) {
+      setErrorMsg(`Pesan ucapan maksimal 200 kata (saat ini: ${wordCount} kata). Harap dipersingkat.`);
+      return;
+    }
+
     setErrorMsg('');
     setIsSubmitting(true);
     let uploadedMediaUrl = '';
@@ -690,18 +703,18 @@ export default function ContributorForm({
                         <label className="block text-xs font-semibold uppercase tracking-wider text-text-muted">
                           Pesan Ucapan <span className="text-accent">*</span>
                         </label>
-                        <span className="text-[11px] text-text-muted">
-                          {message.length}/500
+                        <span className={`text-[11px] ${countWords(message) > 200 ? 'text-red-400 font-semibold' : 'text-text-muted'}`}>
+                          {countWords(message)} / 200 kata
                         </span>
                       </div>
                       <textarea
                         required
-                        maxLength={500}
+                        maxLength={2500}
                         rows={4}
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         placeholder={`Selamat ulang tahun ${recipient}! Semoga sehat selalu, lancar segala impiannya, dan bahagia terus ya...`}
-                        className="w-full px-4 py-3 rounded-xl border border-white/10 bg-black/20 text-text placeholder:text-text-muted/50 focus:outline-none focus:border-accent transition-colors text-sm resize-none"
+                        className={`w-full px-4 py-3 rounded-xl border ${countWords(message) > 200 ? 'border-red-500/50 focus:border-red-500' : 'border-white/10 focus:border-accent'} bg-black/20 text-text placeholder:text-text-muted/50 focus:outline-none transition-colors text-sm resize-none`}
                         disabled={isSubmitting}
                       />
                     </div>
@@ -880,17 +893,17 @@ export default function ContributorForm({
                           <label className="block text-xs font-semibold uppercase tracking-wider text-text-muted">
                             Catatan / Teks Pengantar (Opsional)
                           </label>
-                          <span className="text-[11px] text-text-muted">
-                            {message.length}/300
+                          <span className={`text-[11px] ${countWords(message) > 200 ? 'text-red-400 font-semibold' : 'text-text-muted'}`}>
+                            {countWords(message)} / 200 kata
                           </span>
                         </div>
                         <input
                           type="text"
-                          maxLength={300}
+                          maxLength={1500}
                           value={message}
                           onChange={(e) => setMessage(e.target.value)}
                           placeholder={`Misal: Dengerin yaa ${recipient}! Selamat ulang tahun! 🤍`}
-                          className="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-black/20 text-text placeholder:text-text-muted/50 focus:outline-none focus:border-accent transition-colors text-sm"
+                          className={`w-full px-4 py-2.5 rounded-xl border ${countWords(message) > 200 ? 'border-red-500/50 focus:border-red-500' : 'border-white/10 focus:border-accent'} bg-black/20 text-text placeholder:text-text-muted/50 focus:outline-none transition-colors text-sm`}
                           disabled={isSubmitting}
                         />
                       </div>
