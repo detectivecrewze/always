@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback, use } from 'react';
-import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Copy, Check, Users, ExternalLink, RefreshCw, Send, ArrowRight, ShieldCheck, Heart } from 'lucide-react';
 
