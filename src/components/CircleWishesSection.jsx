@@ -172,7 +172,7 @@ export default function CircleWishesSection({
               }}
             >
               {/* Card Body */}
-              <div>
+              <div className="flex-1 flex flex-col justify-between">
                 {/* Photo or Video Display or Monogram */}
                 {wish.photoUrl ? (
                   <div className="aspect-[4/3] rounded-xl overflow-hidden mb-4 bg-black/20 border border-white/10 relative">
@@ -197,48 +197,35 @@ export default function CircleWishesSection({
                     )}
                   </div>
                 ) : (
-                  <div className="flex items-center gap-3 mb-4">
-                    <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center font-serif text-base font-semibold shrink-0 border"
-                      style={{
-                        background: 'color-mix(in srgb, var(--color-accent) 20%, transparent)',
-                        borderColor: 'color-mix(in srgb, var(--color-accent) 40%, transparent)',
-                        color: 'var(--color-accent)',
-                      }}
-                    >
-                      {(wish.name || 'F').charAt(0).toUpperCase()}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-semibold text-sm text-text truncate">
-                        {wish.name}
-                      </h3>
-                      {formattedDate && (
-                        <span className="text-[11px] text-text-muted block">
-                          {formattedDate}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Friend Name when Photo is Present */}
-                {wish.photoUrl && (
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <h3 className="font-semibold text-sm text-accent font-serif tracking-wide truncate">
-                      {wish.name}
-                    </h3>
-                    {formattedDate && (
-                      <span className="text-[11px] text-text-muted shrink-0">
-                        {formattedDate}
-                      </span>
-                    )}
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center font-serif text-base font-semibold shrink-0 border mb-4"
+                    style={{
+                      background: 'color-mix(in srgb, var(--color-accent) 20%, transparent)',
+                      borderColor: 'color-mix(in srgb, var(--color-accent) 40%, transparent)',
+                      color: 'var(--color-accent)',
+                    }}
+                  >
+                    {(wish.name || 'F').charAt(0).toUpperCase()}
                   </div>
                 )}
 
                 {/* Wish Message Snippet */}
-                <p className="text-xs sm:text-sm text-text/85 italic leading-relaxed line-clamp-3 font-serif">
+                <p className="text-xs sm:text-sm text-text/90 italic leading-relaxed line-clamp-3 font-serif mb-4">
                   &ldquo;{wish.message}&rdquo;
                 </p>
+
+                {/* Sign-Off Bar (Postcard / Letter Style) */}
+                <div className="flex items-center justify-between gap-2 mt-auto pt-1 mb-1">
+                  <div className="font-serif text-sm text-accent font-medium tracking-wide truncate flex items-center gap-1.5">
+                    <span className="opacity-50 select-none font-normal">&mdash;</span>
+                    <span className="truncate">{wish.name}</span>
+                  </div>
+                  {formattedDate && (
+                    <span className="text-[11px] text-text-muted shrink-0 font-sans">
+                      {formattedDate}
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Bottom Action Hint */}
@@ -354,40 +341,27 @@ export default function CircleWishesSection({
                   </div>
                 )}
 
-                {/* Author Info */}
-                <div className="flex items-center gap-3">
-                  {!selectedWish.photoUrl && (
-                    <div
-                      className="w-12 h-12 rounded-full flex items-center justify-center font-serif text-lg font-semibold shrink-0 border"
-                      style={{
-                        background: 'color-mix(in srgb, var(--color-accent) 20%, transparent)',
-                        borderColor: 'color-mix(in srgb, var(--color-accent) 40%, transparent)',
-                        color: 'var(--color-accent)',
-                      }}
-                    >
-                      {(selectedWish.name || 'F').charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <div>
-                    <h4 className="font-serif text-lg sm:text-xl text-text font-medium">
-                      {selectedWish.name}
-                    </h4>
-                    {formatDate(selectedWish.createdAt) && (
-                      <p className="text-xs text-text-muted">
-                        Terkirim pada {formatDate(selectedWish.createdAt)}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Full Un-clamped Message */}
+                {/* Full Un-clamped Message with Postcard Sign-Off */}
                 <div
-                  className="rounded-xl p-5 border border-white/10 text-text font-serif italic text-sm sm:text-base leading-relaxed whitespace-pre-line"
+                  className="rounded-xl p-5 sm:p-6 border border-white/10 text-text font-serif leading-relaxed whitespace-pre-line"
                   style={{
                     background: 'color-mix(in srgb, var(--color-bg) 40%, transparent)',
                   }}
                 >
-                  &ldquo;{selectedWish.message}&rdquo;
+                  <p className="italic text-sm sm:text-base leading-relaxed mb-4">
+                    &ldquo;{selectedWish.message}&rdquo;
+                  </p>
+                  <div className="pt-3 border-t border-white/10 flex items-center justify-between">
+                    <div className="text-accent font-medium text-base tracking-wide flex items-center gap-1.5 font-serif">
+                      <span className="opacity-50 select-none font-normal">&mdash;</span>
+                      <span>{selectedWish.name}</span>
+                    </div>
+                    {formatDate(selectedWish.createdAt) && (
+                      <span className="text-xs text-text-muted font-sans">
+                        {formatDate(selectedWish.createdAt)}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
