@@ -171,26 +171,32 @@ export async function PUT(request, { params }) {
 
     const name = (body.name || '').trim();
     const message = (body.message || '').trim();
+    const audioUrl = (body.audioUrl || '').trim();
+    const audioDuration = body.audioDuration ? Number(body.audioDuration) : null;
+    const isAudioWish = body.mediaType === 'audio' || Boolean(audioUrl);
+
     if (!name) {
       return NextResponse.json({ error: 'Nama pengirim wajib diisi' }, { status: 400 });
     }
-    if (!message) {
+    if (!message && !isAudioWish) {
       return NextResponse.json({ error: 'Pesan ucapan wajib diisi' }, { status: 400 });
     }
 
-    const photoUrl = (body.photoUrl || body.mediaUrl || '').trim();
-    const mediaUrl = (body.mediaUrl || body.photoUrl || '').trim();
+    const photoUrl = (body.photoUrl || '').trim();
+    const mediaUrl = (body.mediaUrl || body.photoUrl || audioUrl || '').trim();
     const mediaType =
       body.mediaType ||
-      (mediaUrl ? (/\.(mp4|webm|mov)(\?.*)?$/i.test(mediaUrl) ? 'video' : 'photo') : null);
+      (isAudioWish ? 'audio' : mediaUrl ? (/\.(mp4|webm|mov)(\?.*)?$/i.test(mediaUrl) ? 'video' : 'photo') : null);
 
     const updatedWish = await saveWish(slug, {
       id: wishId,
       name,
       message,
       photoUrl,
-      mediaUrl,
+      mediaUrl: isAudioWish ? (audioUrl || mediaUrl) : mediaUrl,
       mediaType,
+      audioUrl: audioUrl || (isAudioWish ? mediaUrl : ''),
+      audioDuration,
       createdAt: body.createdAt || new Date().toISOString(),
     });
 

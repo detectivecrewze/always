@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation';
 
-export default async function ContributeRedirectPage({ params }) {
+export default async function ContributeRedirectPage({ params, searchParams }) {
   const { slug } = await params;
-  redirect(`/c/${slug}`);
+  const resolvedParams = searchParams ? await searchParams : {};
+  const queryStr = new URLSearchParams(resolvedParams).toString();
+  redirect(`/c/${slug}${queryStr ? `?${queryStr}` : ''}`);
 }

@@ -1,19 +1,6 @@
 import { NextResponse } from 'next/server';
-import { isKVConfigured, getOrder } from '@/lib/kv';
 import { getWishesBySlug } from '@/lib/wishes';
-import { createInitialSlots, saveOrder } from '@/lib/circleSlots';
-import fs from 'fs';
-import path from 'path';
-
-function readLocalOrders() {
-  const filePath = path.join(process.cwd(), 'data', 'orders.json');
-  if (!fs.existsSync(filePath)) return [];
-  try {
-    return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-  } catch {
-    return [];
-  }
-}
+import { createInitialSlots, saveOrder, findOrder } from '@/lib/circleSlots';
 
 // GET /api/track/[orderId] — Public endpoint for coordinator status tracking
 export async function GET(request, { params: paramsPromise }) {
@@ -23,19 +10,7 @@ export async function GET(request, { params: paramsPromise }) {
       return NextResponse.json({ error: 'Order ID is required' }, { status: 400 });
     }
 
-    let order = null;
-    if (isKVConfigured()) {
-      try {
-        order = await getOrder(orderId);
-      } catch (err) {
-        console.error('Error fetching order from KV for tracking:', err);
-      }
-    }
-
-    if (!order) {
-      const localOrders = readLocalOrders();
-      order = localOrders.find((o) => o.orderId === orderId) || null;
-    }
+    const order = await findOrder(orderId);
 
     if (!order) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });

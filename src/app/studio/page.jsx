@@ -620,8 +620,15 @@ export default function StudioDashboard() {
 
   const handleSaveEditedWish = async (wishId) => {
     if (!selectedOrder || !wishId) return;
-    if (!editWishName.trim() || !editWishMessage.trim()) {
-      alert('Nama dan pesan ucapan tidak boleh kosong');
+    const currentWish = modalWishes.find((w) => w.id === wishId);
+    const isAudio = currentWish?.mediaType === 'audio' || Boolean(currentWish?.audioUrl);
+
+    if (!editWishName.trim()) {
+      alert('Nama pengirim tidak boleh kosong');
+      return;
+    }
+    if (!editWishMessage.trim() && !isAudio) {
+      alert('Pesan ucapan tidak boleh kosong');
       return;
     }
     setSavingWish(true);
@@ -634,20 +641,24 @@ export default function StudioDashboard() {
           id: wishId,
           name: editWishName.trim(),
           message: editWishMessage.trim(),
-          photoUrl: trimmedMedia,
-          mediaUrl: trimmedMedia,
+          photoUrl: isAudio ? (currentWish?.photoUrl || trimmedMedia) : trimmedMedia,
+          mediaUrl: isAudio ? (currentWish?.audioUrl || currentWish?.mediaUrl || trimmedMedia) : trimmedMedia,
+          audioUrl: currentWish?.audioUrl || '',
+          audioDuration: currentWish?.audioDuration || null,
+          mediaType: currentWish?.mediaType || (trimmedMedia ? (isVideoMedia(trimmedMedia) ? 'video' : 'photo') : null),
         }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        setModalWishes(prev => prev.map(w => w.id === wishId ? {
-          ...w,
-          name: editWishName.trim(),
-          message: editWishMessage.trim(),
-          photoUrl: trimmedMedia,
-          mediaUrl: trimmedMedia,
-          mediaType: trimmedMedia ? (isVideoMedia(trimmedMedia) ? 'video' : 'photo') : null,
-        } : w));
+        setModalWishes((prev) =>
+          prev.map((w) => (w.id === wishId ? (data.wish || {
+            ...w,
+            name: editWishName.trim(),
+            message: editWishMessage.trim(),
+            photoUrl: isAudio ? (currentWish?.photoUrl || trimmedMedia) : trimmedMedia,
+            mediaUrl: isAudio ? (currentWish?.audioUrl || currentWish?.mediaUrl || trimmedMedia) : trimmedMedia,
+          }) : w))
+        );
         setEditingWishId(null);
         setEditWishMediaUrl('');
       } else {

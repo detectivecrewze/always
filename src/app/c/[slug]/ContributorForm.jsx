@@ -1072,9 +1072,9 @@ export default function ContributorForm({
 
                   {/* Polaroid Preview Card */}
                   <div className="max-w-xs mx-auto p-4 rounded-xl bg-surface/90 border border-white/10 shadow-xl text-left transform rotate-1 transition-transform hover:rotate-0">
-                    {submittedWish.photoUrl || submittedWish.mediaUrl ? (
-                      <div className="aspect-square rounded-lg overflow-hidden mb-3 bg-black/30">
-                        {submittedWish.mediaType === 'video' || isVideoMedia(submittedWish.photoUrl || submittedWish.mediaUrl) ? (
+                    {submittedWish.photoUrl || (submittedWish.mediaType !== 'audio' && submittedWish.mediaUrl) ? (
+                      <div className="aspect-square rounded-lg overflow-hidden mb-3 bg-black/30 relative">
+                        {submittedWish.mediaType !== 'audio' && (submittedWish.mediaType === 'video' || isVideoMedia(submittedWish.mediaUrl || submittedWish.photoUrl)) ? (
                           <video
                             src={submittedWish.mediaUrl || submittedWish.photoUrl}
                             autoPlay
