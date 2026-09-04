@@ -102,7 +102,6 @@ export default function CoordinatorTrackPage({ params }) {
     return (
       <div style={{ minHeight: '100vh', background: '#0d070b', color: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}>
         <div style={{ maxWidth: '420px', width: '100%', background: '#160d13', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '2rem', textAlign: 'center' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🔍</div>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem' }}>Pesanan Tidak Ditemukan</h2>
           <p style={{ fontSize: '0.85rem', opacity: 0.7, marginBottom: '1.5rem', lineHeight: 1.5 }}>
             {error || 'Pastikan ID pesanan pada URL sudah benar atau hubungi admin jika pesanan baru dibuat.'}
@@ -120,9 +119,9 @@ export default function CoordinatorTrackPage({ params }) {
   const isDone = order.status === 'done';
 
   const waShareText = encodeURIComponent(
-    `Guys! Tolong isi ucapan & upload foto kenangan kalian buat kado ultah ${order.recipient} di sini yaa (rahasia yaa jangan bilang orangnya! 🤫):\n\n` +
-    `👉 ${getContributorUrl()}\n\n` +
-    `Tinggal klik link-nya dan submit langsung dari HP. Makasihh yaa guys! ✨`
+    `Guys! Tolong isi ucapan & upload foto kenangan kalian buat kado ultah ${order.recipient} di sini yaa (rahasia yaa jangan bilang orangnya):\n\n` +
+    `${getContributorUrl()}\n\n` +
+    `Tinggal klik link-nya dan submit langsung dari HP. Makasihh yaa guys!`
   );
 
   return (
@@ -154,17 +153,17 @@ export default function CoordinatorTrackPage({ params }) {
             <div>
               {isCollecting && (
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', padding: '0.35rem 0.8rem', borderRadius: '50px', color: '#FBBF24', fontSize: '0.78rem', fontWeight: 600 }}>
-                  <span>⏳</span> Sedang Mengumpulkan Ucapan
+                  Sedang Mengumpulkan Ucapan
                 </div>
               )}
               {isReadyToCraft && (
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', padding: '0.35rem 0.8rem', borderRadius: '50px', color: '#4ADE80', fontSize: '0.78rem', fontWeight: 600 }}>
-                  <span>🔥</span> Siap Dikerjakan Atelier
+                  Siap Dikerjakan Atelier
                 </div>
               )}
               {isDone && (
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)', padding: '0.35rem 0.8rem', borderRadius: '50px', color: '#60A5FA', fontSize: '0.78rem', fontWeight: 600 }}>
-                  <span>✅</span> Kado Selesai Dibuat
+                  Kado Selesai Dibuat
                 </div>
               )}
             </div>
@@ -306,7 +305,7 @@ export default function CoordinatorTrackPage({ params }) {
               }}
             >
               <Sparkles size={18} />
-              <span>{markingReady ? 'Menyimpan...' : 'Semua Teman Sudah Isi — Siap Dibuat! 🚀'}</span>
+              <span>{markingReady ? 'Menyimpan...' : 'Semua Teman Sudah Isi — Siap Dibuat!'}</span>
             </button>
           </div>
         )}

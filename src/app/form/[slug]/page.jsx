@@ -421,16 +421,15 @@ export default function OrderForm() {
                     border: `1px solid ${!data.isCircle ? currentTheme.text : currentTheme.text + '25'}`,
                   }}
                 >
-                  <div style={{ fontSize: '1.1rem', marginBottom: '0.2rem' }}>💖</div>
-                  <div>Kado Personal</div>
-                  <div style={{ fontSize: '0.68rem', opacity: !data.isCircle ? 0.8 : 0.5, marginTop: '2px' }}>Solo / Pasangan</div>
+                  <div style={{ letterSpacing: '0.01em' }}>Kado Personal</div>
+                  <div style={{ fontSize: '0.68rem', opacity: !data.isCircle ? 0.8 : 0.5, marginTop: '4px' }}>Solo / Pasangan</div>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => update('isCircle', true)}
                   style={{
-                    padding: '0.75rem 0.6rem',
+                    padding: '0.85rem 0.6rem',
                     borderRadius: '12px',
                     fontSize: '0.82rem',
                     fontWeight: data.isCircle ? 600 : 400,
@@ -442,14 +441,13 @@ export default function OrderForm() {
                     border: `1px solid ${data.isCircle ? currentTheme.text : currentTheme.text + '25'}`,
                   }}
                 >
-                  <div style={{ fontSize: '1.1rem', marginBottom: '0.2rem' }}>👥</div>
-                  <div>Kado Keroyokan</div>
-                  <div style={{ fontSize: '0.68rem', opacity: data.isCircle ? 0.8 : 0.5, marginTop: '2px' }}>Circle / Bareng Teman</div>
+                  <div style={{ letterSpacing: '0.01em' }}>Kado Keroyokan</div>
+                  <div style={{ fontSize: '0.68rem', opacity: data.isCircle ? 0.8 : 0.5, marginTop: '4px' }}>Circle / Bareng Teman</div>
                 </button>
               </div>
               {data.isCircle && (
                 <p style={{ fontSize: '0.74rem', opacity: 0.7, marginTop: '0.6rem', lineHeight: 1.4 }}>
-                  ✨ Kamu akan mendapatkan link khusus setelah form ini selesai untuk disebarkan ke teman-teman geng agar mereka bisa mengirimkan ucapan & foto masing-masing.
+                  Kamu akan mendapatkan tautan khusus setelah formulir ini selesai untuk disebarkan ke teman-teman agar mereka bisa mengirimkan ucapan dan foto masing-masing.
                 </p>
               )}
             </div>
@@ -924,7 +922,7 @@ export default function OrderForm() {
             {data.isCircle && (
               <div style={{ padding: '0.85rem 1rem', borderRadius: '14px', background: 'rgba(0,0,0,0.04)', border: `1px solid ${currentTheme.text}20`, marginBottom: '2rem' }}>
                 <p style={{ fontSize: '0.8rem', lineHeight: 1.5, opacity: 0.85, margin: 0 }}>
-                  💡 <strong>Mode Kado Keroyokan (Circle):</strong> Upload foto di bawah ini <em>bersifat opsional</em>. Foto-foto teman geng akan otomatis terpasang di kartu ucapan masing-masing saat mereka mengisi link kontributor. Kamu bisa upload foto kenangan bersama jika ingin ada galeri tambahan, atau langsung lewati ke bawah!
+                  <strong>Mode Kado Keroyokan (Circle):</strong> Unggah foto di bawah ini <em>bersifat opsional</em>. Foto-foto teman geng akan otomatis terpasang di kartu ucapan masing-masing saat mereka mengisi link kontributor. Kamu bisa unggah foto kenangan bersama jika ingin ada galeri tambahan, atau langsung lewati ke bawah.
                 </p>
               </div>
             )}
@@ -1265,9 +1263,9 @@ export default function OrderForm() {
             const contributorUrl = typeof window !== 'undefined' ? `${window.location.origin}/c/${slug}` : '';
             const trackerUrl = typeof window !== 'undefined' ? `${window.location.origin}/track/${orderId || slug}` : '';
             const waShareGroupText = encodeURIComponent(
-              `Guys! Tolong isi ucapan & upload foto kenangan kalian buat kado ultah ${data.recipient} di sini yaa (rahasia yaa jangan bilang orangnya! 🤫):\n\n` +
-              `👉 ${contributorUrl}\n\n` +
-              `Tinggal klik link-nya dan submit langsung dari HP. Makasihh yaa guys! ✨`
+              `Guys! Tolong isi ucapan & upload foto kenangan kalian buat kado ultah ${data.recipient} di sini yaa (rahasia yaa jangan bilang orangnya):\n\n` +
+              `${contributorUrl}\n\n` +
+              `Tinggal klik link-nya dan submit langsung dari HP. Makasihh yaa guys!`
             );
             const waAtelierCircleText = encodeURIComponent(
               `Halo Digital Atelier!\n\n` +
@@ -1368,7 +1366,7 @@ export default function OrderForm() {
 
                 {/* Bookmark Tracker Link */}
                 <div style={{ marginBottom: '1.5rem', fontSize: '0.75rem', opacity: 0.75, background: 'rgba(0,0,0,0.03)', padding: '0.75rem 1rem', borderRadius: '12px', border: `1px dashed ${currentTheme.text}25` }}>
-                  📌 Simpan / bookmark link pelacak ini untuk cek progres kapan saja: <br />
+                  Simpan atau bookmark tautan pelacak ini untuk cek progres kapan saja: <br />
                   <a href={trackerUrl} style={{ color: currentTheme.text, fontWeight: 700, wordBreak: 'break-all', display: 'inline-block', marginTop: '4px' }}>
                     {trackerUrl}
                   </a>
@@ -1410,12 +1408,12 @@ export default function OrderForm() {
                         transition: 'all 0.2s',
                       }}
                     >
-                      {markingReady ? 'Menyimpan...' : 'Semua Teman Sudah Isi — Siap Dibuat! 🚀'}
+                      {markingReady ? 'Menyimpan...' : 'Semua Teman Sudah Isi — Siap Dibuat!'}
                     </button>
                   </div>
                 ) : (
                   <div style={{ padding: '1rem', borderRadius: '16px', background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e', fontSize: '0.85rem', fontWeight: 600, marginBottom: '1.5rem' }}>
-                    🎉 Pesanan Berstatus "Siap Dibuat!"<br />
+                    Pesanan Berstatus "Siap Dibuat!"<br />
                     <span style={{ fontSize: '0.78rem', fontWeight: 400, opacity: 0.9 }}>
                       Tim FYA sedang merangkai kado finalnya. Kami akan menghubungi kamu lewat WhatsApp begitu selesai!
                     </span>
