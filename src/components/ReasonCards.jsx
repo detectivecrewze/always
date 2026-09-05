@@ -220,7 +220,7 @@ export default function ReasonCards({ reasons, reasonsTitle1, reasonsTitle2, rea
           className="font-serif italic text-sm text-text-muted/60"
         >
           {allRevealed
-            ? (reasonsHintAll || '✨ all reasons revealed ✨')
+            ? ((reasonsHintAll || 'all reasons revealed').replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}✨]/gu, '').trim() || 'all reasons revealed')
             : `${revealedCount} / ${reasons.length} ${reasonsHintTap || 'revealed — tap a card to unlock'}`}
         </motion.p>
       </motion.div>
