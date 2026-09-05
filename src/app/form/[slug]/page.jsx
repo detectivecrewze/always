@@ -407,9 +407,34 @@ export default function OrderForm() {
             
             {/* Mode Selector: Personal vs Circle */}
             <div style={{ marginBottom: '1.5rem', background: 'rgba(0,0,0,0.03)', border: `1px solid ${currentTheme.text}20`, borderRadius: '16px', padding: '1rem' }}>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, opacity: 0.8, marginBottom: '0.6rem' }}>
-                Tipe Kado
-              </label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem', flexWrap: 'wrap', gap: '6px' }}>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, opacity: 0.8, margin: 0 }}>
+                  Tipe Kado
+                </label>
+                <a
+                  href="http://anniv.for-you-always.my.id/auto-circle"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    fontSize: '0.72rem',
+                    color: currentTheme.text,
+                    opacity: 0.7,
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    transition: 'opacity 0.2s',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+                  onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.7')}
+                >
+                  <span>Preview Circle Edition</span>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                    <path d="M7 17L17 7M17 7H7M17 7V17" />
+                  </svg>
+                </a>
+              </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                 <button
                   type="button"
@@ -508,9 +533,41 @@ export default function OrderForm() {
                       </button>
                     </div>
                   </div>
-                  <p style={{ fontSize: '0.72rem', opacity: 0.65, lineHeight: 1.4, margin: 0 }}>
-                    Tiap teman akan dapat 1 link khusus untuk kirim pesan & 1 foto/video mereka.
+                  <p style={{ fontSize: '0.72rem', opacity: 0.65, lineHeight: 1.4, margin: '0 0 0.75rem 0' }}>
+                    Tiap teman akan dapat 1 link khusus untuk kirim pesan &amp; 1 foto/video mereka.
                   </p>
+
+                  <a
+                    href="http://anniv.for-you-always.my.id/auto-circle"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      width: '100%',
+                      boxSizing: 'border-box',
+                      padding: '0.55rem 0.85rem',
+                      borderRadius: '10px',
+                      fontSize: '0.74rem',
+                      fontWeight: 500,
+                      textDecoration: 'none',
+                      color: currentTheme.text,
+                      background: `${currentTheme.text}08`,
+                      border: `1px solid ${currentTheme.text}18`,
+                      transition: 'all 0.2s',
+                      lineHeight: 1.3,
+                      textAlign: 'center',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = `${currentTheme.text}14`)}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = `${currentTheme.text}08`)}
+                  >
+                    <span>Lihat Contoh Tampilan Circle Edition</span>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                      <path d="M7 17L17 7M17 7H7M17 7V17" />
+                    </svg>
+                  </a>
                 </div>
               )}
             </div>
