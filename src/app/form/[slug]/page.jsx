@@ -61,6 +61,8 @@ export default function OrderForm() {
   const [submitting, setSubmitting] = useState(false);
   const [orderId, setOrderId] = useState(null);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
+  const [showCirclePreview, setShowCirclePreview] = useState(false);
+  const [circlePreviewLoading, setCirclePreviewLoading] = useState(true);
   const [tempSelectedMusic, setTempSelectedMusic] = useState('');
   const [interfaceLocale, setInterfaceLocale] = useState('id');
   const formRootRef = useRef(null);
@@ -411,28 +413,33 @@ export default function OrderForm() {
                 <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, opacity: 0.8, margin: 0 }}>
                   Tipe Kado
                 </label>
-                <a
-                  href="http://anniv.for-you-always.my.id/auto-circle"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCirclePreview(true);
+                    setCirclePreviewLoading(true);
+                  }}
                   style={{
                     fontSize: '0.72rem',
                     color: currentTheme.text,
-                    opacity: 0.7,
-                    textDecoration: 'none',
+                    opacity: 0.75,
+                    background: 'transparent',
+                    border: 'none',
+                    padding: 0,
+                    cursor: 'pointer',
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '4px',
                     transition: 'opacity 0.2s',
                   }}
                   onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
-                  onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.7')}
+                  onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.75')}
                 >
                   <span>Preview Circle Edition</span>
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                     <path d="M7 17L17 7M17 7H7M17 7V17" />
                   </svg>
-                </a>
+                </button>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
@@ -537,10 +544,12 @@ export default function OrderForm() {
                     Tiap teman akan dapat 1 link khusus untuk kirim pesan &amp; 1 foto/video mereka.
                   </p>
 
-                  <a
-                    href="http://anniv.for-you-always.my.id/auto-circle"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCirclePreview(true);
+                      setCirclePreviewLoading(true);
+                    }}
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
@@ -552,7 +561,7 @@ export default function OrderForm() {
                       borderRadius: '10px',
                       fontSize: '0.74rem',
                       fontWeight: 500,
-                      textDecoration: 'none',
+                      cursor: 'pointer',
                       color: currentTheme.text,
                       background: `${currentTheme.text}08`,
                       border: `1px solid ${currentTheme.text}18`,
@@ -567,7 +576,7 @@ export default function OrderForm() {
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                       <path d="M7 17L17 7M17 7H7M17 7V17" />
                     </svg>
-                  </a>
+                  </button>
                 </div>
               )}
             </div>
@@ -1809,6 +1818,180 @@ export default function OrderForm() {
                 >
                   {tempSelectedMusic ? 'Pilih Lagu Ini' : 'Pilih lagu terlebih dahulu'}
                 </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* --- CIRCLE EDITION PREVIEW MODAL (IN-APP LAZY IFRAME) --- */}
+        {showCirclePreview && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setShowCirclePreview(false)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 250,
+              background: 'rgba(0,0,0,0.65)',
+              backdropFilter: 'blur(8px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0.75rem',
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.95, y: 20, opacity: 0 }}
+              transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: currentTheme.bg,
+                color: currentTheme.text,
+                width: '100%',
+                maxWidth: '460px',
+                height: '88vh',
+                maxHeight: '840px',
+                borderRadius: '24px',
+                display: 'flex',
+                flexDirection: 'column',
+                boxShadow: '0 25px 50px rgba(0,0,0,0.4)',
+                overflow: 'hidden',
+                border: `1px solid ${currentTheme.text}20`,
+              }}
+            >
+              {/* Header */}
+              <div
+                style={{
+                  padding: '0.85rem 1.15rem',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  borderBottom: `1px solid ${currentTheme.text}12`,
+                  background: currentTheme.bg,
+                  flexShrink: 0,
+                  gap: '8px',
+                }}
+              >
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600, letterSpacing: '0.01em' }}>
+                    Preview Circle Edition
+                  </div>
+                  <div style={{ fontSize: '0.66rem', opacity: 0.6, marginTop: '1px' }}>
+                    Contoh tampilan kado &amp; ucapan teman
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                  <a
+                    href="/auto-circle?preview=circle#circle-wishes-section"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      fontSize: '0.68rem',
+                      color: currentTheme.text,
+                      opacity: 0.75,
+                      textDecoration: 'none',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '0.3rem 0.6rem',
+                      borderRadius: '8px',
+                      border: `1px solid ${currentTheme.text}20`,
+                      background: 'transparent',
+                      transition: 'all 0.2s',
+                    }}
+                    title="Buka di tab baru"
+                  >
+                    <span>Tab Baru</span>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M7 17L17 7M17 7H7M17 7V17" />
+                    </svg>
+                  </a>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowCirclePreview(false)}
+                    aria-label="Tutup preview"
+                    style={{
+                      background: `${currentTheme.text}10`,
+                      border: `1px solid ${currentTheme.text}22`,
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: currentTheme.text,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = `${currentTheme.text}20`;
+                      e.currentTarget.style.borderColor = `${currentTheme.text}40`;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = `${currentTheme.text}10`;
+                      e.currentTarget.style.borderColor = `${currentTheme.text}22`;
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Iframe Viewport */}
+              <div style={{ position: 'relative', flex: 1, width: '100%', background: '#0a0a0a', overflow: 'hidden' }}>
+                {circlePreviewLoading && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: currentTheme.bg,
+                      color: currentTheme.text,
+                      zIndex: 2,
+                      gap: '12px',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '30px',
+                        height: '30px',
+                        border: `2.5px solid ${currentTheme.text}25`,
+                        borderTop: `2.5px solid ${currentTheme.text}`,
+                        borderRadius: '50%',
+                        animation: 'spin 0.8s linear infinite',
+                      }}
+                    />
+                    <span style={{ fontSize: '0.75rem', opacity: 0.65 }}>
+                      Memuat contoh kado...
+                    </span>
+                  </div>
+                )}
+
+                <iframe
+                  src="/auto-circle?preview=circle#circle-wishes-section"
+                  title="Contoh Tampilan Circle Edition"
+                  onLoad={() => setCirclePreviewLoading(false)}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    border: 'none',
+                    display: 'block',
+                  }}
+                  allow="autoplay"
+                />
               </div>
             </motion.div>
           </motion.div>

@@ -40,20 +40,48 @@ function normalizeCircleWishes(wishes) {
 export default function GiftPage({ data }) {
   const searchParams = useSearchParams();
   const isStudioMode = searchParams.get('studio') === '1';
+  const isCirclePreview = searchParams.get('preview') === 'circle' || searchParams.get('section') === 'circle';
   // Preview mode: partial payment — some sections are locked
   const isPreview = !isStudioMode && data.paymentStatus === 'partial';
 
-  const [pinUnlocked, setPinUnlocked] = useState(!data.pinEnabled || isStudioMode);
-  const [gateOpen, setGateOpen] = useState(isStudioMode);
+  const [pinUnlocked, setPinUnlocked] = useState(!data.pinEnabled || isStudioMode || isCirclePreview);
+  const [gateOpen, setGateOpen] = useState(isStudioMode || isCirclePreview);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef(null);
   const wasMusicPlayingBeforeWishVideoRef = useRef(false);
+
+  const effectivePinUnlocked = pinUnlocked || !data.pinEnabled || isStudioMode || isCirclePreview;
+  const effectiveGateOpen = gateOpen || isStudioMode || isCirclePreview;
 
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = 0.5;
     }
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+    };
   }, []);
+
+  // Direct auto-scroll to Circle Wishes if preview=circle
+  useEffect(() => {
+    if (isCirclePreview && typeof window !== 'undefined') {
+      const scrollToCircle = () => {
+        const el = document.getElementById('circle-wishes-section');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      };
+      scrollToCircle();
+      const t1 = setTimeout(scrollToCircle, 300);
+      const t2 = setTimeout(scrollToCircle, 700);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
+    }
+  }, [isCirclePreview]);
 
   const handleInteraction = useCallback(() => {
     if (audioRef.current && !isPlaying) {
@@ -98,13 +126,12 @@ export default function GiftPage({ data }) {
     if (isActive) {
       // Pause background music if it was playing
       if (isPlaying || !audioRef.current.paused) {
-        wasMusicPlayingBeforeWishVideoRef.current = true;
         audioRef.current.pause();
+        wasMusicPlayingBeforeWishVideoRef.current = true;
       }
     } else {
-      // Resume background music only if it was playing before unmuting
-      if (wasMusicPlayingBeforeWishVideoRef.current && isPlaying) {
-        audioRef.current.volume = 0.5;
+      // Resume background music only if it was playing before the wish video unmuted
+      if (wasMusicPlayingBeforeWishVideoRef.current) {
         audioRef.current.play().catch(() => {});
         wasMusicPlayingBeforeWishVideoRef.current = false;
       }
@@ -121,11 +148,12 @@ export default function GiftPage({ data }) {
     '--color-text-muted': t.textMuted,
     '--color-accent': t.accent,
     '--color-particle': t.particle,
+    backgroundColor: 'var(--color-bg)',
   };
 
   return (
-    <main className="relative min-h-screen bg-bg text-text selection:bg-accent/30 font-sans overflow-hidden" style={themeStyles}>
-      {/* Audio element — always mounted if music exists with default 50% volume */}
+    <main className="relative min-h-screen text-text overflow-x-hidden selection:bg-accent/20" style={themeStyles}>
+      {/* Background Music */}
       {data.music?.file && (
         <audio
           ref={(el) => {
@@ -140,7 +168,7 @@ export default function GiftPage({ data }) {
 
       {/* PIN Gate Screen (Optional) */}
       <AnimatePresence mode="wait">
-        {data.pinEnabled && !pinUnlocked && (
+        {data.pinEnabled && !effectivePinUnlocked && (
           <PinGateScreen
             pinCode={data.pinCode || ''}
             pinHint={data.pinHint || ''}
@@ -153,7 +181,7 @@ export default function GiftPage({ data }) {
 
       {/* Gate Screen */}
       <AnimatePresence mode="wait">
-        {pinUnlocked && !gateOpen && (
+        {effectivePinUnlocked && !effectiveGateOpen && (
           <GateScreen
             themeName={data.theme}
             gateSubtitle={data.gateSubtitle}
@@ -167,14 +195,14 @@ export default function GiftPage({ data }) {
 
       {/* Main Content */}
       <AnimatePresence>
-        {gateOpen && (
+        {effectiveGateOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1, ease: [0.25, 0.1, 0.25, 1] }}
           >
             {/* Ambient Particles */}
-            <AmbientParticles active={gateOpen} themeColors={[t.particle, t.accent, t.textMuted]} />
+            <AmbientParticles active={effectiveGateOpen} themeColors={[t.particle, t.accent, t.textMuted]} />
 
             {/* Content Sections */}
             <HeroSection

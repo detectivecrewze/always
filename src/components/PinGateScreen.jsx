@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function PinGateScreen({
@@ -13,6 +13,7 @@ export default function PinGateScreen({
   const [inputPin, setInputPin] = useState('');
   const [isError, setIsError] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false);
+  const activeTimersRef = useRef(new Set());
 
   const safePinCode = String(pinCode || '');
   const maxDigits = Math.min(Math.max(safePinCode.length || 4, 4), 6);
@@ -20,6 +21,22 @@ export default function PinGateScreen({
 
   const primaryColor = themeColors[0] || '#C084FC';
   const secondaryColor = themeColors[1] || '#F0ABFC';
+
+  const setTrackedTimeout = useCallback((fn, delay) => {
+    const timerId = setTimeout(() => {
+      activeTimersRef.current.delete(timerId);
+      fn();
+    }, delay);
+    activeTimersRef.current.add(timerId);
+    return timerId;
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      activeTimersRef.current.forEach((id) => clearTimeout(id));
+      activeTimersRef.current.clear();
+    };
+  }, []);
 
   const handleDigitPress = useCallback((digit) => {
     if (isUnlocked) return;
@@ -32,12 +49,12 @@ export default function PinGateScreen({
       if (next.length === maxDigits || next === targetPin) {
         if (next === targetPin) {
           setIsUnlocked(true);
-          setTimeout(() => {
+          setTrackedTimeout(() => {
             if (onUnlock) onUnlock();
           }, 1200);
         } else if (next.length === maxDigits) {
           setIsError(true);
-          setTimeout(() => {
+          setTrackedTimeout(() => {
             setInputPin('');
             setIsError(false);
           }, 700);
@@ -45,7 +62,7 @@ export default function PinGateScreen({
       }
       return next;
     });
-  }, [isUnlocked, maxDigits, targetPin, onUnlock]);
+  }, [isUnlocked, maxDigits, targetPin, onUnlock, setTrackedTimeout]);
 
   const handleBackspace = useCallback(() => {
     if (isUnlocked) return;

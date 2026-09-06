@@ -11,8 +11,8 @@ import { formatAudioTime } from '@/lib/audioRecorder';
 // Helper: detect if a URL points to an audio file (not a photo or video)
 function isAudioUrl(url) {
   if (!url) return false;
-  return /\.(mp3|m4a|ogg|aac|wav|opus|flac|webm)(\?.*)?$/i.test(url)
-    && !/\.(mp4|mov)(\?.*)?$/i.test(url);
+  if (isVideoMedia(url)) return false;
+  return /\.(mp3|m4a|ogg|aac|wav|opus|flac)(\?.*)?$/i.test(url);
 }
 
 // Helper: check if a photoUrl is a valid displayable image/video (not an audio file)
@@ -48,11 +48,6 @@ export default function CircleWishesSection({
   themeStyles,
   theme,
 }) {
-  // Strict non-breaking guard
-  if (!wishes || wishes.length === 0) {
-    return null;
-  }
-
   const [mounted, setMounted] = useState(false);
   const [selectedWish, setSelectedWish] = useState(null);
   const [isMuted, setIsMuted] = useState(true);
@@ -102,7 +97,7 @@ export default function CircleWishesSection({
     return rawSubtitle;
   };
 
-  // Toggle video sound with onVideoAudioChange notification
+  // Toggle video sound with onVideoAudioChange notification & voice note mutual exclusion
   const toggleMute = useCallback(() => {
     if (!modalVideoRef.current) return;
     const nextMuted = !isMuted;
@@ -110,12 +105,16 @@ export default function CircleWishesSection({
     modalVideoRef.current.muted = nextMuted;
 
     if (!nextMuted) {
+      if (modalAudioRef.current && isPlayingAudio) {
+        modalAudioRef.current.pause();
+        setIsPlayingAudio(false);
+      }
       modalVideoRef.current.play().catch(() => {});
       if (onVideoAudioChange) onVideoAudioChange(true);
     } else {
-      if (onVideoAudioChange) onVideoAudioChange(false);
+      if (!isPlayingAudio && onVideoAudioChange) onVideoAudioChange(false);
     }
-  }, [isMuted, onVideoAudioChange]);
+  }, [isMuted, isPlayingAudio, onVideoAudioChange]);
 
   // Unified modal close handler ensuring audio & video cleanup
   const closeModal = useCallback(() => {
@@ -138,27 +137,31 @@ export default function CircleWishesSection({
     setSelectedWish(null);
   }, [isMuted, isPlayingAudio, onVideoAudioChange]);
 
-  // Toggle voice note audio play/pause with background music sync
+  // Toggle voice note audio play/pause with background music sync & video mutual exclusion
   const toggleAudioPlay = useCallback(() => {
     if (!modalAudioRef.current) return;
     if (isPlayingAudio) {
       modalAudioRef.current.pause();
       setIsPlayingAudio(false);
-      if (onVideoAudioChange) onVideoAudioChange(false);
+      if (isMuted && onVideoAudioChange) onVideoAudioChange(false);
     } else {
+      if (modalVideoRef.current && !isMuted) {
+        modalVideoRef.current.muted = true;
+        setIsMuted(true);
+      }
       modalAudioRef.current.play().then(() => {
         setIsPlayingAudio(true);
         if (onVideoAudioChange) onVideoAudioChange(true);
       }).catch(() => {});
     }
-  }, [isPlayingAudio, onVideoAudioChange]);
+  }, [isPlayingAudio, isMuted, onVideoAudioChange]);
 
   const handleAudioEnded = useCallback(() => {
     setIsPlayingAudio(false);
     setAudioCurrentTime(0);
     if (modalAudioRef.current) modalAudioRef.current.currentTime = 0;
-    if (onVideoAudioChange) onVideoAudioChange(false);
-  }, [onVideoAudioChange]);
+    if (isMuted && onVideoAudioChange) onVideoAudioChange(false);
+  }, [isMuted, onVideoAudioChange]);
 
   const handleSeekAudio = (e) => {
     if (!modalAudioRef.current || !audioDuration) return;
@@ -204,8 +207,13 @@ export default function CircleWishesSection({
     };
   }, [selectedWish, closeModal]);
 
+  // Strict non-breaking guard (placed after all hook declarations to adhere to React Rules of Hooks)
+  if (!wishes || wishes.length === 0) {
+    return null;
+  }
+
   return (
-    <section className="relative z-10 px-4 sm:px-6 py-16 md:py-24 flex flex-col items-center">
+    <section id="circle-wishes-section" className="relative z-10 px-4 sm:px-6 py-16 md:py-24 flex flex-col items-center">
       {/* Section Header */}
       <motion.div
         className="text-center mb-12 md:mb-16 max-w-2xl"
@@ -402,14 +410,30 @@ export default function CircleWishesSection({
                   boxShadow: '0 25px 60px rgba(0,0,0,0.6)',
                 }}
               >
-                {/* Close Button */}
+                {/* Close Button — Premium frosted contrast pill visible on any media/theme */}
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-text flex items-center justify-center transition-colors z-10 cursor-pointer"
+                  className="absolute top-3.5 right-3.5 sm:top-4 sm:right-4 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 z-20 cursor-pointer hover:scale-105 active:scale-95 shadow-xl"
+                  style={{
+                    background: 'rgba(15, 17, 23, 0.78)',
+                    backdropFilter: 'blur(12px)',
+                    WebkitBackdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.15)',
+                    color: '#ffffff',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(15, 17, 23, 0.92)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(15, 17, 23, 0.78)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                  }}
                   aria-label="Tutup dialog ucapan"
                 >
-                  <X size={16} />
+                  <X size={17} strokeWidth={2.2} className="text-white" />
                 </button>
 
                 <div className="overflow-y-auto pr-1 space-y-5">
@@ -432,10 +456,10 @@ export default function CircleWishesSection({
                               if (!isMuted && onVideoAudioChange) onVideoAudioChange(true);
                             }}
                             onPause={() => {
-                              if (!isMuted && onVideoAudioChange) onVideoAudioChange(false);
+                              if (!isMuted && !isPlayingAudio && onVideoAudioChange) onVideoAudioChange(false);
                             }}
                             onEnded={() => {
-                              if (!isMuted && onVideoAudioChange) onVideoAudioChange(false);
+                              if (!isMuted && !isPlayingAudio && onVideoAudioChange) onVideoAudioChange(false);
                             }}
                             className="w-full h-full max-h-[320px] object-contain mx-auto cursor-pointer"
                           />
@@ -492,7 +516,7 @@ export default function CircleWishesSection({
                       onEnded={handleAudioEnded}
                       onPause={() => {
                         setIsPlayingAudio(false);
-                        if (onVideoAudioChange) onVideoAudioChange(false);
+                        if (isMuted && onVideoAudioChange) onVideoAudioChange(false);
                       }}
                       onPlay={() => {
                         setIsPlayingAudio(true);

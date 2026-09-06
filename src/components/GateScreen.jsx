@@ -172,7 +172,7 @@ function buildParticles(count, themeName) {
 export default function GateScreen({ gateSubtitle, onInteraction, onOpen, themeColors, themeName, disableFountain }) {
   const [phase, setPhase] = useState('idle'); // idle | fountain | done
   const [exitPhase, setExitPhase] = useState('none'); // none | left | right
-  const timerRef = useRef(null);
+  const activeTimersRef = useRef(new Set());
 
   // Optimize particle count for mobile
   const [particleCount, setParticleCount] = useState(300);
@@ -190,6 +190,15 @@ export default function GateScreen({ gateSubtitle, onInteraction, onOpen, themeC
     [activeAccent]
   );
 
+  const setTrackedTimeout = useCallback((fn, delay) => {
+    const timerId = setTimeout(() => {
+      activeTimersRef.current.delete(timerId);
+      fn();
+    }, delay);
+    activeTimersRef.current.add(timerId);
+    return timerId;
+  }, []);
+
   // Click handler: idle → fountain (or skip fountain if disableFountain is true)
   const handleClick = useCallback(() => {
     if (phase !== 'idle') return;
@@ -198,24 +207,29 @@ export default function GateScreen({ gateSubtitle, onInteraction, onOpen, themeC
     if (disableFountain) {
       // Skip flower animation — go straight to gift page
       setPhase('done');
-      setTimeout(() => { if (onOpen) onOpen(); }, 400);
+      setTrackedTimeout(() => { if (onOpen) onOpen(); }, 400);
       return;
     }
 
     setPhase('fountain');
     
     // Sequential swipe out animations — start after flowers have settled
-    setTimeout(() => setExitPhase('left'), 4200);
-    setTimeout(() => setExitPhase('right'), 4700);
+    setTrackedTimeout(() => setExitPhase('left'), 4200);
+    setTrackedTimeout(() => setExitPhase('right'), 4700);
 
     // After swipe out, transition to gift page
-    timerRef.current = setTimeout(() => {
+    setTrackedTimeout(() => {
       setPhase('done');
-      setTimeout(() => { if (onOpen) onOpen(); }, 400);
+      setTrackedTimeout(() => { if (onOpen) onOpen(); }, 400);
     }, 5500);
-  }, [phase, onOpen, disableFountain]);
+  }, [phase, onOpen, disableFountain, onInteraction, setTrackedTimeout]);
 
-  useEffect(() => () => clearTimeout(timerRef.current), []);
+  useEffect(() => {
+    return () => {
+      activeTimersRef.current.forEach((id) => clearTimeout(id));
+      activeTimersRef.current.clear();
+    };
+  }, []);
 
   const isFountain = !disableFountain && (phase === 'fountain' || phase === 'done');
 
