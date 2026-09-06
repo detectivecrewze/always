@@ -61,8 +61,15 @@ export default function OrderForm() {
   const [submitting, setSubmitting] = useState(false);
   const [orderId, setOrderId] = useState(null);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
-  const [showCirclePreview, setShowCirclePreview] = useState(false);
-  const [circlePreviewLoading, setCirclePreviewLoading] = useState(true);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewTab, setPreviewTab] = useState('personal'); // 'personal' | 'circle'
+  const [previewLoading, setPreviewLoading] = useState(true);
+
+  const openPreviewModal = (tab = 'personal') => {
+    setPreviewTab(tab);
+    setPreviewLoading(true);
+    setShowPreviewModal(true);
+  };
   const [tempSelectedMusic, setTempSelectedMusic] = useState('');
   const [interfaceLocale, setInterfaceLocale] = useState('id');
   const formRootRef = useRef(null);
@@ -409,37 +416,10 @@ export default function OrderForm() {
             
             {/* Mode Selector: Personal vs Circle */}
             <div style={{ marginBottom: '1.5rem', background: 'rgba(0,0,0,0.03)', border: `1px solid ${currentTheme.text}20`, borderRadius: '16px', padding: '1rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem', flexWrap: 'wrap', gap: '6px' }}>
+              <div style={{ marginBottom: '0.6rem' }}>
                 <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, opacity: 0.8, margin: 0 }}>
                   Tipe Kado
                 </label>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowCirclePreview(true);
-                    setCirclePreviewLoading(true);
-                  }}
-                  style={{
-                    fontSize: '0.72rem',
-                    color: currentTheme.text,
-                    opacity: 0.75,
-                    background: 'transparent',
-                    border: 'none',
-                    padding: 0,
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    transition: 'opacity 0.2s',
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
-                  onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.75')}
-                >
-                  <span>Preview Circle Edition</span>
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                    <path d="M7 17L17 7M17 7H7M17 7V17" />
-                  </svg>
-                </button>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
@@ -483,8 +463,81 @@ export default function OrderForm() {
                   <div style={{ fontSize: '0.68rem', opacity: data.isCircle ? 0.8 : 0.5, marginTop: '4px' }}>Sertakan Ucapan Teman</div>
                 </button>
               </div>
+
+              {/* Dual Preview Buttons: Personal vs Circle */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '8px',
+                  marginTop: '0.75rem',
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => openPreviewModal('personal')}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '5px',
+                    width: '100%',
+                    boxSizing: 'border-box',
+                    padding: '0.55rem 0.65rem',
+                    borderRadius: '10px',
+                    fontSize: '0.72rem',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    color: currentTheme.text,
+                    background: `${currentTheme.text}08`,
+                    border: `1px solid ${currentTheme.text}18`,
+                    transition: 'all 0.2s',
+                    lineHeight: 1.25,
+                    textAlign: 'center',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = `${currentTheme.text}14`)}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = `${currentTheme.text}08`)}
+                >
+                  <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Lihat Contoh Personal</span>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                    <path d="M7 17L17 7M17 7H7M17 7V17" />
+                  </svg>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => openPreviewModal('circle')}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '5px',
+                    width: '100%',
+                    boxSizing: 'border-box',
+                    padding: '0.55rem 0.65rem',
+                    borderRadius: '10px',
+                    fontSize: '0.72rem',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    color: currentTheme.text,
+                    background: `${currentTheme.text}08`,
+                    border: `1px solid ${currentTheme.text}18`,
+                    transition: 'all 0.2s',
+                    lineHeight: 1.25,
+                    textAlign: 'center',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = `${currentTheme.text}14`)}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = `${currentTheme.text}08`)}
+                >
+                  <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Lihat Contoh Circle</span>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                    <path d="M7 17L17 7M17 7H7M17 7V17" />
+                  </svg>
+                </button>
+              </div>
+
               {data.isCircle && (
-                <div style={{ marginTop: '1rem', paddingTop: '0.85rem', borderTop: `1px solid ${currentTheme.text}15` }}>
+                <div style={{ marginTop: '0.85rem', paddingTop: '0.85rem', borderTop: `1px solid ${currentTheme.text}15` }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                     <div>
                       <div style={{ fontSize: '0.82rem', fontWeight: 600 }}>Jumlah Teman</div>
@@ -540,43 +593,9 @@ export default function OrderForm() {
                       </button>
                     </div>
                   </div>
-                  <p style={{ fontSize: '0.72rem', opacity: 0.65, lineHeight: 1.4, margin: '0 0 0.75rem 0' }}>
+                  <p style={{ fontSize: '0.72rem', opacity: 0.65, lineHeight: 1.4, margin: '0' }}>
                     Tiap teman akan dapat 1 link khusus untuk kirim pesan &amp; 1 foto/video mereka.
                   </p>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowCirclePreview(true);
-                      setCirclePreviewLoading(true);
-                    }}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '6px',
-                      width: '100%',
-                      boxSizing: 'border-box',
-                      padding: '0.55rem 0.85rem',
-                      borderRadius: '10px',
-                      fontSize: '0.74rem',
-                      fontWeight: 500,
-                      cursor: 'pointer',
-                      color: currentTheme.text,
-                      background: `${currentTheme.text}08`,
-                      border: `1px solid ${currentTheme.text}18`,
-                      transition: 'all 0.2s',
-                      lineHeight: 1.3,
-                      textAlign: 'center',
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = `${currentTheme.text}14`)}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = `${currentTheme.text}08`)}
-                  >
-                    <span>Lihat Contoh Tampilan Circle Edition</span>
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                      <path d="M7 17L17 7M17 7H7M17 7V17" />
-                    </svg>
-                  </button>
                 </div>
               )}
             </div>
@@ -1823,14 +1842,14 @@ export default function OrderForm() {
           </motion.div>
         )}
 
-        {/* --- CIRCLE EDITION PREVIEW MODAL (IN-APP LAZY IFRAME) --- */}
-        {showCirclePreview && (
+        {/* --- DUAL EDITION PREVIEW MODAL (PERSONAL VS CIRCLE) --- */}
+        {showPreviewModal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            onClick={() => setShowCirclePreview(false)}
+            onClick={() => setShowPreviewModal(false)}
             style={{
               position: 'fixed',
               inset: 0,
@@ -1853,7 +1872,7 @@ export default function OrderForm() {
                 background: currentTheme.bg,
                 color: currentTheme.text,
                 width: '100%',
-                maxWidth: '460px',
+                maxWidth: '470px',
                 height: '88vh',
                 maxHeight: '840px',
                 borderRadius: '24px',
@@ -1864,10 +1883,10 @@ export default function OrderForm() {
                 border: `1px solid ${currentTheme.text}20`,
               }}
             >
-              {/* Header */}
+              {/* Header with Segmented Tab Switcher */}
               <div
                 style={{
-                  padding: '0.85rem 1.15rem',
+                  padding: '0.75rem 1rem',
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
@@ -1877,18 +1896,67 @@ export default function OrderForm() {
                   gap: '8px',
                 }}
               >
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600, letterSpacing: '0.01em' }}>
-                    Preview Circle Edition
-                  </div>
-                  <div style={{ fontSize: '0.66rem', opacity: 0.6, marginTop: '1px' }}>
-                    Contoh tampilan kado &amp; ucapan teman
-                  </div>
+                {/* Segmented Control */}
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    padding: '3px',
+                    borderRadius: '10px',
+                    background: `${currentTheme.text}0a`,
+                    border: `1px solid ${currentTheme.text}18`,
+                    gap: '2px',
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (previewTab !== 'personal') {
+                        setPreviewTab('personal');
+                        setPreviewLoading(true);
+                      }
+                    }}
+                    style={{
+                      padding: '0.35rem 0.65rem',
+                      borderRadius: '8px',
+                      fontSize: '0.73rem',
+                      fontWeight: previewTab === 'personal' ? 600 : 400,
+                      cursor: 'pointer',
+                      border: 'none',
+                      transition: 'all 0.15s',
+                      background: previewTab === 'personal' ? currentTheme.text : 'transparent',
+                      color: previewTab === 'personal' ? currentTheme.bg : currentTheme.text,
+                    }}
+                  >
+                    Personal Edition
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (previewTab !== 'circle') {
+                        setPreviewTab('circle');
+                        setPreviewLoading(true);
+                      }
+                    }}
+                    style={{
+                      padding: '0.35rem 0.65rem',
+                      borderRadius: '8px',
+                      fontSize: '0.73rem',
+                      fontWeight: previewTab === 'circle' ? 600 : 400,
+                      cursor: 'pointer',
+                      border: 'none',
+                      transition: 'all 0.15s',
+                      background: previewTab === 'circle' ? currentTheme.text : 'transparent',
+                      color: previewTab === 'circle' ? currentTheme.bg : currentTheme.text,
+                    }}
+                  >
+                    Circle Edition
+                  </button>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                   <a
-                    href="/auto-circle?preview=circle#circle-wishes-section"
+                    href={previewTab === 'circle' ? '/auto-circle?preview=circle#circle-wishes-section' : '/untuk-nadia?preview=personal'}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
@@ -1915,7 +1983,7 @@ export default function OrderForm() {
 
                   <button
                     type="button"
-                    onClick={() => setShowCirclePreview(false)}
+                    onClick={() => setShowPreviewModal(false)}
                     aria-label="Tutup preview"
                     style={{
                       background: `${currentTheme.text}10`,
@@ -1949,7 +2017,7 @@ export default function OrderForm() {
 
               {/* Iframe Viewport */}
               <div style={{ position: 'relative', flex: 1, width: '100%', background: '#0a0a0a', overflow: 'hidden' }}>
-                {circlePreviewLoading && (
+                {previewLoading && (
                   <div
                     style={{
                       position: 'absolute',
@@ -1975,15 +2043,16 @@ export default function OrderForm() {
                       }}
                     />
                     <span style={{ fontSize: '0.75rem', opacity: 0.65 }}>
-                      Memuat contoh kado...
+                      Memuat contoh kado {previewTab === 'circle' ? 'Circle Edition' : 'Personal Edition'}...
                     </span>
                   </div>
                 )}
 
                 <iframe
-                  src="/auto-circle?preview=circle#circle-wishes-section"
-                  title="Contoh Tampilan Circle Edition"
-                  onLoad={() => setCirclePreviewLoading(false)}
+                  key={previewTab}
+                  src={previewTab === 'circle' ? '/auto-circle?preview=circle#circle-wishes-section' : '/untuk-nadia?preview=personal'}
+                  title={previewTab === 'circle' ? 'Contoh Tampilan Circle Edition' : 'Contoh Tampilan Personal Edition'}
+                  onLoad={() => setPreviewLoading(false)}
                   style={{
                     width: '100%',
                     height: '100%',

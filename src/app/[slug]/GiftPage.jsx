@@ -40,18 +40,21 @@ function normalizeCircleWishes(wishes) {
 export default function GiftPage({ data }) {
   const searchParams = useSearchParams();
   const isStudioMode = searchParams.get('studio') === '1';
-  const isCirclePreview = searchParams.get('preview') === 'circle' || searchParams.get('section') === 'circle';
+  const previewParam = searchParams.get('preview');
+  const isCirclePreview = previewParam === 'circle' || searchParams.get('section') === 'circle';
+  const isPersonalPreview = previewParam === 'personal' || previewParam === 'solo';
+  const isPreviewBypass = isCirclePreview || isPersonalPreview;
   // Preview mode: partial payment — some sections are locked
   const isPreview = !isStudioMode && data.paymentStatus === 'partial';
 
-  const [pinUnlocked, setPinUnlocked] = useState(!data.pinEnabled || isStudioMode || isCirclePreview);
-  const [gateOpen, setGateOpen] = useState(isStudioMode || isCirclePreview);
+  const [pinUnlocked, setPinUnlocked] = useState(!data.pinEnabled || isStudioMode || isPreviewBypass);
+  const [gateOpen, setGateOpen] = useState(isStudioMode || isPreviewBypass);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef(null);
   const wasMusicPlayingBeforeWishVideoRef = useRef(false);
 
-  const effectivePinUnlocked = pinUnlocked || !data.pinEnabled || isStudioMode || isCirclePreview;
-  const effectiveGateOpen = gateOpen || isStudioMode || isCirclePreview;
+  const effectivePinUnlocked = pinUnlocked || !data.pinEnabled || isStudioMode || isPreviewBypass;
+  const effectiveGateOpen = gateOpen || isStudioMode || isPreviewBypass;
 
   useEffect(() => {
     if (audioRef.current) {
