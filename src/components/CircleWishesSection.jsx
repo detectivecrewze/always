@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, Mic, Volume2, VolumeX, ArrowUpRight, X } from 'lucide-react';
+import { Play, Pause, Mic, Volume2, VolumeX, ArrowUpRight, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { themes, defaultTheme } from '@/lib/themes';
 import { isVideoMedia } from '@/lib/videoValidation';
 import { formatAudioTime } from '@/lib/audioRecorder';
@@ -49,7 +49,8 @@ export default function CircleWishesSection({
   theme,
 }) {
   const [mounted, setMounted] = useState(false);
-  const [selectedWish, setSelectedWish] = useState(null);
+  const [selectedIndex, setSelectedIndex] = useState(null);
+  const [slideDirection, setSlideDirection] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [audioCurrentTime, setAudioCurrentTime] = useState(0);
@@ -58,6 +59,12 @@ export default function CircleWishesSection({
   const modalAudioRef = useRef(null);
   const onVideoAudioChangeRef = useRef(onVideoAudioChange);
   onVideoAudioChangeRef.current = onVideoAudioChange;
+  const touchStartRef = useRef({ x: 0, y: 0 });
+
+  const selectedWish =
+    selectedIndex !== null && wishes && wishes[selectedIndex]
+      ? wishes[selectedIndex]
+      : null;
 
   useEffect(() => {
     setMounted(true);
@@ -118,8 +125,8 @@ export default function CircleWishesSection({
     }
   }, [isMuted, isPlayingAudio, onVideoAudioChange]);
 
-  // Unified modal close handler ensuring audio & video cleanup
-  const closeModal = useCallback(() => {
+  // Stop and clean up any active video or voice note playback
+  const stopCurrentMedia = useCallback(() => {
     if (modalVideoRef.current) {
       modalVideoRef.current.pause();
       modalVideoRef.current.muted = true;
@@ -130,14 +137,65 @@ export default function CircleWishesSection({
     }
     if (isPlayingAudio) {
       setIsPlayingAudio(false);
-      if (onVideoAudioChange) onVideoAudioChange(false);
+      if (onVideoAudioChangeRef.current) onVideoAudioChangeRef.current(false);
     }
     if (!isMuted) {
       setIsMuted(true);
-      if (onVideoAudioChange) onVideoAudioChange(false);
+      if (onVideoAudioChangeRef.current) onVideoAudioChangeRef.current(false);
     }
-    setSelectedWish(null);
-  }, [isMuted, isPlayingAudio, onVideoAudioChange]);
+  }, [isMuted, isPlayingAudio]);
+
+  // Unified modal close handler ensuring audio & video cleanup
+  const closeModal = useCallback(() => {
+    stopCurrentMedia();
+    setSelectedIndex(null);
+  }, [stopCurrentMedia]);
+
+  // Infinite carousel navigation handlers (< Prev and Next >)
+  const handleNext = useCallback(() => {
+    if (!wishes || wishes.length <= 1 || selectedIndex === null) return;
+    stopCurrentMedia();
+    setSlideDirection(1);
+    setSelectedIndex((prev) => (prev + 1) % wishes.length);
+  }, [wishes, selectedIndex, stopCurrentMedia]);
+
+  const handlePrev = useCallback(() => {
+    if (!wishes || wishes.length <= 1 || selectedIndex === null) return;
+    stopCurrentMedia();
+    setSlideDirection(-1);
+    setSelectedIndex((prev) => (prev - 1 + wishes.length) % wishes.length);
+  }, [wishes, selectedIndex, stopCurrentMedia]);
+
+  // Touch swipe gesture handlers for mobile devices
+  const handleTouchStart = (e) => {
+    if (e.target && e.target.closest && e.target.closest('input[type="range"]')) {
+      touchStartRef.current = { x: 0, y: 0, isIgnored: true };
+      return;
+    }
+    if (e.touches && e.touches[0]) {
+      touchStartRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+        isIgnored: false,
+      };
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    if (touchStartRef.current.isIgnored) return;
+    if (e.changedTouches && e.changedTouches[0]) {
+      const deltaX = e.changedTouches[0].clientX - touchStartRef.current.x;
+      const deltaY = e.changedTouches[0].clientY - touchStartRef.current.y;
+      // Trigger swipe when horizontal movement is dominant and exceeds 45px
+      if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY) * 1.3) {
+        if (deltaX < 0) {
+          handleNext();
+        } else {
+          handlePrev();
+        }
+      }
+    }
+  };
 
   // Toggle voice note audio play/pause with background music sync & video mutual exclusion
   const toggleAudioPlay = useCallback(() => {
@@ -194,7 +252,7 @@ export default function CircleWishesSection({
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [isMuted, isPlayingAudio]);
 
-  // 2. Reset media states when selectedWish changes (new wish opened)
+  // 2. Reset media states when selectedWish changes (new wish opened or navigated)
   useEffect(() => {
     if (selectedWish) {
       setIsMuted(true);
@@ -204,13 +262,17 @@ export default function CircleWishesSection({
     }
   }, [selectedWish]);
 
-  // Lock body scroll when modal is open, and handle ESC key
+  // Lock body scroll when modal is open, and handle ESC + Arrow keys
   useEffect(() => {
-    if (!selectedWish) return;
+    if (selectedIndex === null) return;
 
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         closeModal();
+      } else if (e.key === 'ArrowRight') {
+        handleNext();
+      } else if (e.key === 'ArrowLeft') {
+        handlePrev();
       }
     };
 
@@ -222,7 +284,7 @@ export default function CircleWishesSection({
       window.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = originalOverflow;
     };
-  }, [selectedWish, closeModal]);
+  }, [selectedIndex, closeModal, handleNext, handlePrev]);
 
   // Strict non-breaking guard (placed after all hook declarations to adhere to React Rules of Hooks)
   if (!wishes || wishes.length === 0) {
@@ -266,8 +328,10 @@ export default function CircleWishesSection({
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.6, delay: (index % 6) * 0.08 }}
-              onClick={() => setSelectedWish(wish)}
+              onClick={() => {
+                setSlideDirection(0);
+                setSelectedIndex(index);
+              }}
               className={`group cursor-pointer relative rounded-2xl p-5 border transition-all duration-300 transform hover:scale-[1.02] flex flex-col justify-between ${tiltClass}`}
               style={{
                 background: 'color-mix(in srgb, var(--color-surface) 65%, transparent)',
@@ -415,45 +479,118 @@ export default function CircleWishesSection({
                 isolation: 'isolate',
               }}
             >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.95, opacity: 0, y: 15 }}
-                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                onClick={(e) => e.stopPropagation()}
-                className="relative w-full max-w-lg rounded-2xl p-6 sm:p-8 border border-white/15 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
-                style={{
-                  background: 'color-mix(in srgb, var(--color-surface) 92%, #000)',
-                  boxShadow: '0 25px 60px rgba(0,0,0,0.6)',
-                }}
-              >
-                {/* Close Button — Premium frosted contrast pill visible on any media/theme */}
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="absolute top-3.5 right-3.5 sm:top-4 sm:right-4 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 z-20 cursor-pointer hover:scale-105 active:scale-95 shadow-xl"
-                  style={{
-                    background: 'rgba(15, 17, 23, 0.78)',
-                    backdropFilter: 'blur(12px)',
-                    WebkitBackdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
-                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.15)',
-                    color: '#ffffff',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(15, 17, 23, 0.92)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.5)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(15, 17, 23, 0.78)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                  }}
-                  aria-label="Tutup dialog ucapan"
-                >
-                  <X size={17} strokeWidth={2.2} className="text-white" />
-                </button>
+              <div className="relative w-full max-w-lg flex items-center justify-center">
+                {/* Floating Previous Ghost Chevron */}
+                {wishes.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePrev();
+                    }}
+                    className="fixed left-1 sm:left-2 md:absolute md:-left-14 lg:-left-16 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center transition-all duration-300 z-30 cursor-pointer select-none text-white/35 hover:text-white hover:scale-110 active:scale-95 group"
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      outline: 'none',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.filter = 'drop-shadow(0 0 10px rgba(255, 255, 255, 0.45))';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.filter = 'none';
+                    }}
+                    aria-label="Ucapan sebelumnya"
+                    title="Ucapan sebelumnya (Panah Kiri / Swipe Kanan)"
+                  >
+                    <ChevronLeft size={28} strokeWidth={1.5} className="transition-transform duration-300 group-hover:-translate-x-0.5" />
+                  </button>
+                )}
 
-                <div className="overflow-y-auto pr-1 space-y-5">
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  exit={{ scale: 0.95, opacity: 0, y: 15 }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                  onClick={(e) => e.stopPropagation()}
+                  onTouchStart={handleTouchStart}
+                  onTouchEnd={handleTouchEnd}
+                  className="relative w-full max-w-lg rounded-2xl p-6 sm:p-8 border border-white/15 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+                  style={{
+                    background: 'color-mix(in srgb, var(--color-surface) 92%, #000)',
+                    boxShadow: '0 25px 60px rgba(0,0,0,0.6)',
+                  }}
+                >
+                  {/* Top Action Bar: Counter Pill + Close Button */}
+                  <div className="absolute top-3.5 right-3.5 sm:top-4 sm:right-4 flex items-center gap-2 z-20">
+                    {wishes.length > 1 && (
+                      <div
+                        className="px-2.5 py-1 rounded-full text-[11px] font-mono font-medium tracking-wider flex items-center gap-1 select-none shadow-xl"
+                        style={{
+                          background: 'rgba(15, 17, 23, 0.78)',
+                          backdropFilter: 'blur(12px)',
+                          WebkitBackdropFilter: 'blur(12px)',
+                          border: '1px solid rgba(255, 255, 255, 0.25)',
+                          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.45)',
+                          color: 'rgba(255, 255, 255, 0.85)',
+                        }}
+                      >
+                        <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{selectedIndex + 1}</span>
+                        <span className="opacity-35 font-normal">/</span>
+                        <span>{wishes.length}</span>
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={closeModal}
+                      className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer hover:scale-105 active:scale-95 shadow-xl"
+                      style={{
+                        background: 'rgba(15, 17, 23, 0.78)',
+                        backdropFilter: 'blur(12px)',
+                        WebkitBackdropFilter: 'blur(12px)',
+                        border: '1px solid rgba(255, 255, 255, 0.3)',
+                        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.15)',
+                        color: '#ffffff',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(15, 17, 23, 0.92)';
+                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'rgba(15, 17, 23, 0.78)';
+                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                      }}
+                      aria-label="Tutup dialog ucapan"
+                    >
+                      <X size={17} strokeWidth={2.2} className="text-white" />
+                    </button>
+                  </div>
+
+                  <AnimatePresence mode="wait" initial={false} custom={slideDirection}>
+                    <motion.div
+                      key={selectedIndex}
+                      custom={slideDirection}
+                      variants={{
+                        enter: (direction) => ({
+                          x: direction > 0 ? 25 : direction < 0 ? -25 : 0,
+                          opacity: 0,
+                        }),
+                        center: {
+                          x: 0,
+                          opacity: 1,
+                        },
+                        exit: (direction) => ({
+                          x: direction > 0 ? -25 : direction < 0 ? 25 : 0,
+                          opacity: 0,
+                        }),
+                      }}
+                      initial="enter"
+                      animate="center"
+                      exit="exit"
+                      transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+                      className="overflow-y-auto pr-1 space-y-5 flex-1"
+                    >
                   {/* Full-size Photo or Video if present */}
                   {isDisplayableMedia(selectedWish.photoUrl) && (
                     <div className="relative w-full max-h-[320px] rounded-xl overflow-hidden bg-black/40 border border-white/10 flex items-center justify-center">
@@ -656,24 +793,59 @@ export default function CircleWishesSection({
                     )}
                   </div>
                 )}
-              </div>
+                  </motion.div>
+                </AnimatePresence>
 
-              {/* Bottom Close Button */}
-              <div className="mt-6 pt-4 border-t border-white/10 flex justify-end">
+                {/* Bottom Navigation Hint & Close Button */}
+                <div className="mt-5 pt-3.5 border-t border-white/10 flex items-center justify-between gap-3 shrink-0">
+                  {wishes.length > 1 ? (
+                    <div className="text-[11px] text-text-muted font-sans flex items-center gap-1.5 opacity-70 select-none">
+                      <span className="hidden sm:inline">Gunakan panah keyboard atau geser</span>
+                      <span className="sm:hidden">Geser untuk ucapan lain</span>
+                    </div>
+                  ) : <div />}
+                  <button
+                    type="button"
+                    onClick={closeModal}
+                    className="px-5 py-2 rounded-xl text-xs font-medium border transition-colors cursor-pointer shrink-0"
+                    style={{
+                      color: 'var(--color-accent)',
+                      borderColor: 'color-mix(in srgb, var(--color-accent) 40%, transparent)',
+                      background: 'color-mix(in srgb, var(--color-accent) 10%, transparent)',
+                    }}
+                  >
+                    Tutup Ucapan
+                  </button>
+                </div>
+              </motion.div>
+
+              {/* Floating Next Ghost Chevron */}
+              {wishes.length > 1 && (
                 <button
                   type="button"
-                  onClick={closeModal}
-                  className="px-5 py-2 rounded-xl text-xs font-medium border transition-colors cursor-pointer"
-                  style={{
-                    color: 'var(--color-accent)',
-                    borderColor: 'color-mix(in srgb, var(--color-accent) 40%, transparent)',
-                    background: 'color-mix(in srgb, var(--color-accent) 10%, transparent)',
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleNext();
                   }}
+                  className="fixed right-1 sm:right-2 md:absolute md:-right-14 lg:-right-16 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center transition-all duration-300 z-30 cursor-pointer select-none text-white/35 hover:text-white hover:scale-110 active:scale-95 group"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.filter = 'drop-shadow(0 0 10px rgba(255, 255, 255, 0.45))';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.filter = 'none';
+                  }}
+                  aria-label="Ucapan berikutnya"
+                  title="Ucapan berikutnya (Panah Kanan / Swipe Kiri)"
                 >
-                  Tutup Ucapan
+                  <ChevronRight size={28} strokeWidth={1.5} className="transition-transform duration-300 group-hover:translate-x-0.5" />
                 </button>
-              </div>
-            </motion.div>
+              )}
+            </div>
           </motion.div>
           )}
         </AnimatePresence>,
