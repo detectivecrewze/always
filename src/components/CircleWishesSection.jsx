@@ -56,6 +56,8 @@ export default function CircleWishesSection({
   const [audioDuration, setAudioDuration] = useState(0);
   const modalVideoRef = useRef(null);
   const modalAudioRef = useRef(null);
+  const onVideoAudioChangeRef = useRef(onVideoAudioChange);
+  onVideoAudioChangeRef.current = onVideoAudioChange;
 
   useEffect(() => {
     setMounted(true);
@@ -173,9 +175,24 @@ export default function CircleWishesSection({
   // 1. Unmount cleanup only
   useEffect(() => {
     return () => {
-      if (onVideoAudioChange) onVideoAudioChange(false);
+      if (onVideoAudioChangeRef.current) onVideoAudioChangeRef.current(false);
     };
-  }, [onVideoAudioChange]);
+  }, []);
+
+  // 1b. Sync audio state when tab visibility changes
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        if (modalVideoRef.current && modalVideoRef.current.paused && !isPlayingAudio) {
+          if (!isMuted && onVideoAudioChangeRef.current) {
+            onVideoAudioChangeRef.current(false);
+          }
+        }
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [isMuted, isPlayingAudio]);
 
   // 2. Reset media states when selectedWish changes (new wish opened)
   useEffect(() => {
@@ -456,6 +473,7 @@ export default function CircleWishesSection({
                               if (!isMuted && onVideoAudioChange) onVideoAudioChange(true);
                             }}
                             onPause={() => {
+                              if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
                               if (!isMuted && !isPlayingAudio && onVideoAudioChange) onVideoAudioChange(false);
                             }}
                             onEnded={() => {

@@ -199,7 +199,7 @@ export default function ReasonCards({ reasons, reasonsTitle1, reasonsTitle2, rea
   };
 
   return (
-    <section className="relative z-10 px-6 py-16 md:py-24 flex flex-col items-center">
+    <section id="reasons-section" className="relative z-10 px-6 py-16 md:py-24 flex flex-col items-center">
 
       {/* Section Title & Subtitle */}
       <motion.div

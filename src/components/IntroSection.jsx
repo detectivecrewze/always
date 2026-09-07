@@ -37,7 +37,7 @@ export default function IntroSection({
   const paragraphs = Array.isArray(introText) ? introText : [introText];
 
   return (
-    <section className="relative z-10 flex flex-col items-center px-4 py-16 md:py-24">
+    <section id="letter-section" className="relative z-10 flex flex-col items-center px-4 py-16 md:py-24">
       <motion.div
         className="max-w-[560px] w-full"
         variants={containerVariants}

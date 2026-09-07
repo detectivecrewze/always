@@ -43,7 +43,10 @@ export default function GiftPage({ data }) {
   const previewParam = searchParams.get('preview');
   const isCirclePreview = previewParam === 'circle' || searchParams.get('section') === 'circle';
   const isPersonalPreview = previewParam === 'personal' || previewParam === 'solo';
-  const isPreviewBypass = isCirclePreview || isPersonalPreview;
+  const isReasonsPreview = previewParam === 'reasons' || searchParams.get('section') === 'reasons';
+  const isLetterPreview = previewParam === 'letter' || searchParams.get('section') === 'letter';
+  const isGalleryPreview = previewParam === 'gallery' || searchParams.get('section') === 'gallery';
+  const isPreviewBypass = isCirclePreview || isPersonalPreview || isReasonsPreview || isLetterPreview || isGalleryPreview;
   // Preview mode: partial payment — some sections are locked
   const isPreview = !isStudioMode && data.paymentStatus === 'partial';
 
@@ -85,6 +88,63 @@ export default function GiftPage({ data }) {
       };
     }
   }, [isCirclePreview]);
+
+  // Direct auto-scroll to Reasons if preview=reasons
+  useEffect(() => {
+    if (isReasonsPreview && typeof window !== 'undefined') {
+      const scrollToReasons = () => {
+        const el = document.getElementById('reasons-section');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      };
+      scrollToReasons();
+      const t1 = setTimeout(scrollToReasons, 300);
+      const t2 = setTimeout(scrollToReasons, 700);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
+    }
+  }, [isReasonsPreview]);
+
+  // Direct auto-scroll to Letter if preview=letter
+  useEffect(() => {
+    if (isLetterPreview && typeof window !== 'undefined') {
+      const scrollToLetter = () => {
+        const el = document.getElementById('letter-section');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      };
+      scrollToLetter();
+      const t1 = setTimeout(scrollToLetter, 300);
+      const t2 = setTimeout(scrollToLetter, 700);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
+    }
+  }, [isLetterPreview]);
+
+  // Direct auto-scroll to Gallery if preview=gallery
+  useEffect(() => {
+    if (isGalleryPreview && typeof window !== 'undefined') {
+      const scrollToGallery = () => {
+        const el = document.getElementById('gallery-section');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      };
+      scrollToGallery();
+      const t1 = setTimeout(scrollToGallery, 300);
+      const t2 = setTimeout(scrollToGallery, 700);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
+    }
+  }, [isGalleryPreview]);
 
   const handleInteraction = useCallback(() => {
     if (audioRef.current && !isPlaying) {

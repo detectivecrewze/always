@@ -66,7 +66,7 @@ export default function Gallery({ photos, galleryTitle1, galleryTitle2, freeCoun
   const hiddenCount = hasFreeLimit ? photos.length - freeCount : 0;
 
   return (
-    <section className="relative z-10 px-6 py-16 md:py-24 flex flex-col items-center">
+    <section id="gallery-section" className="relative z-10 px-6 py-16 md:py-24 flex flex-col items-center">
 
       {/* Section Title */}
       <motion.div

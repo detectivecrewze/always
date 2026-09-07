@@ -53,6 +53,30 @@ function translateFormCopy(root, locale) {
   });
 }
 
+function formatMusicInfo(music) {
+  if (!music) return { title: '', artist: '', full: '' };
+  if (typeof music === 'object') {
+    const title = music.title || music.name || '';
+    const artist = music.artist || '';
+    const full = title && artist ? `${title} - ${artist}` : (title || artist || '');
+    return { title, artist, full };
+  }
+  const str = String(music).trim();
+  if (str.startsWith('http') || str.startsWith('/')) {
+    const matched = Array.isArray(playlist) ? playlist.find(p => p.audioUrl === str || p.url === str || p.file === str) : null;
+    if (matched) {
+      return { title: matched.title, artist: matched.artist, full: `${matched.title} - ${matched.artist}` };
+    }
+  }
+  if (str.includes(' - ')) {
+    const parts = str.split(' - ');
+    const title = parts[0]?.trim() || '';
+    const artist = parts.slice(1).join(' - ').trim();
+    return { title, artist, full: str };
+  }
+  return { title: str, artist: '', full: str };
+}
+
 export default function OrderForm() {
   const params = useParams();
   const slug = params?.slug || 'unknown';
@@ -61,6 +85,7 @@ export default function OrderForm() {
   const [submitting, setSubmitting] = useState(false);
   const [orderId, setOrderId] = useState(null);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewTab, setPreviewTab] = useState('personal'); // 'personal' | 'circle'
   const [previewLoading, setPreviewLoading] = useState(true);
@@ -73,6 +98,7 @@ export default function OrderForm() {
   const [tempSelectedMusic, setTempSelectedMusic] = useState('');
   const [interfaceLocale, setInterfaceLocale] = useState('id');
   const formRootRef = useRef(null);
+  const isSubmittingRef = useRef(false);
 
   const [data, setData] = useState({
     sender: '',
@@ -116,15 +142,22 @@ export default function OrderForm() {
     // 1. Try local storage first (instant feel)
     try {
       const saved = localStorage.getItem(`loves-order-${slug}`);
-      if (saved) setData(JSON.parse(saved));
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') {
+          if (parsed.music) parsed.music = formatMusicInfo(parsed.music).full;
+          setData(prev => ({ ...prev, ...parsed }));
+        }
+      }
     } catch { /* ignore */ }
     
     // 2. Fetch online draft as source of truth
     fetch(`/api/drafts/${slug}`)
       .then(res => res.ok ? res.json() : null)
       .then(onlineDraft => {
-        if (!mounted || !onlineDraft) return;
-        setData(onlineDraft);
+        if (!mounted || !onlineDraft || typeof onlineDraft !== 'object') return;
+        if (onlineDraft.music) onlineDraft.music = formatMusicInfo(onlineDraft.music).full;
+        setData(prev => ({ ...prev, ...onlineDraft }));
         localStorage.setItem(`loves-order-${slug}`, JSON.stringify(onlineDraft));
       })
       .catch(() => {});
@@ -140,6 +173,17 @@ export default function OrderForm() {
     document.documentElement.lang = interfaceLocale;
     translateFormCopy(formRootRef.current, interfaceLocale);
   });
+
+  // Lock background body scroll when any modal is open
+  useEffect(() => {
+    if (showReviewModal || showPlaylistModal || showPreviewModal) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [showReviewModal, showPlaylistModal, showPreviewModal]);
 
   // Save to localStorage AND online when data changes (debounced)
   useEffect(() => {
@@ -177,11 +221,11 @@ export default function OrderForm() {
 
   const handleNext = () => {
     setValidationError('');
-    if (step === 1 && (!data.sender || !data.recipient)) {
+    if (step === 1 && (!data.sender?.trim() || !data.recipient?.trim())) {
       setValidationError('Mohon isi nama pengirim dan penerima.');
       return;
     }
-    if (step === 3 && !data.message) {
+    if (step === 3 && !data.message?.trim()) {
       setValidationError('Mohon isi pesan utama yang ingin disampaikan.');
       return;
     }
@@ -265,6 +309,21 @@ export default function OrderForm() {
   };
 
   const handleSubmit = async () => {
+    if (isSubmittingRef.current) return;
+
+    if (!data.sender?.trim() || !data.recipient?.trim()) {
+      alert('Mohon lengkapi nama pengirim dan penerima.');
+      return;
+    }
+    if (!data.message?.trim()) {
+      alert('Mohon isi pesan utama yang ingin disampaikan.');
+      return;
+    }
+    if (data.pinEnabled && (!data.pinCode || data.pinCode.length < 4)) {
+      alert('PIN Code harus terdiri dari minimal 4 digit angka.');
+      return;
+    }
+
     // Check if any uploads are still in progress
     const stillUploading = uploadedPhotos.some(p => p.status === 'uploading') ||
       (secretPhoto && secretPhoto.status === 'uploading');
@@ -273,12 +332,24 @@ export default function OrderForm() {
       return;
     }
 
+    // Check if any uploads failed
+    const hasError = uploadedPhotos.some(p => p.status === 'error') ||
+      (secretPhoto && secretPhoto.status === 'error');
+    if (hasError) {
+      alert('Ada foto/media yang gagal diunggah. Mohon hapus atau unggah ulang sebelum mengirim.');
+      return;
+    }
+
+    isSubmittingRef.current = true;
     setSubmitting(true);
     try {
       const photos = uploadedPhotos.filter(p => p.status === 'done').map(p => p.remoteUrl);
       const secretPhotoUrl = secretPhoto?.status === 'done' ? secretPhoto.remoteUrl : null;
       const payload = {
         ...data,
+        sender: data.sender?.trim(),
+        recipient: data.recipient?.trim(),
+        message: data.message?.trim(),
         slug,
         isCircle: Boolean(data.isCircle),
         circleQuota: data.isCircle ? (data.circleQuota || 8) : null,
@@ -298,6 +369,7 @@ export default function OrderForm() {
         if (result.order && Array.isArray(result.order.slots)) {
           setCreatedSlots(result.order.slots);
         }
+        setShowReviewModal(false);
         setStep(5); // Success screen
         
         // Delete the online draft so it disappears from Studio Live Drafts
@@ -308,8 +380,10 @@ export default function OrderForm() {
     } catch (err) {
       console.error(err);
       alert('Gagal mengirim data. Silakan coba lagi.');
+    } finally {
+      isSubmittingRef.current = false;
+      setSubmitting(false);
     }
-    setSubmitting(false);
   };
 
   const STORY_CONCEPTS = [
@@ -604,7 +678,7 @@ export default function OrderForm() {
               <div>
                 <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>Dari (Nama Anda)</label>
                 <input 
-                  value={data.sender} onChange={e => update('sender', e.target.value)} 
+                  value={data.sender || ''} onChange={e => update('sender', e.target.value)} 
                   placeholder="Misal: Budi"
                   style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: `1px solid ${currentTheme.text}40`, color: 'inherit', padding: '0.5rem 0', fontSize: '1rem', outline: 'none', transition: 'border-color 0.3s' }}
                   onFocus={(e) => e.target.style.borderColor = currentTheme.text}
@@ -615,7 +689,7 @@ export default function OrderForm() {
               <div>
                 <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>Untuk (Nama Lengkap / Nama Pendek)</label>
                 <input 
-                  value={data.recipient} onChange={e => update('recipient', e.target.value)} 
+                  value={data.recipient || ''} onChange={e => update('recipient', e.target.value)} 
                   placeholder="Misal: Nadia Aulia"
                   style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: `1px solid ${currentTheme.text}40`, color: 'inherit', padding: '0.5rem 0', fontSize: '1rem', outline: 'none', transition: 'border-color 0.3s' }}
                   onFocus={(e) => e.target.style.borderColor = currentTheme.text}
@@ -627,7 +701,7 @@ export default function OrderForm() {
                 <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.25rem' }}>Panggilan Sayang <span style={{ opacity: 0.5 }}>(Opsional)</span></label>
                 <p style={{ fontSize: '0.75rem', opacity: 0.5, marginBottom: '0.5rem', lineHeight: 1.4 }}>Panggilan spesial yang biasa kamu sebut (misal: sayang, cinta, beb, dll)</p>
                 <input 
-                  value={data.nickname} onChange={e => update('nickname', e.target.value)} 
+                  value={data.nickname || ''} onChange={e => update('nickname', e.target.value)} 
                   placeholder="Misal: Sayang, Beb, Cinta..."
                   style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: `1px solid ${currentTheme.text}40`, color: 'inherit', padding: '0.5rem 0', fontSize: '1rem', outline: 'none', transition: 'border-color 0.3s' }}
                   onFocus={(e) => e.target.style.borderColor = currentTheme.text}
@@ -846,7 +920,35 @@ export default function OrderForm() {
               {/* Metaphor section hidden — no longer used */}
 
               <div style={{ marginBottom: '2rem' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.2rem' }}>Tema Kartu Alasan & Kenangan</label>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '0.2rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600 }}>Tema Kartu Alasan &amp; Kenangan</label>
+                  <button
+                    type="button"
+                    onClick={() => openPreviewModal('reasons')}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '0.25rem 0.55rem',
+                      borderRadius: '16px',
+                      fontSize: '0.7rem',
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      color: currentTheme.text,
+                      background: `${currentTheme.text}0a`,
+                      border: `1px solid ${currentTheme.text}20`,
+                      transition: 'all 0.2s',
+                      flexShrink: 0,
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = `${currentTheme.text}16`)}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = `${currentTheme.text}0a`)}
+                  >
+                    <span>Lihat Contoh</span>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M7 17L17 7M17 7H7M17 7V17" />
+                    </svg>
+                  </button>
+                </div>
                 <p style={{ fontSize: '0.75rem', opacity: 0.7, marginBottom: '1.25rem', lineHeight: 1.4 }}>Pilih sudut pandang cerita untuk kartu-kartu pesan tentang dia.</p>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
                   {REASON_THEMES.map(theme => {
@@ -989,7 +1091,35 @@ export default function OrderForm() {
         {/* --- STEP 3: THE MESSAGE --- */}
         {step === 3 && (
           <div style={{ animation: 'fadeIn 0.5s ease-out' }}>
-            <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', fontWeight: 500 }}>Pesan Utama</h2>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '1rem' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 500, margin: 0 }}>Pesan Utama</h2>
+              <button
+                type="button"
+                onClick={() => openPreviewModal('letter')}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '0.25rem 0.55rem',
+                  borderRadius: '16px',
+                  fontSize: '0.7rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  color: currentTheme.text,
+                  background: `${currentTheme.text}0a`,
+                  border: `1px solid ${currentTheme.text}20`,
+                  transition: 'all 0.2s',
+                  flexShrink: 0,
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = `${currentTheme.text}16`)}
+                onMouseLeave={(e) => (e.currentTarget.style.background = `${currentTheme.text}0a`)}
+              >
+                <span>Lihat Contoh Surat</span>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M7 17L17 7M17 7H7M17 7V17" />
+                </svg>
+              </button>
+            </div>
             <p style={{ fontSize: '0.85rem', opacity: 0.7, marginBottom: '2rem', lineHeight: 1.6 }}>
               Ceritakan saja intinya secara santai. Tim *copywriter* kami yang akan mengubahnya menjadi kalimat yang sangat puitis dan indah.
               <br /><br />
@@ -997,7 +1127,7 @@ export default function OrderForm() {
             </p>
             
             <textarea 
-              value={data.message} 
+              value={data.message || ''} 
               onChange={e => update('message', e.target.value)} 
               placeholder="Contoh: Makasih ya udah sabar ngadepin aku yang kadang egois. Aku cuma mau bilang kalau aku beruntung banget punya kamu..."
               style={{ 
@@ -1026,15 +1156,21 @@ export default function OrderForm() {
               
               {data.musicChoice === 'playlist' && (
                 <div style={{ marginTop: '0.5rem' }}>
-                  {data.music ? (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.05)', padding: '0.75rem 1rem', borderRadius: '12px', border: `1px solid ${currentTheme.text}30` }}>
-                      <div style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Music size={16} strokeWidth={2} opacity={0.8} />
-                        <div><strong>{data.music.split(' - ')[0]}</strong> <span style={{ opacity: 0.7 }}>- {data.music.split(' - ')[1]}</span></div>
+                  {data.music ? (() => {
+                    const musicInfo = formatMusicInfo(data.music);
+                    return (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.05)', padding: '0.75rem 1rem', borderRadius: '12px', border: `1px solid ${currentTheme.text}30` }}>
+                        <div style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <Music size={16} strokeWidth={2} opacity={0.8} />
+                          <div>
+                            <strong>{musicInfo.title}</strong>
+                            {musicInfo.artist && <span style={{ opacity: 0.7 }}> - {musicInfo.artist}</span>}
+                          </div>
+                        </div>
+                        <button onClick={() => { setTempSelectedMusic(musicInfo.full); setShowPlaylistModal(true); }} style={{ background: 'transparent', border: 'none', color: currentTheme.text, fontSize: '0.8rem', textDecoration: 'underline', cursor: 'pointer' }}>Ganti</button>
                       </div>
-                      <button onClick={() => { setTempSelectedMusic(data.music); setShowPlaylistModal(true); }} style={{ background: 'transparent', border: 'none', color: currentTheme.text, fontSize: '0.8rem', textDecoration: 'underline', cursor: 'pointer' }}>Ganti</button>
-                    </div>
-                  ) : (
+                    );
+                  })() : (
                     <button 
                       onClick={() => { setTempSelectedMusic(''); setShowPlaylistModal(true); }}
                       style={{ 
@@ -1050,7 +1186,7 @@ export default function OrderForm() {
 
               {data.musicChoice === 'request' && (
                 <input 
-                  value={data.music} onChange={e => update('music', e.target.value)} 
+                  value={data.music || ''} onChange={e => update('music', e.target.value)} 
                   placeholder="Misal: Sempurna - Andra & The Backbone"
                   style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: `1px solid ${currentTheme.text}40`, color: 'inherit', padding: '0.5rem 0', fontSize: '1rem', outline: 'none' }}
                 />
@@ -1062,7 +1198,35 @@ export default function OrderForm() {
         {/* --- STEP 4: MEMORIES (MEDIA) --- */}
         {step === 4 && (
           <div style={{ animation: 'fadeIn 0.5s ease-out' }}>
-            <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', fontWeight: 500 }}>Galeri Kenangan</h2>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '1rem' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 500, margin: 0 }}>Galeri Kenangan</h2>
+              <button
+                type="button"
+                onClick={() => openPreviewModal(data.isCircle ? 'gallery-circle' : 'gallery')}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '0.25rem 0.55rem',
+                  borderRadius: '16px',
+                  fontSize: '0.7rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  color: currentTheme.text,
+                  background: `${currentTheme.text}0a`,
+                  border: `1px solid ${currentTheme.text}20`,
+                  transition: 'all 0.2s',
+                  flexShrink: 0,
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = `${currentTheme.text}16`)}
+                onMouseLeave={(e) => (e.currentTarget.style.background = `${currentTheme.text}0a`)}
+              >
+                <span>Lihat Contoh Galeri</span>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M7 17L17 7M17 7H7M17 7V17" />
+                </svg>
+              </button>
+            </div>
             <p style={{ fontSize: '0.85rem', opacity: 0.7, marginBottom: '1.5rem', lineHeight: 1.6 }}>
               Bagikan momen-momen terbaik kalian. Kami akan menatanya ke dalam galeri digital yang cantik.
             </p>
@@ -1385,7 +1549,27 @@ export default function OrderForm() {
                 </button>
               ) : (
                 <button
-                  onClick={handleSubmit} disabled={submitting}
+                  type="button"
+                  onClick={() => {
+                    const stillUploading = uploadedPhotos.some(p => p.status === 'uploading') ||
+                      (secretPhoto && secretPhoto.status === 'uploading');
+                    if (stillUploading) {
+                      alert('Foto masih dalam proses upload, mohon tunggu sebentar.');
+                      return;
+                    }
+                    const hasError = uploadedPhotos.some(p => p.status === 'error') ||
+                      (secretPhoto && secretPhoto.status === 'error');
+                    if (hasError) {
+                      alert('Ada foto/media yang gagal diunggah. Mohon hapus atau unggah ulang file yang error sebelum melanjutkan.');
+                      return;
+                    }
+                    if (data.pinEnabled && (!data.pinCode || data.pinCode.length < 4)) {
+                      alert('PIN Code harus terdiri dari minimal 4 digit angka.');
+                      return;
+                    }
+                    setShowReviewModal(true);
+                  }}
+                  disabled={submitting}
                   style={{
                     background: currentTheme.text, color: currentTheme.bg, border: 'none',
                     padding: '0.8rem 2.5rem', borderRadius: '30px', fontSize: '0.9rem',
@@ -1394,7 +1578,7 @@ export default function OrderForm() {
                     touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent'
                   }}
                 >
-                  {submitting ? 'Mengirim Data...' : 'Selesai & Kirim'}
+                  Tinjau Formulir →
                 </button>
               )}
             </div>
@@ -1731,7 +1915,7 @@ export default function OrderForm() {
             exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
             transition={{ duration: 0.5 }}
             style={{
-              position: 'fixed', inset: 0, zIndex: 100,
+              position: 'fixed', inset: 0, zIndex: 300,
               background: `${currentTheme.bg}F2`, color: currentTheme.text,
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
             }}
@@ -1894,69 +2078,161 @@ export default function OrderForm() {
                   background: currentTheme.bg,
                   flexShrink: 0,
                   gap: '8px',
+                  flexWrap: 'wrap',
                 }}
               >
-                {/* Segmented Control */}
-                <div
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    padding: '3px',
-                    borderRadius: '10px',
-                    background: `${currentTheme.text}0a`,
-                    border: `1px solid ${currentTheme.text}18`,
-                    gap: '2px',
-                  }}
-                >
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (previewTab !== 'personal') {
-                        setPreviewTab('personal');
-                        setPreviewLoading(true);
-                      }
-                    }}
+                {previewTab === 'reasons' || previewTab === 'letter' ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ fontSize: '0.86rem', fontWeight: 600 }}>
+                      {previewTab === 'letter' ? 'Contoh: Surat Utama (Letter)' : 'Contoh: Kartu Alasan'}
+                    </div>
+                    <span
+                      style={{
+                        fontSize: '0.66rem',
+                        fontWeight: 500,
+                        padding: '2px 7px',
+                        borderRadius: '6px',
+                        background: `${currentTheme.text}0e`,
+                        border: `1px solid ${currentTheme.text}18`,
+                        opacity: 0.8,
+                      }}
+                    >
+                      Personal Edition
+                    </span>
+                  </div>
+                ) : previewTab === 'gallery' || previewTab === 'gallery-circle' ? (
+                  /* Segmented Control for Gallery */
+                  <div
                     style={{
-                      padding: '0.35rem 0.65rem',
-                      borderRadius: '8px',
-                      fontSize: '0.73rem',
-                      fontWeight: previewTab === 'personal' ? 600 : 400,
-                      cursor: 'pointer',
-                      border: 'none',
-                      transition: 'all 0.15s',
-                      background: previewTab === 'personal' ? currentTheme.text : 'transparent',
-                      color: previewTab === 'personal' ? currentTheme.bg : currentTheme.text,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      padding: '3px',
+                      borderRadius: '10px',
+                      background: `${currentTheme.text}0a`,
+                      border: `1px solid ${currentTheme.text}18`,
+                      gap: '2px',
                     }}
                   >
-                    Personal Edition
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (previewTab !== 'circle') {
-                        setPreviewTab('circle');
-                        setPreviewLoading(true);
-                      }
-                    }}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (previewTab !== 'gallery') {
+                          setPreviewTab('gallery');
+                          setPreviewLoading(true);
+                        }
+                      }}
+                      style={{
+                        padding: '0.35rem 0.65rem',
+                        borderRadius: '8px',
+                        fontSize: '0.73rem',
+                        fontWeight: previewTab === 'gallery' ? 600 : 400,
+                        cursor: 'pointer',
+                        border: 'none',
+                        transition: 'all 0.15s',
+                        background: previewTab === 'gallery' ? currentTheme.text : 'transparent',
+                        color: previewTab === 'gallery' ? currentTheme.bg : currentTheme.text,
+                      }}
+                    >
+                      Personal Edition
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (previewTab !== 'gallery-circle') {
+                          setPreviewTab('gallery-circle');
+                          setPreviewLoading(true);
+                        }
+                      }}
+                      style={{
+                        padding: '0.35rem 0.65rem',
+                        borderRadius: '8px',
+                        fontSize: '0.73rem',
+                        fontWeight: previewTab === 'gallery-circle' ? 600 : 400,
+                        cursor: 'pointer',
+                        border: 'none',
+                        transition: 'all 0.15s',
+                        background: previewTab === 'gallery-circle' ? currentTheme.text : 'transparent',
+                        color: previewTab === 'gallery-circle' ? currentTheme.bg : currentTheme.text,
+                      }}
+                    >
+                      Circle Edition
+                    </button>
+                  </div>
+                ) : (
+                  /* Segmented Control for Format Kado (Step 1) */
+                  <div
                     style={{
-                      padding: '0.35rem 0.65rem',
-                      borderRadius: '8px',
-                      fontSize: '0.73rem',
-                      fontWeight: previewTab === 'circle' ? 600 : 400,
-                      cursor: 'pointer',
-                      border: 'none',
-                      transition: 'all 0.15s',
-                      background: previewTab === 'circle' ? currentTheme.text : 'transparent',
-                      color: previewTab === 'circle' ? currentTheme.bg : currentTheme.text,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      padding: '3px',
+                      borderRadius: '10px',
+                      background: `${currentTheme.text}0a`,
+                      border: `1px solid ${currentTheme.text}18`,
+                      gap: '2px',
                     }}
                   >
-                    Circle Edition
-                  </button>
-                </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (previewTab !== 'personal') {
+                          setPreviewTab('personal');
+                          setPreviewLoading(true);
+                        }
+                      }}
+                      style={{
+                        padding: '0.35rem 0.65rem',
+                        borderRadius: '8px',
+                        fontSize: '0.73rem',
+                        fontWeight: previewTab === 'personal' ? 600 : 400,
+                        cursor: 'pointer',
+                        border: 'none',
+                        transition: 'all 0.15s',
+                        background: previewTab === 'personal' ? currentTheme.text : 'transparent',
+                        color: previewTab === 'personal' ? currentTheme.bg : currentTheme.text,
+                      }}
+                    >
+                      Personal Edition
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (previewTab !== 'circle') {
+                          setPreviewTab('circle');
+                          setPreviewLoading(true);
+                        }
+                      }}
+                      style={{
+                        padding: '0.35rem 0.65rem',
+                        borderRadius: '8px',
+                        fontSize: '0.73rem',
+                        fontWeight: previewTab === 'circle' ? 600 : 400,
+                        cursor: 'pointer',
+                        border: 'none',
+                        transition: 'all 0.15s',
+                        background: previewTab === 'circle' ? currentTheme.text : 'transparent',
+                        color: previewTab === 'circle' ? currentTheme.bg : currentTheme.text,
+                      }}
+                    >
+                      Circle Edition
+                    </button>
+                  </div>
+                )}
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                   <a
-                    href={previewTab === 'circle' ? '/auto-circle?preview=circle#circle-wishes-section' : '/untuk-nadia?preview=personal'}
+                    href={
+                      previewTab === 'gallery'
+                        ? '/untuk-nadia?preview=gallery#gallery-section'
+                        : previewTab === 'gallery-circle'
+                        ? '/auto-circle?preview=gallery#gallery-section'
+                        : previewTab === 'circle'
+                        ? '/auto-circle?preview=circle#circle-wishes-section'
+                        : previewTab === 'letter'
+                        ? '/untuk-nadia?preview=letter#letter-section'
+                        : previewTab === 'reasons'
+                        ? '/untuk-nadia?preview=reasons#reasons-section'
+                        : '/untuk-nadia?preview=personal'
+                    }
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
@@ -2043,15 +2319,39 @@ export default function OrderForm() {
                       }}
                     />
                     <span style={{ fontSize: '0.75rem', opacity: 0.65 }}>
-                      Memuat contoh kado {previewTab === 'circle' ? 'Circle Edition' : 'Personal Edition'}...
+                      Memuat contoh {previewTab === 'gallery' ? 'Galeri Kenangan' : previewTab === 'gallery-circle' ? 'Galeri Circle Edition' : previewTab === 'circle' ? 'Circle Edition' : previewTab === 'letter' ? 'Surat Utama' : previewTab === 'reasons' ? 'Kartu Alasan' : 'Personal Edition'}...
                     </span>
                   </div>
                 )}
 
                 <iframe
                   key={previewTab}
-                  src={previewTab === 'circle' ? '/auto-circle?preview=circle#circle-wishes-section' : '/untuk-nadia?preview=personal'}
-                  title={previewTab === 'circle' ? 'Contoh Tampilan Circle Edition' : 'Contoh Tampilan Personal Edition'}
+                  src={
+                    previewTab === 'gallery'
+                      ? '/untuk-nadia?preview=gallery#gallery-section'
+                      : previewTab === 'gallery-circle'
+                      ? '/auto-circle?preview=gallery#gallery-section'
+                      : previewTab === 'circle'
+                      ? '/auto-circle?preview=circle#circle-wishes-section'
+                      : previewTab === 'letter'
+                      ? '/untuk-nadia?preview=letter#letter-section'
+                      : previewTab === 'reasons'
+                      ? '/untuk-nadia?preview=reasons#reasons-section'
+                      : '/untuk-nadia?preview=personal'
+                  }
+                  title={
+                    previewTab === 'gallery'
+                      ? 'Contoh Tampilan Galeri Kenangan'
+                      : previewTab === 'gallery-circle'
+                      ? 'Contoh Tampilan Galeri Circle Edition'
+                      : previewTab === 'circle'
+                      ? 'Contoh Tampilan Circle Edition'
+                      : previewTab === 'letter'
+                      ? 'Contoh Tampilan Surat Utama'
+                      : previewTab === 'reasons'
+                      ? 'Contoh Tampilan Kartu Alasan'
+                      : 'Contoh Tampilan Personal Edition'
+                  }
                   onLoad={() => setPreviewLoading(false)}
                   style={{
                     width: '100%',
@@ -2061,6 +2361,508 @@ export default function OrderForm() {
                   }}
                   allow="autoplay"
                 />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+        {/* --- ORDER REVIEW MODAL (FINAL CONFIRMATION STEP) --- */}
+        {showReviewModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => { if (!submitting) setShowReviewModal(false); }}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 260,
+              background: 'rgba(0,0,0,0.7)',
+              backdropFilter: 'blur(8px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0.75rem',
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.95, y: 20, opacity: 0 }}
+              transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: currentTheme.bg,
+                color: currentTheme.text,
+                width: '100%',
+                maxWidth: '480px',
+                height: '88vh',
+                maxHeight: '840px',
+                borderRadius: '24px',
+                display: 'flex',
+                flexDirection: 'column',
+                boxShadow: '0 25px 50px rgba(0,0,0,0.45)',
+                overflow: 'hidden',
+                border: `1px solid ${currentTheme.text}20`,
+              }}
+            >
+              {/* Header */}
+              <div
+                style={{
+                  padding: '0.9rem 1.15rem',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  borderBottom: `1px solid ${currentTheme.text}12`,
+                  background: currentTheme.bg,
+                  flexShrink: 0,
+                  gap: '8px',
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: '0.88rem', fontWeight: 600, letterSpacing: '0.01em' }}>
+                    Ringkasan Formulir
+                  </div>
+                  <div style={{ fontSize: '0.67rem', opacity: 0.6, marginTop: '1px' }}>
+                    Periksa kembali data kado sebelum dikirimkan
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => { if (!submitting) setShowReviewModal(false); }}
+                  disabled={submitting}
+                  aria-label="Tutup ringkasan"
+                  style={{
+                    background: `${currentTheme.text}10`,
+                    border: `1px solid ${currentTheme.text}22`,
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: currentTheme.text,
+                    cursor: submitting ? 'not-allowed' : 'pointer',
+                    opacity: submitting ? 0.4 : 1,
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!submitting) {
+                      e.currentTarget.style.background = `${currentTheme.text}20`;
+                      e.currentTarget.style.borderColor = `${currentTheme.text}40`;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!submitting) {
+                      e.currentTarget.style.background = `${currentTheme.text}10`;
+                      e.currentTarget.style.borderColor = `${currentTheme.text}22`;
+                    }
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Bento Card Body */}
+              <div
+                style={{
+                  padding: '1rem',
+                  overflowY: 'auto',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                  flex: 1,
+                  WebkitOverflowScrolling: 'touch',
+                }}
+              >
+                {/* Card 1: Tentang Kalian */}
+                <div
+                  style={{
+                    background: `${currentTheme.text}06`,
+                    border: `1px solid ${currentTheme.text}15`,
+                    borderRadius: '16px',
+                    padding: '0.85rem 0.95rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.68rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', opacity: 0.6 }}>
+                      Tentang Kalian
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '0.68rem',
+                        fontWeight: 600,
+                        padding: '2px 8px',
+                        borderRadius: '6px',
+                        background: data.isCircle ? `${currentTheme.accent || currentTheme.text}22` : `${currentTheme.text}12`,
+                        color: currentTheme.text,
+                        border: `1px solid ${currentTheme.text}18`,
+                      }}
+                    >
+                      {data.isCircle ? `Circle Edition (${data.circleQuota || 8} Teman)` : 'Personal Edition'}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.78rem' }}>
+                    <div>
+                      <span style={{ opacity: 0.55, display: 'block', fontSize: '0.66rem' }}>Penerima (Untuk)</span>
+                      <span style={{ fontWeight: 600, wordBreak: 'break-word' }}>
+                        {data.recipient || '-'}
+                        {data.nickname ? ` (${data.nickname})` : ''}
+                      </span>
+                    </div>
+                    <div>
+                      <span style={{ opacity: 0.55, display: 'block', fontSize: '0.66rem' }}>Pengirim (Dari)</span>
+                      <span style={{ fontWeight: 600, wordBreak: 'break-word' }}>{data.sender || '-'}</span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.76rem', paddingTop: '6px', borderTop: `1px dashed ${currentTheme.text}12` }}>
+                    <div>
+                      <span style={{ opacity: 0.55, display: 'block', fontSize: '0.66rem' }}>Momen Spesial</span>
+                      <span style={{ fontWeight: 500 }}>
+                        {data.moment === 'Lainnya' ? (data.customMoment || 'Lainnya') : (data.moment || '-')}
+                      </span>
+                    </div>
+                    {data.recipientBirthdate && (
+                      <div>
+                        <span style={{ opacity: 0.55, display: 'block', fontSize: '0.66rem' }}>Tgl Lahir Penerima</span>
+                        <span style={{ fontWeight: 500 }}>{data.recipientBirthdate}</span>
+                      </div>
+                    )}
+                    {data.milestoneNumber && (
+                      <div>
+                        <span style={{ opacity: 0.55, display: 'block', fontSize: '0.66rem' }}>Usia / Ke</span>
+                        <span style={{ fontWeight: 500 }}>{data.milestoneNumber}</span>
+                      </div>
+                    )}
+                    {data.relationship && (
+                      <div>
+                        <span style={{ opacity: 0.55, display: 'block', fontSize: '0.66rem' }}>Status Hubungan</span>
+                        <span style={{ fontWeight: 500 }}>{data.relationship}</span>
+                      </div>
+                    )}
+                    {data.deadline && (
+                      <div>
+                        <span style={{ opacity: 0.55, display: 'block', fontSize: '0.66rem' }}>Deadline Gift</span>
+                        <span style={{ fontWeight: 500 }}>{data.deadline}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Card 2: Gaya & Musik */}
+                <div
+                  style={{
+                    background: `${currentTheme.text}06`,
+                    border: `1px solid ${currentTheme.text}15`,
+                    borderRadius: '16px',
+                    padding: '0.85rem 0.95rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}
+                >
+                  <span style={{ fontSize: '0.68rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', opacity: 0.6 }}>
+                    Gaya &amp; Musik
+                  </span>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div
+                        style={{
+                          width: '16px',
+                          height: '16px',
+                          borderRadius: '50%',
+                          background: currentTheme.bg,
+                          border: `2px solid ${currentTheme.accent || currentTheme.text}`,
+                          flexShrink: 0,
+                        }}
+                      />
+                      <span style={{ fontSize: '0.78rem', fontWeight: 600 }}>
+                        {themes[data.theme]?.name || data.theme}
+                      </span>
+                    </div>
+                    <span style={{ fontSize: '0.72rem', opacity: 0.75 }}>
+                      {data.language === 'Lainnya / Custom' ? (data.customLanguage || 'Custom') : data.language}
+                    </span>
+                  </div>
+
+                  {/* Tone tags */}
+                  {(() => {
+                    const tones = Array.isArray(data.tone) ? data.tone : (data.tone ? [data.tone] : []);
+                    if (tones.length === 0) return null;
+                    return (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                        {tones.map((t, idx) => (
+                          <span
+                            key={idx}
+                            style={{
+                              fontSize: '0.66rem',
+                              padding: '2px 7px',
+                              borderRadius: '6px',
+                              background: `${currentTheme.text}0d`,
+                              border: `1px solid ${currentTheme.text}18`,
+                              opacity: 0.85,
+                            }}
+                          >
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+                    );
+                  })()}
+
+                  {/* Music info */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.74rem', paddingTop: '6px', borderTop: `1px dashed ${currentTheme.text}12` }}>
+                    <Music size={12} style={{ opacity: 0.6, flexShrink: 0 }} />
+                    <span style={{ opacity: 0.6, fontSize: '0.67rem' }}>Lagu:</span>
+                    <span style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {data.musicChoice === 'random'
+                        ? 'Bebas / Rekomendasi Tim'
+                        : data.music
+                        ? (formatMusicInfo(data.music).full || 'Dipilih')
+                        : 'Belum dipilih'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Card 3: Pesan & Konsep */}
+                <div
+                  style={{
+                    background: `${currentTheme.text}06`,
+                    border: `1px solid ${currentTheme.text}15`,
+                    borderRadius: '16px',
+                    padding: '0.85rem 0.95rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.68rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', opacity: 0.6 }}>
+                      Pesan &amp; Konsep
+                    </span>
+                    <span style={{ fontSize: '0.68rem', opacity: 0.65 }}>
+                      {REASON_THEMES.find(t => t.id === data.reasonChoice)?.title || data.reasonChoice || 'Sifat Spesial'}
+                    </span>
+                  </div>
+
+                  {data.message ? (
+                    <div
+                      style={{
+                        fontFamily: 'Georgia, serif',
+                        fontStyle: 'italic',
+                        fontSize: '0.78rem',
+                        lineHeight: 1.6,
+                        opacity: 0.9,
+                        background: `${currentTheme.text}06`,
+                        padding: '0.75rem 0.9rem',
+                        borderRadius: '10px',
+                        borderLeft: `2.5px solid ${currentTheme.accent || currentTheme.text}`,
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word',
+                      }}
+                    >
+                      &ldquo;{data.message}&rdquo;
+                    </div>
+                  ) : (
+                    <span style={{ fontSize: '0.74rem', opacity: 0.5, fontStyle: 'italic' }}>Pesan belum diisi</span>
+                  )}
+
+                  {data.specialDate && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', opacity: 0.75 }}>
+                      <Clock size={12} style={{ opacity: 0.6 }} />
+                      <span>Tanggal Hitungan: <strong>{data.specialDate}</strong> {data.specialDateOccasion ? `(${data.specialDateOccasion})` : ''}</span>
+                    </div>
+                  )}
+
+                  {data.pinEnabled && data.pinCode && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', opacity: 0.75, paddingTop: '4px', borderTop: `1px dashed ${currentTheme.text}12` }}>
+                      <Lock size={12} style={{ opacity: 0.6 }} />
+                      <span>PIN Gate Aktif: <strong>••••••</strong> {data.pinHint ? `(Clue: ${data.pinHint})` : ''}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Card 4: Galeri Media & Foto */}
+                <div
+                  style={{
+                    background: `${currentTheme.text}06`,
+                    border: `1px solid ${currentTheme.text}15`,
+                    borderRadius: '16px',
+                    padding: '0.85rem 0.95rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.68rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', opacity: 0.6 }}>
+                      Galeri Foto &amp; Media
+                    </span>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 600 }}>
+                      {uploadedPhotos.filter(p => p.status === 'done').length} Foto Terpilih
+                    </span>
+                  </div>
+
+                  {uploadedPhotos.filter(p => p.status === 'done').length > 0 ? (
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(5, 1fr)',
+                        gap: '6px',
+                        marginTop: '2px',
+                      }}
+                    >
+                      {uploadedPhotos.filter(p => p.status === 'done').map((p, i) => (
+                        <div
+                          key={p.id || i}
+                          style={{
+                            position: 'relative',
+                            aspectRatio: '1',
+                            borderRadius: '8px',
+                            overflow: 'hidden',
+                            background: `${currentTheme.text}15`,
+                            border: `1px solid ${currentTheme.text}20`,
+                          }}
+                        >
+                          {p.isVideo ? (
+                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000' }}>
+                              <Video size={14} color="#fff" />
+                            </div>
+                          ) : (
+                            <img
+                              src={p.localUrl || p.remoteUrl}
+                              alt={`Foto ${i + 1}`}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                          )}
+                          <span
+                            style={{
+                              position: 'absolute',
+                              bottom: '2px',
+                              right: '3px',
+                              fontSize: '0.55rem',
+                              fontWeight: 700,
+                              color: '#fff',
+                              textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+                            }}
+                          >
+                            #{i + 1}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <span style={{ fontSize: '0.74rem', opacity: 0.5, fontStyle: 'italic' }}>
+                      Belum ada foto yang diunggah
+                    </span>
+                  )}
+
+                  {secretPhoto && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px', paddingTop: '6px', borderTop: `1px dashed ${currentTheme.text}12` }}>
+                      <div style={{ width: '28px', height: '28px', borderRadius: '6px', overflow: 'hidden', flexShrink: 0, border: `1px solid ${currentTheme.text}25` }}>
+                        {secretPhoto.isVideo ? (
+                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000' }}>
+                            <Video size={14} color="#fff" />
+                          </div>
+                        ) : (
+                          <img src={secretPhoto.localUrl || secretPhoto.remoteUrl} alt="Secret" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        )}
+                      </div>
+                      <div style={{ fontSize: '0.72rem' }}>
+                        <span style={{ fontWeight: 600, display: 'block' }}>{secretPhoto.isVideo ? 'Secret Video Disertakan' : 'Secret Media Disertakan'}</span>
+                        <span style={{ opacity: 0.6, fontSize: '0.65rem' }}>Akan muncul di akhir kado</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div
+                style={{
+                  padding: '0.85rem 1rem',
+                  borderTop: `1px solid ${currentTheme.text}12`,
+                  background: currentTheme.bg,
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1.6fr',
+                  gap: '8px',
+                  alignItems: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setShowReviewModal(false)}
+                  disabled={submitting}
+                  style={{
+                    background: 'transparent',
+                    border: `1px solid ${currentTheme.text}25`,
+                    color: currentTheme.text,
+                    padding: '0.75rem 0.5rem',
+                    borderRadius: '24px',
+                    fontSize: '0.8rem',
+                    fontWeight: 500,
+                    cursor: submitting ? 'not-allowed' : 'pointer',
+                    opacity: submitting ? 0.5 : 0.85,
+                    transition: 'all 0.2s',
+                    textAlign: 'center',
+                  }}
+                  onMouseEnter={(e) => { if (!submitting) e.currentTarget.style.opacity = '1'; }}
+                  onMouseLeave={(e) => { if (!submitting) e.currentTarget.style.opacity = '0.85'; }}
+                >
+                  Kembali Edit
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                  style={{
+                    background: currentTheme.text,
+                    color: currentTheme.bg,
+                    border: 'none',
+                    padding: '0.75rem 1rem',
+                    borderRadius: '24px',
+                    fontSize: '0.82rem',
+                    fontWeight: 600,
+                    cursor: submitting ? 'wait' : 'pointer',
+                    opacity: submitting ? 0.7 : 1,
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    boxShadow: '0 4px 14px rgba(0,0,0,0.15)',
+                  }}
+                >
+                  {submitting ? (
+                    <>
+                      <div
+                        style={{
+                          width: '14px',
+                          height: '14px',
+                          border: `2px solid ${currentTheme.bg}40`,
+                          borderTop: `2px solid ${currentTheme.bg}`,
+                          borderRadius: '50%',
+                          animation: 'spin 0.8s linear infinite',
+                        }}
+                      />
+                      <span>Mengirim Formulir...</span>
+                    </>
+                  ) : (
+                    <span>Konfirmasi &amp; Kirim Formulir</span>
+                  )}
+                </button>
               </div>
             </motion.div>
           </motion.div>
