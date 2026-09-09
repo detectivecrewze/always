@@ -489,23 +489,23 @@ export default function OrderForm() {
             <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', fontWeight: 500 }}>Tentang Kalian</h2>
             
             {/* Mode Selector: Personal vs Circle */}
-            <div style={{ marginBottom: '1.75rem', background: 'rgba(0,0,0,0.03)', border: `1px solid ${currentTheme.text}20`, borderRadius: '16px', padding: '1.1rem' }}>
-              <div style={{ marginBottom: '0.85rem' }}>
-                <label style={{ display: 'block', fontSize: '0.86rem', fontWeight: 600, opacity: 0.9, margin: '0 0 0.35rem 0' }}>
+            <div style={{ marginBottom: '1.75rem', background: 'rgba(0,0,0,0.03)', border: `1px solid ${currentTheme.text}20`, borderRadius: '16px', padding: '1rem' }}>
+              <div style={{ marginBottom: '0.75rem' }}>
+                <label style={{ display: 'block', fontSize: '0.86rem', fontWeight: 600, opacity: 0.9, margin: '0 0 0.25rem 0' }}>
                   Pilihan Format Kado
                 </label>
-                <p style={{ fontSize: '0.74rem', lineHeight: 1.45, opacity: 0.7, margin: 0 }}>
-                  Personal Edition adalah format kado utama dari kamu secara personal. Circle Edition merupakan fitur baru opsional jika ingin menyertakan pesan sahabat.
+                <p style={{ fontSize: '0.72rem', opacity: 0.65, margin: 0, lineHeight: 1.4 }}>
+                  Pilih format intim berdua atau sertakan pesan para sahabat.
                 </p>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
                 {/* Button 1: Personal Edition */}
                 <button
                   type="button"
                   onClick={() => update('isCircle', false)}
                   style={{
-                    padding: '0.9rem 0.85rem',
+                    padding: '0.85rem 0.8rem',
                     borderRadius: '12px',
                     cursor: 'pointer',
                     transition: 'all 0.2s',
@@ -520,40 +520,39 @@ export default function OrderForm() {
                     boxShadow: !data.isCircle ? '0 4px 12px rgba(0,0,0,0.08)' : 'none',
                   }}
                 >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+                    <span
+                      style={{
+                        fontSize: '0.58rem',
+                        fontWeight: 700,
+                        letterSpacing: '0.08em',
+                        textTransform: 'uppercase',
+                        padding: '2px 7px',
+                        borderRadius: '999px',
+                        background: !data.isCircle ? `${currentTheme.bg}25` : `${currentTheme.text}10`,
+                        color: !data.isCircle ? currentTheme.bg : currentTheme.text,
+                        border: `1px solid ${!data.isCircle ? currentTheme.bg + '40' : currentTheme.text + '18'}`,
+                      }}
+                    >
+                      Format Utama
+                    </span>
+                    {!data.isCircle && (
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.9 }}>
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    )}
+                  </div>
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', marginBottom: '6px' }}>
-                      <span
-                        style={{
-                          fontSize: '0.6rem',
-                          fontWeight: 700,
-                          letterSpacing: '0.08em',
-                          textTransform: 'uppercase',
-                          padding: '2px 7px',
-                          borderRadius: '999px',
-                          background: !data.isCircle ? `${currentTheme.bg}25` : `${currentTheme.text}10`,
-                          color: !data.isCircle ? currentTheme.bg : currentTheme.text,
-                          border: `1px solid ${!data.isCircle ? currentTheme.bg + '40' : currentTheme.text + '18'}`,
-                        }}
-                      >
-                        Format Utama
-                      </span>
-                      {!data.isCircle && (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.9 }}>
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                      )}
-                    </div>
-                    <div style={{ fontSize: '0.88rem', fontWeight: 600, letterSpacing: '0.01em' }}>
+                    <div style={{ fontSize: '0.86rem', fontWeight: 600, letterSpacing: '0.01em' }}>
                       Personal Edition
                     </div>
-                    <div style={{ fontSize: '0.72rem', opacity: !data.isCircle ? 0.85 : 0.6, marginTop: '2px', fontWeight: 500 }}>
-                      Spesial dari Kamu Sendiri
+                    <div style={{ fontSize: '0.72rem', opacity: !data.isCircle ? 0.8 : 0.55, marginTop: '2px', lineHeight: 1.35 }}>
+                      Khusus berdua dari kamu sendiri
+                    </div>
+                    <div style={{ fontSize: '0.66rem', opacity: !data.isCircle ? 0.65 : 0.45, marginTop: '4px', lineHeight: 1.3 }}>
+                      Cocok: Semua Momen Spesial
                     </div>
                   </div>
-
-                  <p style={{ fontSize: '0.7rem', lineHeight: 1.4, opacity: !data.isCircle ? 0.75 : 0.55, margin: 0, paddingTop: '6px', borderTop: `1px solid ${!data.isCircle ? currentTheme.bg + '20' : currentTheme.text + '12'}` }}>
-                    Format kado intim. Berisi surat, kartu kenangan, dan galeri murni dari hatimu untuk dia.
-                  </p>
                 </button>
 
                 {/* Button 2: Circle Edition */}
@@ -561,7 +560,7 @@ export default function OrderForm() {
                   type="button"
                   onClick={() => update('isCircle', true)}
                   style={{
-                    padding: '0.9rem 0.85rem',
+                    padding: '0.85rem 0.8rem',
                     borderRadius: '12px',
                     cursor: 'pointer',
                     transition: 'all 0.2s',
@@ -576,40 +575,39 @@ export default function OrderForm() {
                     boxShadow: data.isCircle ? '0 4px 12px rgba(0,0,0,0.08)' : 'none',
                   }}
                 >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+                    <span
+                      style={{
+                        fontSize: '0.58rem',
+                        fontWeight: 700,
+                        letterSpacing: '0.08em',
+                        textTransform: 'uppercase',
+                        padding: '2px 7px',
+                        borderRadius: '999px',
+                        background: data.isCircle ? `${currentTheme.bg}25` : `${currentTheme.text}10`,
+                        color: data.isCircle ? currentTheme.bg : currentTheme.text,
+                        border: `1px solid ${data.isCircle ? currentTheme.bg + '40' : currentTheme.text + '18'}`,
+                      }}
+                    >
+                      Baru · Opsional
+                    </span>
+                    {data.isCircle && (
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.9 }}>
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    )}
+                  </div>
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', marginBottom: '6px' }}>
-                      <span
-                        style={{
-                          fontSize: '0.6rem',
-                          fontWeight: 700,
-                          letterSpacing: '0.08em',
-                          textTransform: 'uppercase',
-                          padding: '2px 7px',
-                          borderRadius: '999px',
-                          background: data.isCircle ? `${currentTheme.bg}25` : `${currentTheme.text}10`,
-                          color: data.isCircle ? currentTheme.bg : currentTheme.text,
-                          border: `1px solid ${data.isCircle ? currentTheme.bg + '40' : currentTheme.text + '18'}`,
-                        }}
-                      >
-                        Baru · Opsional
-                      </span>
-                      {data.isCircle && (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.9 }}>
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                      )}
-                    </div>
-                    <div style={{ fontSize: '0.88rem', fontWeight: 600, letterSpacing: '0.01em' }}>
+                    <div style={{ fontSize: '0.86rem', fontWeight: 600, letterSpacing: '0.01em' }}>
                       Circle Edition
                     </div>
-                    <div style={{ fontSize: '0.72rem', opacity: data.isCircle ? 0.85 : 0.6, marginTop: '2px', fontWeight: 500 }}>
-                      Sertakan Pesan Sahabat
+                    <div style={{ fontSize: '0.72rem', opacity: data.isCircle ? 0.8 : 0.55, marginTop: '2px', lineHeight: 1.35 }}>
+                      Kado utama + pesan sahabat
+                    </div>
+                    <div style={{ fontSize: '0.66rem', opacity: data.isCircle ? 0.65 : 0.45, marginTop: '4px', lineHeight: 1.3 }}>
+                      Cocok: Ulang Tahun, Wisuda & Perpisahan
                     </div>
                   </div>
-
-                  <p style={{ fontSize: '0.7rem', lineHeight: 1.4, opacity: data.isCircle ? 0.75 : 0.55, margin: 0, paddingTop: '6px', borderTop: `1px solid ${data.isCircle ? currentTheme.bg + '20' : currentTheme.text + '12'}` }}>
-                    Fitur baru opsional. Dapatkan link praktis agar teman-teman bisa ikut menitipkan pesan, foto, video, atau voice note.
-                  </p>
                 </button>
               </div>
 
@@ -685,39 +683,9 @@ export default function OrderForm() {
                 </button>
               </div>
 
-              {/* Contextual Status / Explanation Box */}
-              {!data.isCircle ? (
-                <div
-                  style={{
-                    marginTop: '0.85rem',
-                    padding: '0.65rem 0.85rem',
-                    borderRadius: '10px',
-                    background: `${currentTheme.text}06`,
-                    border: `1px solid ${currentTheme.text}12`,
-                    fontSize: '0.72rem',
-                    lineHeight: 1.45,
-                    opacity: 0.8,
-                  }}
-                >
-                  <strong>Format aktif: Personal Edition.</strong> Seluruh kado didedikasikan murni untuk ungkapan perasaanmu secara personal tanpa melibatkan pesan pihak lain.
-                </div>
-              ) : (
+              {/* Quota Settings (Only when Circle Edition is active) */}
+              {data.isCircle && (
                 <div style={{ marginTop: '0.85rem', paddingTop: '0.85rem', borderTop: `1px solid ${currentTheme.text}15` }}>
-                  <div
-                    style={{
-                      padding: '0.65rem 0.85rem',
-                      borderRadius: '10px',
-                      background: `${currentTheme.text}06`,
-                      border: `1px solid ${currentTheme.text}12`,
-                      fontSize: '0.72rem',
-                      lineHeight: 1.45,
-                      opacity: 0.85,
-                      marginBottom: '0.85rem',
-                    }}
-                  >
-                    <strong>Format aktif: Circle Edition (Fitur Baru).</strong> Kamu tetap menulis pesan utamamu seperti biasa, ditambah link khusus yang dapat dibagikan ke sahabat untuk menitipkan ucapan.
-                  </div>
-
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                     <div>
                       <div style={{ fontSize: '0.82rem', fontWeight: 600 }}>Jumlah Teman</div>
