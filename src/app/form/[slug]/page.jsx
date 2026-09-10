@@ -423,7 +423,7 @@ export default function OrderForm() {
       minHeight: '100vh',
       fontFamily: 'var(--font-sans)',
       transition: 'background-color 0.8s ease, color 0.8s ease',
-      padding: '3rem 1.5rem',
+      padding: 'clamp(1.5rem, 5vw, 3rem) clamp(0.75rem, 3vw, 1.5rem)',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center'
@@ -437,7 +437,7 @@ export default function OrderForm() {
         backdropFilter: 'blur(16px)',
         border: '1px solid rgba(255, 255, 255, 0.1)',
         borderRadius: '24px',
-        padding: '2.5rem',
+        padding: 'clamp(1.15rem, 4vw, 2.5rem)',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
         position: 'relative',
         overflow: 'hidden'
@@ -615,7 +615,7 @@ export default function OrderForm() {
               <div
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
                   gap: '8px',
                   marginTop: '0.85rem',
                 }}
@@ -627,12 +627,14 @@ export default function OrderForm() {
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '5px',
+                    gap: '6px',
                     width: '100%',
+                    minWidth: 0,
                     boxSizing: 'border-box',
-                    padding: '0.55rem 0.65rem',
+                    padding: '0.65rem 0.85rem',
+                    minHeight: '42px',
                     borderRadius: '10px',
-                    fontSize: '0.72rem',
+                    fontSize: '0.74rem',
                     fontWeight: 500,
                     cursor: 'pointer',
                     color: currentTheme.text,
@@ -646,7 +648,7 @@ export default function OrderForm() {
                   onMouseLeave={(e) => (e.currentTarget.style.background = `${currentTheme.text}08`)}
                 >
                   <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Lihat Contoh Personal</span>
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                     <path d="M7 17L17 7M17 7H7M17 7V17" />
                   </svg>
                 </button>
@@ -658,12 +660,14 @@ export default function OrderForm() {
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '5px',
+                    gap: '6px',
                     width: '100%',
+                    minWidth: 0,
                     boxSizing: 'border-box',
-                    padding: '0.55rem 0.65rem',
+                    padding: '0.65rem 0.85rem',
+                    minHeight: '42px',
                     borderRadius: '10px',
-                    fontSize: '0.72rem',
+                    fontSize: '0.74rem',
                     fontWeight: 500,
                     cursor: 'pointer',
                     color: currentTheme.text,
@@ -677,7 +681,7 @@ export default function OrderForm() {
                   onMouseLeave={(e) => (e.currentTarget.style.background = `${currentTheme.text}08`)}
                 >
                   <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Lihat Contoh Circle</span>
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                     <path d="M7 17L17 7M17 7H7M17 7V17" />
                   </svg>
                 </button>
@@ -994,7 +998,7 @@ export default function OrderForm() {
               {/* Metaphor section hidden — no longer used */}
 
               <div style={{ marginBottom: '2rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '0.2rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '0.2rem', flexWrap: 'wrap' }}>
                   <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600 }}>Tema Kartu Alasan &amp; Kenangan</label>
                   <button
                     type="button"
@@ -1165,7 +1169,7 @@ export default function OrderForm() {
         {/* --- STEP 3: THE MESSAGE --- */}
         {step === 3 && (
           <div style={{ animation: 'fadeIn 0.5s ease-out' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '1rem', flexWrap: 'wrap' }}>
               <h2 style={{ fontSize: '1.25rem', fontWeight: 500, margin: 0 }}>Pesan Utama</h2>
               <button
                 type="button"
@@ -1272,7 +1276,7 @@ export default function OrderForm() {
         {/* --- STEP 4: MEMORIES (MEDIA) --- */}
         {step === 4 && (
           <div style={{ animation: 'fadeIn 0.5s ease-out' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '1rem', flexWrap: 'wrap' }}>
               <h2 style={{ fontSize: '1.25rem', fontWeight: 500, margin: 0 }}>Galeri Kenangan</h2>
               <button
                 type="button"
