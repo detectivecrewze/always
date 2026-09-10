@@ -7,51 +7,7 @@ import { themes } from '@/lib/themes';
 import playlist from '@/app/studio/playlist.json';
 import { Flower2, Leaf, Clock, Heart, Music, Image as ImageIcon, Lock, CheckCircle2, Sparkles, Video, Star, Camera, Handshake, HeartHandshake } from 'lucide-react';
 
-const FORM_COPY = [
-  ['Order Form', 'Order Form'], ['Step', 'Step'], ['Tentang Kalian', 'About You'],
-  ['Dari (Nama Anda)', 'From (Your Name)'], ['Untuk (Nama Lengkap / Nama Pendek)', 'To (Full Name / Nickname)'],
-  ['Panggilan Sayang', 'Term of Endearment'], ['(Opsional)', '(Optional)'],
-  ['Panggilan spesial yang biasa kamu sebut (misal: sayang, cinta, beb, dll)', 'A special name you usually use (e.g. darling, love, babe).'],
-  ['Momen Spesial', 'Special Occasion'], ['Tulis momen spesialmu di sini... (cth: Hari pertama kenalan)', 'Write your special occasion here... (e.g. the day we first met)'],
-  ['Nama Momen / Acara (Opsional)', 'Occasion / Event Name (Optional)'], ['Kamu dan', 'You and'], ['adalah...', 'are...'],
-  ['Gaya & Suasana', 'Style & Mood'], ['Pilih Palet Warna', 'Choose a Color Palette'],
-  ['Tema Kartu Alasan & Kenangan', 'Reasons & Memories Section Theme'], ['Pilih sudut pandang cerita untuk kartu-kartu pesan tentang dia.', 'Choose a story perspective for the cards about them.'],
-  ['Bahasa Penulisan', 'Letter Language'], ['Pilih satu bahasa utama untuk surat kamu.', 'Choose one main language for your letter.'],
-  ['Lainnya / Custom', 'Other / Custom'], ['Tulis preferensi bahasa kamu sendiri di bawah ini.', 'Write your language preference below.'],
-  ['Gaya Penulisan (Vibe)', 'Writing Style (Vibe)'], ['Boleh pilih lebih dari satu untuk hasil yang lebih pas.', 'You can choose more than one for a better result.'],
-  ['Pesan Utama', 'Main Message'], ['Lagu Latar (Backsound)', 'Background Music'], ['Ganti', 'Change'],
-  ['Galeri Kenangan', 'Memory Gallery'], ['Video maks. 15MB. Foto akan dikompres otomatis.', 'Videos can be up to 15MB. Photos are compressed automatically.'],
-  ['Kapan gift harus jadi? (Opsional)', 'When should the gift be ready? (Optional)'], ['PIN Code (Maks 6 Angka)', 'PIN Code (Up to 6 Digits)'],
-  ['PIN Hint / Clue (Opsional)', 'PIN Hint / Clue (Optional)'], ['Pilih Lagu Latar', 'Choose Background Music'],
-  ['Sebelumnya', 'Back'], ['Lanjut', 'Next'], ['Kirim Pesanan', 'Submit Order'], ['Bahasa Tampilan', 'Interface Language'],
-  ['Misal: Budi', 'Example: Budi'], ['Misal: Nadia Aulia', 'Example: Nadia Aulia'], ['Misal: Sayang, Beb, Cinta...', 'Example: Darling, Babe, Love...'],
-  ['Cth: Hari pertama kenalan, Wisuda, dll...', 'E.g. The day we first met, graduation, etc...'],
-  ['Contoh: Bahasa Jawa, campuran Korea-Indonesia, dll...', 'Example: Javanese, a Korean-Indonesian mix, etc...'],
-  ['Contoh: Makasih ya udah sabar ngadepin aku yang kadang egois. Aku cuma mau bilang kalau aku beruntung banget punya kamu...', 'Example: Thank you for being patient with me when I am sometimes selfish. I just want to say how lucky I am to have you...'],
-  ['Misal: Sempurna - Andra & The Backbone', 'Example: Perfect - Ed Sheeran'], ['Contoh: 123456', 'Example: 123456'], ['Contoh: Tanggal jadian kita', 'Example: Our anniversary date'],
-  ['Mohon isi nama pengirim dan penerima.', 'Please fill in the sender and recipient names.'], ['Mohon isi pesan utama yang ingin disampaikan.', 'Please fill in the main message you want to share.']
-];
-const FORM_DICTIONARY = Object.fromEntries(FORM_COPY.flatMap(([id, en]) => [[id, { id, en }], [en, { id, en }]]));
-function translateFormCopy(root, locale) {
-  if (!root) return;
-  const translate = (value) => FORM_DICTIONARY[value]?.[locale] || value;
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  let node;
-  while ((node = walker.nextNode())) {
-    const parent = node.parentElement;
-    if (!parent || ['SCRIPT', 'STYLE', 'TEXTAREA'].includes(parent.tagName) || parent.isContentEditable) continue;
-    const source = node.nodeValue;
-    const key = source.replace(/\s+/g, ' ').trim();
-    const translated = translate(key);
-    if (translated !== key) node.nodeValue = source.replace(key, translated);
-  }
-  root.querySelectorAll('[placeholder], [title], [aria-label]').forEach((element) => {
-    ['placeholder', 'title', 'aria-label'].forEach((attribute) => {
-      const value = element.getAttribute(attribute);
-      if (value) element.setAttribute(attribute, translate(value));
-    });
-  });
-}
+
 
 function formatMusicInfo(music) {
   if (!music) return { title: '', artist: '', full: '' };
@@ -97,6 +53,7 @@ export default function OrderForm() {
   };
   const [tempSelectedMusic, setTempSelectedMusic] = useState('');
   const [interfaceLocale, setInterfaceLocale] = useState('id');
+  const isEn = interfaceLocale === 'en';
   const formRootRef = useRef(null);
   const isSubmittingRef = useRef(false);
 
@@ -171,8 +128,7 @@ export default function OrderForm() {
 
   useEffect(() => {
     document.documentElement.lang = interfaceLocale;
-    translateFormCopy(formRootRef.current, interfaceLocale);
-  });
+  }, [interfaceLocale]);
 
   // Lock background body scroll when any modal is open
   useEffect(() => {
@@ -222,11 +178,11 @@ export default function OrderForm() {
   const handleNext = () => {
     setValidationError('');
     if (step === 1 && (!data.sender?.trim() || !data.recipient?.trim())) {
-      setValidationError('Mohon isi nama pengirim dan penerima.');
+      setValidationError(isEn ? 'Please fill in the sender and recipient names.' : 'Mohon isi nama pengirim dan penerima.');
       return;
     }
     if (step === 3 && !data.message?.trim()) {
-      setValidationError('Mohon isi pesan utama yang ingin disampaikan.');
+      setValidationError(isEn ? 'Please fill in the main message you want to share.' : 'Mohon isi pesan utama yang ingin disampaikan.');
       return;
     }
     setStep(s => Math.min(4, s + 1));
@@ -283,7 +239,7 @@ export default function OrderForm() {
     e.target.value = '';
     // Videos must be <= 15MB. Images will be compressed.
     const validFiles = selected.filter(f => f.type.startsWith('image/') || f.size <= 15 * 1024 * 1024);
-    if (validFiles.length < selected.length) alert('Beberapa video diabaikan karena ukurannya lebih dari 15MB.');
+    if (validFiles.length < selected.length) alert(isEn ? 'Some videos were skipped because they exceed 15MB.' : 'Beberapa video diabaikan karena ukurannya lebih dari 15MB.');
 
     if (isSecret) {
       const file = validFiles[0];
@@ -312,15 +268,15 @@ export default function OrderForm() {
     if (isSubmittingRef.current) return;
 
     if (!data.sender?.trim() || !data.recipient?.trim()) {
-      alert('Mohon lengkapi nama pengirim dan penerima.');
+      alert(isEn ? 'Please fill in the sender and recipient names.' : 'Mohon lengkapi nama pengirim dan penerima.');
       return;
     }
     if (!data.message?.trim()) {
-      alert('Mohon isi pesan utama yang ingin disampaikan.');
+      alert(isEn ? 'Please fill in the main message you want to share.' : 'Mohon isi pesan utama yang ingin disampaikan.');
       return;
     }
     if (data.pinEnabled && (!data.pinCode || data.pinCode.length < 4)) {
-      alert('PIN Code harus terdiri dari minimal 4 digit angka.');
+      alert(isEn ? 'PIN Code must be at least 4 digits.' : 'PIN Code harus terdiri dari minimal 4 digit angka.');
       return;
     }
 
@@ -328,7 +284,7 @@ export default function OrderForm() {
     const stillUploading = uploadedPhotos.some(p => p.status === 'uploading') ||
       (secretPhoto && secretPhoto.status === 'uploading');
     if (stillUploading) {
-      alert('Foto masih dalam proses upload, mohon tunggu sebentar.');
+      alert(isEn ? 'Photos are still uploading, please wait a moment.' : 'Foto masih dalam proses upload, mohon tunggu sebentar.');
       return;
     }
 
@@ -336,7 +292,7 @@ export default function OrderForm() {
     const hasError = uploadedPhotos.some(p => p.status === 'error') ||
       (secretPhoto && secretPhoto.status === 'error');
     if (hasError) {
-      alert('Ada foto/media yang gagal diunggah. Mohon hapus atau unggah ulang sebelum mengirim.');
+      alert(isEn ? 'Some media failed to upload. Please remove or re-upload before submitting.' : 'Ada foto/media yang gagal diunggah. Mohon hapus atau unggah ulang sebelum mengirim.');
       return;
     }
 
@@ -375,11 +331,11 @@ export default function OrderForm() {
         // Delete the online draft so it disappears from Studio Live Drafts
         fetch(`/api/drafts/${slug}`, { method: 'DELETE' }).catch(() => {});
       } else {
-        alert(result.error || 'Terjadi kesalahan pada sistem.');
+        alert(result.error || (isEn ? 'A system error occurred.' : 'Terjadi kesalahan pada sistem.'));
       }
     } catch (err) {
       console.error(err);
-      alert('Gagal mengirim data. Silakan coba lagi.');
+      alert(isEn ? 'Failed to submit data. Please try again.' : 'Gagal mengirim data. Silakan coba lagi.');
     } finally {
       isSubmittingRef.current = false;
       setSubmitting(false);
@@ -387,34 +343,48 @@ export default function OrderForm() {
   };
 
   const STORY_CONCEPTS = [
-    { id: 'Flowers (Bunga)', icon: <Flower2 size={24} strokeWidth={1.5} />, title: 'Bunga (Flowers)', desc: 'Cocok untuk cerita cinta yang dirawat dan terus bertumbuh mekar.' },
-    { id: 'Seasons (4 Musim)', icon: <Leaf size={24} strokeWidth={1.5} />, title: 'Musim (Seasons)', desc: 'Menyoroti bagaimana kalian melewati masa senang dan sulit bersama.' },
-    { id: 'Time (Waktu)', icon: <Clock size={24} strokeWidth={1.5} />, title: 'Waktu (Time)', desc: 'Fokus pada detik, hari, dan tahun perjalanan yang telah dihabiskan.' },
-    { id: 'Keepsakes (Kenangan)', icon: <Heart size={24} strokeWidth={1.5} />, title: 'Kenangan (Keepsakes)', desc: 'Mengabadikan hal-hal kecil bermakna yang menjadi saksi cerita kalian.' }
+    { id: 'Flowers (Bunga)', icon: <Flower2 size={24} strokeWidth={1.5} />, title: isEn ? 'Flowers' : 'Bunga (Flowers)', desc: isEn ? 'Perfect for a love story nurtured and continually blooming.' : 'Cocok untuk cerita cinta yang dirawat dan terus bertumbuh mekar.' },
+    { id: 'Seasons (4 Musim)', icon: <Leaf size={24} strokeWidth={1.5} />, title: isEn ? 'Seasons' : 'Musim (Seasons)', desc: isEn ? 'Highlighting how you walked through sunny and rainy days together.' : 'Menyoroti bagaimana kalian melewati masa senang dan sulit bersama.' },
+    { id: 'Time (Waktu)', icon: <Clock size={24} strokeWidth={1.5} />, title: isEn ? 'Time' : 'Waktu (Time)', desc: isEn ? 'Focused on every second, day, and year of time spent together.' : 'Fokus pada detik, hari, dan tahun perjalanan yang telah dihabiskan.' },
+    { id: 'Keepsakes (Kenangan)', icon: <Heart size={24} strokeWidth={1.5} />, title: isEn ? 'Keepsakes' : 'Kenangan (Keepsakes)', desc: isEn ? 'Preserving little meaningful things that witnessed your journey.' : 'Mengabadikan hal-hal kecil bermakna yang menjadi saksi cerita kalian.' }
   ];
 
   const REASON_THEMES = [
-    { id: 'qualities', icon: <Star size={24} strokeWidth={1.5} />, title: 'Sifat Spesial (Qualities)', desc: 'Hal-hal yang membuat dia begitu istimewa di mata kamu.' },
-    { id: 'moments', icon: <Camera size={24} strokeWidth={1.5} />, title: 'Momen Berharga (Moments)', desc: 'Kenangan-kenangan indah yang kalian lalui bersama.' },
-    { id: 'promises', icon: <HeartHandshake size={24} strokeWidth={1.5} />, title: 'Harapan & Janji (Promises)', desc: 'Harapan terbaik atau janji manis yang ingin kamu sampaikan untuk dia.' },
-    { id: 'gratitude', icon: <Sparkles size={24} strokeWidth={1.5} />, title: 'Rasa Syukur (Gratitude)', desc: 'Segala hal yang kamu syukuri atas kehadiran dia.' },
+    { id: 'qualities', icon: <Star size={24} strokeWidth={1.5} />, title: isEn ? 'Special Qualities' : 'Sifat Spesial (Qualities)', desc: isEn ? 'Things that make them so special in your eyes.' : 'Hal-hal yang membuat dia begitu istimewa di mata kamu.' },
+    { id: 'moments', icon: <Camera size={24} strokeWidth={1.5} />, title: isEn ? 'Cherished Moments' : 'Momen Berharga (Moments)', desc: isEn ? 'Beautiful memories that you have shared together.' : 'Kenangan-kenangan indah yang kalian lalui bersama.' },
+    { id: 'promises', icon: <HeartHandshake size={24} strokeWidth={1.5} />, title: isEn ? 'Hopes & Promises' : 'Harapan & Janji (Promises)', desc: isEn ? 'Heartfelt wishes or sweet promises you want to share with them.' : 'Harapan terbaik atau janji manis yang ingin kamu sampaikan untuk dia.' },
+    { id: 'gratitude', icon: <Sparkles size={24} strokeWidth={1.5} />, title: isEn ? 'Gratitude' : 'Rasa Syukur (Gratitude)', desc: isEn ? 'Everything you are grateful for having them in your life.' : 'Segala hal yang kamu syukuri atas kehadiran dia.' },
   ];
 
   const LANGUAGES = [
-    { id: 'Full Indonesia', label: 'Full Indonesia', hint: 'Surat ditulis 100% dalam Bahasa Indonesia.' },
-    { id: 'Full English', label: 'Full English', hint: 'Surat ditulis 100% dalam Bahasa Inggris.' },
-    { id: 'Indoglish', label: 'Indoglish', hint: 'Campuran Bahasa Indonesia dan Inggris secara natural.' },
-    { id: 'Lainnya / Custom', label: 'Lainnya / Custom', hint: 'Ketik preferensi bahasamu sendiri di bawah ini.' },
+    { id: 'Full Indonesia', label: isEn ? 'Full Indonesian' : 'Full Indonesia', hint: isEn ? 'Letter is written 100% in Indonesian.' : 'Surat ditulis 100% dalam Bahasa Indonesia.' },
+    { id: 'Full English', label: isEn ? 'Full English' : 'Full English', hint: isEn ? 'Letter is written 100% in English.' : 'Surat ditulis 100% dalam Bahasa Inggris.' },
+    { id: 'Indoglish', label: isEn ? 'Indoglish' : 'Indoglish', hint: isEn ? 'A natural blend of Indonesian and English.' : 'Campuran Bahasa Indonesia dan Inggris secara natural.' },
+    { id: 'Lainnya / Custom', label: isEn ? 'Other / Custom' : 'Lainnya / Custom', hint: isEn ? 'Type your custom language preference below.' : 'Ketik preferensi bahasamu sendiri di bawah ini.' },
   ];
   const VIBES = [
-    { id: 'Santai', label: 'Santai', hint: 'Kasual, seperti ngobrol biasa, pakai kata-kata sehari-hari.' },
-    { id: 'Puitis', label: 'Puitis', hint: 'Bermakna dan mengalir, tapi tetap natural, bukan kaku seperti sajak.' },
-    { id: 'Romantis', label: 'Romantis', hint: 'Hangat, intim, dan penuh rasa sayang yang tulus.' },
-    { id: 'Mengharukan', label: 'Mengharukan', hint: 'Dalam, emosional, cocok untuk perasaan yang sulit diungkapkan.' },
-    { id: 'Bucin / ABG', label: 'Bucin / ABG', hint: 'Manja, santai, dengan repetisi kata yang akrab.' },
+    { id: 'Santai', label: isEn ? 'Casual' : 'Santai', hint: isEn ? 'Casual and conversational, using natural everyday language.' : 'Kasual, seperti ngobrol biasa, pakai kata-kata sehari-hari.' },
+    { id: 'Puitis', label: isEn ? 'Poetic' : 'Puitis', hint: isEn ? 'Meaningful and flowing, yet natural without feeling stiff.' : 'Bermakna dan mengalir, tapi tetap natural, bukan kaku seperti sajak.' },
+    { id: 'Romantis', label: isEn ? 'Romantic' : 'Romantis', hint: isEn ? 'Warm, intimate, and filled with sincere affection.' : 'Hangat, intim, dan penuh rasa sayang yang tulus.' },
+    { id: 'Mengharukan', label: isEn ? 'Heartfelt' : 'Mengharukan', hint: isEn ? 'Deep and emotional, perfect for feelings hard to put into words.' : 'Dalam, emosional, cocok untuk perasaan yang sulit diungkapkan.' },
+    { id: 'Bucin / ABG', label: isEn ? 'Sweet & Playful' : 'Bucin / ABG', hint: isEn ? 'Sweet, playful, and affectionately close.' : 'Manja, santai, dengan repetisi kata yang akrab.' },
   ];
-  const MOMENTS = ['Ultah', 'Anniversary', 'LDR', 'Wisuda', 'Friendship', 'Just Because', 'Lainnya'];
-  const RELATIONSHIPS = ['Pasangan', 'Sahabat', 'Teman', 'Keluarga', 'Lainnya'];
+  const MOMENTS = [
+    { id: 'Ultah', label: isEn ? 'Birthday' : 'Ultah' },
+    { id: 'Anniversary', label: isEn ? 'Anniversary' : 'Anniversary' },
+    { id: 'LDR', label: isEn ? 'LDR' : 'LDR' },
+    { id: 'Wisuda', label: isEn ? 'Graduation' : 'Wisuda' },
+    { id: 'Friendship', label: isEn ? 'Friendship' : 'Friendship' },
+    { id: 'Just Because', label: isEn ? 'Just Because' : 'Just Because' },
+    { id: 'Lainnya', label: isEn ? 'Other' : 'Lainnya' },
+  ];
+  const RELATIONSHIPS = [
+    { id: 'Pasangan', label: isEn ? 'Partner / Couple' : 'Pasangan' },
+    { id: 'Sahabat', label: isEn ? 'Best Friend' : 'Sahabat' },
+    { id: 'Teman', label: isEn ? 'Friend' : 'Teman' },
+    { id: 'Keluarga', label: isEn ? 'Family' : 'Keluarga' },
+    { id: 'Lainnya', label: isEn ? 'Other' : 'Lainnya' },
+  ];
 
   return (
     <div ref={formRootRef} style={{
@@ -516,16 +486,16 @@ export default function OrderForm() {
         {/* --- STEP 1: BASICS --- */}
         {step === 1 && (
           <div style={{ animation: 'fadeIn 0.5s ease-out' }}>
-            <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', fontWeight: 500 }}>Tentang Kalian</h2>
+            <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', fontWeight: 500 }}>{isEn ? 'About You' : 'Tentang Kalian'}</h2>
             
             {/* Mode Selector: Personal vs Circle */}
             <div style={{ marginBottom: '1.75rem', background: 'rgba(0,0,0,0.03)', border: `1px solid ${currentTheme.text}20`, borderRadius: '16px', padding: '1rem' }}>
               <div style={{ marginBottom: '0.75rem' }}>
                 <label style={{ display: 'block', fontSize: '0.86rem', fontWeight: 600, opacity: 0.9, margin: '0 0 0.25rem 0' }}>
-                  Pilihan Format Kado
+                  {isEn ? 'Gift Format Options' : 'Pilihan Format Kado'}
                 </label>
                 <p style={{ fontSize: '0.72rem', opacity: 0.65, margin: 0, lineHeight: 1.4 }}>
-                  Pilih format intim berdua atau sertakan pesan para sahabat.
+                  {isEn ? 'Choose an intimate format for two or include heartfelt wishes from friends.' : 'Pilih format intim berdua atau sertakan pesan para sahabat.'}
                 </p>
               </div>
 
@@ -564,7 +534,7 @@ export default function OrderForm() {
                         border: `1px solid ${!data.isCircle ? currentTheme.bg + '40' : currentTheme.text + '18'}`,
                       }}
                     >
-                      Format Utama
+                      {isEn ? 'Main Format' : 'Format Utama'}
                     </span>
                     {!data.isCircle && (
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.9 }}>
@@ -577,10 +547,10 @@ export default function OrderForm() {
                       Personal Edition
                     </div>
                     <div style={{ fontSize: '0.72rem', opacity: !data.isCircle ? 0.8 : 0.55, marginTop: '2px', lineHeight: 1.35 }}>
-                      Khusus berdua dari kamu sendiri
+                      {isEn ? 'Exclusively for the two of you from you alone' : 'Khusus berdua dari kamu sendiri'}
                     </div>
                     <div style={{ fontSize: '0.66rem', opacity: !data.isCircle ? 0.65 : 0.45, marginTop: '4px', lineHeight: 1.3 }}>
-                      Cocok: Semua Momen Spesial
+                      {isEn ? 'Best for: All Special Occasions' : 'Cocok: Semua Momen Spesial'}
                     </div>
                   </div>
                 </button>
@@ -619,7 +589,7 @@ export default function OrderForm() {
                         border: `1px solid ${data.isCircle ? currentTheme.bg + '40' : currentTheme.text + '18'}`,
                       }}
                     >
-                      Baru · Opsional
+                      {isEn ? 'New · Optional' : 'Baru · Opsional'}
                     </span>
                     {data.isCircle && (
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.9 }}>
@@ -632,10 +602,10 @@ export default function OrderForm() {
                       Circle Edition
                     </div>
                     <div style={{ fontSize: '0.72rem', opacity: data.isCircle ? 0.8 : 0.55, marginTop: '2px', lineHeight: 1.35 }}>
-                      Kado utama + pesan sahabat
+                      {isEn ? 'Main gift + messages from friends' : 'Kado utama + pesan sahabat'}
                     </div>
                     <div style={{ fontSize: '0.66rem', opacity: data.isCircle ? 0.65 : 0.45, marginTop: '4px', lineHeight: 1.3 }}>
-                      Cocok: Ulang Tahun, Wisuda & Perpisahan
+                      {isEn ? 'Best for: Birthdays, Graduations & Farewells' : 'Cocok: Ulang Tahun, Wisuda & Perpisahan'}
                     </div>
                   </div>
                 </button>
@@ -677,7 +647,7 @@ export default function OrderForm() {
                   onMouseEnter={(e) => (e.currentTarget.style.background = `${currentTheme.text}14`)}
                   onMouseLeave={(e) => (e.currentTarget.style.background = `${currentTheme.text}08`)}
                 >
-                  <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Lihat Contoh Personal</span>
+                  <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{isEn ? 'View Personal Sample' : 'Lihat Contoh Personal'}</span>
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                     <path d="M7 17L17 7M17 7H7M17 7V17" />
                   </svg>
@@ -710,7 +680,7 @@ export default function OrderForm() {
                   onMouseEnter={(e) => (e.currentTarget.style.background = `${currentTheme.text}14`)}
                   onMouseLeave={(e) => (e.currentTarget.style.background = `${currentTheme.text}08`)}
                 >
-                  <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Lihat Contoh Circle</span>
+                  <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{isEn ? 'View Circle Sample' : 'Lihat Contoh Circle'}</span>
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                     <path d="M7 17L17 7M17 7H7M17 7V17" />
                   </svg>
@@ -722,8 +692,8 @@ export default function OrderForm() {
                 <div style={{ marginTop: '0.85rem', paddingTop: '0.85rem', borderTop: `1px solid ${currentTheme.text}15` }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                     <div>
-                      <div style={{ fontSize: '0.82rem', fontWeight: 600 }}>Jumlah Teman</div>
-                      <div style={{ fontSize: '0.7rem', opacity: 0.65 }}>Pilih 1 – 20 teman</div>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 600 }}>{isEn ? 'Number of Friends' : 'Jumlah Teman'}</div>
+                      <div style={{ fontSize: '0.7rem', opacity: 0.65 }}>{isEn ? 'Choose 1 – 20 friends' : 'Pilih 1 – 20 teman'}</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <button
@@ -776,7 +746,7 @@ export default function OrderForm() {
                     </div>
                   </div>
                   <p style={{ fontSize: '0.72rem', opacity: 0.65, lineHeight: 1.4, margin: '0' }}>
-                    Tiap teman akan menerima tautan khusus untuk mengirimkan pesan serta foto, video singkat, atau rekaman suara mereka.
+                    {isEn ? 'Each friend will receive a dedicated link to submit their message along with photos, short videos, or voice recordings.' : 'Tiap teman akan menerima tautan khusus untuk mengirimkan pesan serta foto, video singkat, atau rekaman suara mereka.'}
                   </p>
                 </div>
               )}
@@ -784,10 +754,10 @@ export default function OrderForm() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>Dari (Nama Anda)</label>
+                <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>{isEn ? 'From (Your Name)' : 'Dari (Nama Anda)'}</label>
                 <input 
                   value={data.sender || ''} onChange={e => update('sender', e.target.value)} 
-                  placeholder="Misal: Budi"
+                  placeholder={isEn ? 'Example: Alex' : 'Misal: Budi'}
                   style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: `1px solid ${currentTheme.text}40`, color: 'inherit', padding: '0.5rem 0', fontSize: '1rem', outline: 'none', transition: 'border-color 0.3s' }}
                   onFocus={(e) => e.target.style.borderColor = currentTheme.text}
                   onBlur={(e) => e.target.style.borderColor = `${currentTheme.text}40`}
@@ -795,10 +765,10 @@ export default function OrderForm() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>Untuk (Nama Lengkap / Nama Pendek)</label>
+                <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>{isEn ? 'To (Full Name / Nickname)' : 'Untuk (Nama Lengkap / Nama Pendek)'}</label>
                 <input 
                   value={data.recipient || ''} onChange={e => update('recipient', e.target.value)} 
-                  placeholder="Misal: Nadia Aulia"
+                  placeholder={isEn ? 'Example: Nadia Aulia' : 'Misal: Nadia Aulia'}
                   style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: `1px solid ${currentTheme.text}40`, color: 'inherit', padding: '0.5rem 0', fontSize: '1rem', outline: 'none', transition: 'border-color 0.3s' }}
                   onFocus={(e) => e.target.style.borderColor = currentTheme.text}
                   onBlur={(e) => e.target.style.borderColor = `${currentTheme.text}40`}
@@ -806,11 +776,11 @@ export default function OrderForm() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.25rem' }}>Panggilan Sayang <span style={{ opacity: 0.5 }}>(Opsional)</span></label>
-                <p style={{ fontSize: '0.75rem', opacity: 0.5, marginBottom: '0.5rem', lineHeight: 1.4 }}>Panggilan spesial yang biasa kamu sebut (misal: sayang, cinta, beb, dll)</p>
+                <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.25rem' }}>{isEn ? 'Term of Endearment ' : 'Panggilan Sayang '}<span style={{ opacity: 0.5 }}>({isEn ? 'Optional' : 'Opsional'})</span></label>
+                <p style={{ fontSize: '0.75rem', opacity: 0.5, marginBottom: '0.5rem', lineHeight: 1.4 }}>{isEn ? 'Special nickname you usually call them (e.g. darling, love, babe, etc.)' : 'Panggilan spesial yang biasa kamu sebut (misal: sayang, cinta, beb, dll)'}</p>
                 <input 
                   value={data.nickname || ''} onChange={e => update('nickname', e.target.value)} 
-                  placeholder="Misal: Sayang, Beb, Cinta..."
+                  placeholder={isEn ? 'Example: Darling, Babe, Love...' : 'Misal: Sayang, Beb, Cinta...'}
                   style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: `1px solid ${currentTheme.text}40`, color: 'inherit', padding: '0.5rem 0', fontSize: '1rem', outline: 'none', transition: 'border-color 0.3s' }}
                   onFocus={(e) => e.target.style.borderColor = currentTheme.text}
                   onBlur={(e) => e.target.style.borderColor = `${currentTheme.text}40`}
@@ -818,20 +788,20 @@ export default function OrderForm() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '1rem' }}>Momen Spesial</label>
+                <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '1rem' }}>{isEn ? 'Special Occasion' : 'Momen Spesial'}</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                   {MOMENTS.map(m => (
                     <button 
-                      key={m} 
-                      onClick={() => update('moment', m)}
+                      key={m.id} 
+                      onClick={() => update('moment', m.id)}
                       style={{ 
                         padding: '0.6rem 1.2rem', borderRadius: '30px', fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.3s',
-                        background: data.moment === m ? currentTheme.text : 'transparent',
-                        color: data.moment === m ? currentTheme.bg : currentTheme.text,
-                        border: `1px solid ${data.moment === m ? currentTheme.text : currentTheme.text + '40'}`
+                        background: data.moment === m.id ? currentTheme.text : 'transparent',
+                        color: data.moment === m.id ? currentTheme.bg : currentTheme.text,
+                        border: `1px solid ${data.moment === m.id ? currentTheme.text : currentTheme.text + '40'}`
                       }}
                     >
-                      {m}
+                      {m.label}
                     </button>
                   ))}
                 </div>
@@ -846,7 +816,7 @@ export default function OrderForm() {
                     <input
                       value={data.customMoment || ''}
                       onChange={e => update('customMoment', e.target.value)}
-                      placeholder="Tulis momen spesialmu di sini... (cth: Hari pertama kenalan)"
+                      placeholder={isEn ? 'Write your special occasion here... (e.g. The day we first met)' : 'Tulis momen spesialmu di sini... (cth: Hari pertama kenalan)'}
                       style={{
                         width: '100%', background: 'transparent', border: 'none',
                         borderBottom: `1px solid ${currentTheme.text}40`, color: 'inherit',
@@ -867,14 +837,14 @@ export default function OrderForm() {
                     style={{ marginTop: '1.25rem', overflow: 'hidden' }}
                   >
                     <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>
-                      {data.moment === 'Ultah' ? 'Ulang Tahun ke berapa? (Opsional)' : 'Anniversary ke berapa? (Opsional)'}
+                      {data.moment === 'Ultah' ? (isEn ? 'Which Birthday? (Optional)' : 'Ulang Tahun ke berapa? (Opsional)') : (isEn ? 'Which Anniversary? (Optional)' : 'Anniversary ke berapa? (Opsional)')}
                     </label>
                     <input
                       type="number"
                       min="1"
                       value={data.milestoneNumber || ''}
                       onChange={e => update('milestoneNumber', e.target.value)}
-                      placeholder={data.moment === 'Ultah' ? 'Cth: 18, 20, 21...' : 'Cth: 1, 2, 5...'}
+                      placeholder={data.moment === 'Ultah' ? (isEn ? 'E.g. 18, 20, 21...' : 'Cth: 18, 20, 21...') : (isEn ? 'E.g. 1, 2, 5...' : 'Cth: 1, 2, 5...')}
                       style={{
                         width: '100%', background: 'transparent', border: 'none',
                         borderBottom: `1px solid ${currentTheme.text}40`, color: 'inherit',
@@ -896,7 +866,7 @@ export default function OrderForm() {
                     style={{ marginTop: '1.25rem', overflow: 'hidden' }}
                   >
                     <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>
-                      Tanggal Lahir Penerima (Opsional)
+                      {isEn ? "Recipient's Date of Birth (Optional)" : 'Tanggal Lahir Penerima (Opsional)'}
                     </label>
                     <input
                       type="date"
@@ -912,7 +882,7 @@ export default function OrderForm() {
                       onBlur={e => e.target.style.borderColor = `${currentTheme.text}40`}
                     />
                     <p style={{ fontSize: '0.72rem', opacity: 0.5, marginTop: '0.3rem', marginBottom: 0 }}>
-                      Digunakan untuk menghitung berapa tahun perjalanan hidup penerima.
+                      {isEn ? "Used to calculate how many years of the recipient's life journey." : 'Digunakan untuk menghitung berapa tahun perjalanan hidup penerima.'}
                     </p>
                   </motion.div>
                 )}
@@ -926,7 +896,7 @@ export default function OrderForm() {
                     style={{ marginTop: '1.25rem', overflow: 'hidden' }}
                   >
                     <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>
-                      {data.moment === 'Anniversary' ? 'Tanggal Anniversary (Opsional)' : 'Tanggal Penting (Opsional)'}
+                      {data.moment === 'Anniversary' ? (isEn ? 'Anniversary Date (Optional)' : 'Tanggal Anniversary (Opsional)') : (isEn ? 'Special Date (Optional)' : 'Tanggal Penting (Opsional)')}
                     </label>
                     <input 
                       type="date"
@@ -951,17 +921,17 @@ export default function OrderForm() {
                     transition={{ duration: 0.3 }}
                     style={{ marginTop: '1rem', overflow: 'hidden' }}
                   >
-                    <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>Nama Momen / Acara (Opsional)</label>
+                    <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>{isEn ? 'Occasion / Event Name (Optional)' : 'Nama Momen / Acara (Opsional)'}</label>
                     <input 
                       type="text"
                       value={data.specialDateOccasion || ''} 
                       onChange={e => update('specialDateOccasion', e.target.value)} 
-                      placeholder="Cth: Hari pertama kenalan, Wisuda, dll..."
+                      placeholder={isEn ? 'E.g. The day we first met, Graduation, etc...' : 'Cth: Hari pertama kenalan, Wisuda, dll...'}
                       style={{ 
                         width: '100%', background: 'transparent', border: 'none', 
                         borderBottom: `1px solid ${currentTheme.text}40`, color: 'inherit', 
                         padding: '0.5rem 0', fontSize: '0.95rem', outline: 'none',
-                        transition: 'border-color 0.3s'
+                        transition: 'border-color 0.3s' 
                       }}
                       onFocus={e => e.target.style.borderColor = currentTheme.text}
                       onBlur={e => e.target.style.borderColor = `${currentTheme.text}40`}
@@ -972,20 +942,20 @@ export default function OrderForm() {
 
               {/* Hubungan Pengirim ke Penerima */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.75rem' }}>Kamu dan {data.recipient || 'penerima'} adalah...</label>
+                <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.75rem' }}>{isEn ? `You and ${data.recipient || 'the recipient'} are...` : `Kamu dan ${data.recipient || 'penerima'} adalah...`}</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                   {RELATIONSHIPS.map(r => (
                     <button
-                      key={r}
-                      onClick={() => update('relationship', r)}
+                      key={r.id}
+                      onClick={() => update('relationship', r.id)}
                       style={{
                         padding: '0.5rem 1.1rem', borderRadius: '30px', fontSize: '0.82rem', cursor: 'pointer', transition: 'all 0.3s',
-                        background: data.relationship === r ? currentTheme.text : 'transparent',
-                        color: data.relationship === r ? currentTheme.bg : currentTheme.text,
-                        border: `1px solid ${data.relationship === r ? currentTheme.text : currentTheme.text + '40'}`
+                        background: data.relationship === r.id ? currentTheme.text : 'transparent',
+                        color: data.relationship === r.id ? currentTheme.bg : currentTheme.text,
+                        border: `1px solid ${data.relationship === r.id ? currentTheme.text : currentTheme.text + '40'}`
                       }}
                     >
-                      {r}
+                      {r.label}
                     </button>
                   ))}
                 </div>
@@ -998,11 +968,11 @@ export default function OrderForm() {
         {/* --- STEP 2: VIBE & STYLE --- */}
         {step === 2 && (
           <div style={{ animation: 'fadeIn 0.5s ease-out' }}>
-            <h2 style={{ fontSize: '1.25rem', marginBottom: '2rem', fontWeight: 500 }}>Gaya & Suasana</h2>
+            <h2 style={{ fontSize: '1.25rem', marginBottom: '2rem', fontWeight: 500 }}>{isEn ? 'Style & Mood' : 'Gaya & Suasana'}</h2>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '1rem' }}>Pilih Palet Warna</label>
+                <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '1rem' }}>{isEn ? 'Choose Color Palette' : 'Pilih Palet Warna'}</label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '12px' }}>
                   {Object.entries(themes).map(([key, t]) => (
                     <button 
@@ -1029,7 +999,7 @@ export default function OrderForm() {
 
               <div style={{ marginBottom: '2rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '0.2rem', flexWrap: 'wrap' }}>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600 }}>Tema Kartu Alasan &amp; Kenangan</label>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600 }}>{isEn ? 'Reasons & Memories Section Theme' : 'Tema Kartu Alasan & Kenangan'}</label>
                   <button
                     type="button"
                     onClick={() => openPreviewModal('reasons')}
@@ -1051,13 +1021,13 @@ export default function OrderForm() {
                     onMouseEnter={(e) => (e.currentTarget.style.background = `${currentTheme.text}16`)}
                     onMouseLeave={(e) => (e.currentTarget.style.background = `${currentTheme.text}0a`)}
                   >
-                    <span>Lihat Contoh</span>
+                    <span>{isEn ? 'View Sample' : 'Lihat Contoh'}</span>
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M7 17L17 7M17 7H7M17 7V17" />
                     </svg>
                   </button>
                 </div>
-                <p style={{ fontSize: '0.75rem', opacity: 0.7, marginBottom: '1.25rem', lineHeight: 1.4 }}>Pilih sudut pandang cerita untuk kartu-kartu pesan tentang dia.</p>
+                <p style={{ fontSize: '0.75rem', opacity: 0.7, marginBottom: '1.25rem', lineHeight: 1.4 }}>{isEn ? 'Choose a story perspective for the cards about them.' : 'Pilih sudut pandang cerita untuk kartu-kartu pesan tentang dia.'}</p>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
                   {REASON_THEMES.map(theme => {
                     const isSelected = data.reasonChoice === theme.id;
@@ -1095,8 +1065,8 @@ export default function OrderForm() {
 
               {/* LANGUAGE SELECTION */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>Bahasa Penulisan</label>
-                <p style={{ fontSize: '0.72rem', opacity: 0.5, marginBottom: '1rem', lineHeight: 1.5 }}>Pilih satu bahasa utama untuk surat kamu.</p>
+                <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>{isEn ? 'Letter Language' : 'Bahasa Penulisan'}</label>
+                <p style={{ fontSize: '0.72rem', opacity: 0.5, marginBottom: '1rem', lineHeight: 1.5 }}>{isEn ? 'Choose one primary language for your letter.' : 'Pilih satu bahasa utama untuk surat kamu.'}</p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '0.75rem' }}>
                   {LANGUAGES.map(lang => {
                     const isSelected = data.language === lang.id;
@@ -1133,7 +1103,7 @@ export default function OrderForm() {
                       type="text"
                       value={data.customLanguage || ''}
                       onChange={e => update('customLanguage', e.target.value)}
-                      placeholder="Contoh: Bahasa Jawa, campuran Korea-Indonesia, dll..."
+                      placeholder={isEn ? 'Example: Javanese, Korean-English mix, etc...' : 'Contoh: Bahasa Jawa, campuran Korea-Indonesia, dll...'}
                       style={{
                         width: '100%', padding: '0.6rem 0.9rem', borderRadius: '8px', fontSize: '0.82rem',
                         background: 'rgba(0,0,0,0.1)', border: `1px solid ${currentTheme.text}40`,
@@ -1146,8 +1116,8 @@ export default function OrderForm() {
 
               {/* VIBE / TONE SELECTION */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>Gaya Penulisan (Vibe)</label>
-                <p style={{ fontSize: '0.72rem', opacity: 0.5, marginBottom: '1rem', lineHeight: 1.5 }}>Boleh pilih lebih dari satu untuk hasil yang lebih pas.</p>
+                <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '0.5rem' }}>{isEn ? 'Writing Style (Vibe)' : 'Gaya Penulisan (Vibe)'}</label>
+                <p style={{ fontSize: '0.72rem', opacity: 0.5, marginBottom: '1rem', lineHeight: 1.5 }}>{isEn ? 'You can choose more than one for the best result.' : 'Boleh pilih lebih dari satu untuk hasil yang lebih pas.'}</p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '0.75rem' }}>
                   {VIBES.map(vibe => {
                     const toneArr = Array.isArray(data.tone) ? data.tone : (data.tone ? [data.tone] : []);
@@ -1200,7 +1170,7 @@ export default function OrderForm() {
         {step === 3 && (
           <div style={{ animation: 'fadeIn 0.5s ease-out' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '1rem', flexWrap: 'wrap' }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 500, margin: 0 }}>Pesan Utama</h2>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 500, margin: 0 }}>{isEn ? 'Main Message' : 'Pesan Utama'}</h2>
               <button
                 type="button"
                 onClick={() => openPreviewModal('letter')}
@@ -1222,22 +1192,27 @@ export default function OrderForm() {
                 onMouseEnter={(e) => (e.currentTarget.style.background = `${currentTheme.text}16`)}
                 onMouseLeave={(e) => (e.currentTarget.style.background = `${currentTheme.text}0a`)}
               >
-                <span>Lihat Contoh Surat</span>
+                <span>{isEn ? 'View Sample Letter' : 'Lihat Contoh Surat'}</span>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M7 17L17 7M17 7H7M17 7V17" />
                 </svg>
               </button>
             </div>
             <p style={{ fontSize: '0.85rem', opacity: 0.7, marginBottom: '2rem', lineHeight: 1.6 }}>
-              Ceritakan saja intinya secara santai. Tim *copywriter* kami yang akan mengubahnya menjadi kalimat yang sangat puitis dan indah.
+              {isEn
+                ? 'Feel free to share your thoughts casually. Our copywriters will craft them into beautiful, poetic prose.'
+                : 'Ceritakan saja intinya secara santai. Tim copywriter kami yang akan mengubahnya menjadi kalimat yang sangat puitis dan indah.'}
               <br /><br />
-              <strong>Hint:</strong> Semakin banyak pesan / cerita yang kamu bagikan, maka akan semakin personal dan istimewa hasil gift-nya nanti.
+              <strong>Hint:</strong>{' '}
+              {isEn
+                ? 'The more stories and memories you share, the more personal and meaningful your gift will be.'
+                : 'Semakin banyak pesan / cerita yang kamu bagikan, maka akan semakin personal dan istimewa hasil gift-nya nanti.'}
             </p>
             
             <textarea 
               value={data.message || ''} 
               onChange={e => update('message', e.target.value)} 
-              placeholder="Contoh: Makasih ya udah sabar ngadepin aku yang kadang egois. Aku cuma mau bilang kalau aku beruntung banget punya kamu..."
+              placeholder={isEn ? 'Example: Thank you for always being patient with me. I just want you to know how truly grateful and lucky I am to have you in my life...' : 'Contoh: Makasih ya udah sabar ngadepin aku yang kadang egois. Aku cuma mau bilang kalau aku beruntung banget punya kamu...'}
               style={{ 
                 width: '100%', minHeight: '200px', background: 'rgba(0,0,0,0.1)', border: `1px solid ${currentTheme.text}40`, 
                 borderRadius: '12px', color: 'inherit', padding: '1rem', fontSize: '1rem', outline: 'none', resize: 'vertical', lineHeight: 1.6
@@ -1245,20 +1220,20 @@ export default function OrderForm() {
             />
 
             <div style={{ marginTop: '2rem' }}>
-              <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '1rem' }}>Lagu Latar (Backsound)</label>
+              <label style={{ display: 'block', fontSize: '0.8rem', opacity: 0.7, marginBottom: '1rem' }}>{isEn ? 'Background Music' : 'Lagu Latar (Backsound)'}</label>
               
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.9rem' }}>
                   <input type="radio" checked={data.musicChoice === 'playlist'} onChange={() => {update('musicChoice', 'playlist'); update('music', '');}} style={{ accentColor: currentTheme.text }} />
-                  Pilih dari Playlist
+                  {isEn ? 'Choose from Playlist' : 'Pilih dari Playlist'}
                 </label>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.9rem' }}>
                   <input type="radio" checked={data.musicChoice === 'request'} onChange={() => update('musicChoice', 'request')} style={{ accentColor: currentTheme.text }} />
-                  Request Lagu Lain
+                  {isEn ? 'Request Another Song' : 'Request Lagu Lain'}
                 </label>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.9rem' }}>
                   <input type="radio" checked={data.musicChoice === 'random'} onChange={() => {update('musicChoice', 'random'); update('music', '');}} style={{ accentColor: currentTheme.text }} />
-                  Biar Tim Pilihkan
+                  {isEn ? 'Let Team Decide' : 'Biar Tim Pilihkan'}
                 </label>
               </div>
               
@@ -1275,7 +1250,7 @@ export default function OrderForm() {
                             {musicInfo.artist && <span style={{ opacity: 0.7 }}> - {musicInfo.artist}</span>}
                           </div>
                         </div>
-                        <button onClick={() => { setTempSelectedMusic(musicInfo.full); setShowPlaylistModal(true); }} style={{ background: 'transparent', border: 'none', color: currentTheme.text, fontSize: '0.8rem', textDecoration: 'underline', cursor: 'pointer' }}>Ganti</button>
+                        <button onClick={() => { setTempSelectedMusic(musicInfo.full); setShowPlaylistModal(true); }} style={{ background: 'transparent', border: 'none', color: currentTheme.text, fontSize: '0.8rem', textDecoration: 'underline', cursor: 'pointer' }}>{isEn ? 'Change' : 'Ganti'}</button>
                       </div>
                     );
                   })() : (
@@ -1286,7 +1261,7 @@ export default function OrderForm() {
                         borderRadius: '12px', color: currentTheme.text, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem'
                       }}
                     >
-                      <Music size={18} strokeWidth={2} /> Buka Daftar Playlist Kami
+                      <Music size={18} strokeWidth={2} /> {isEn ? 'Browse Our Playlist' : 'Buka Daftar Playlist Kami'}
                     </button>
                   )}
                 </div>
@@ -1295,7 +1270,7 @@ export default function OrderForm() {
               {data.musicChoice === 'request' && (
                 <input 
                   value={data.music || ''} onChange={e => update('music', e.target.value)} 
-                  placeholder="Misal: Sempurna - Andra & The Backbone"
+                  placeholder={isEn ? 'Example: Perfect - Ed Sheeran' : 'Misal: Sempurna - Andra & The Backbone'}
                   style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: `1px solid ${currentTheme.text}40`, color: 'inherit', padding: '0.5rem 0', fontSize: '1rem', outline: 'none' }}
                 />
               )}
@@ -1307,7 +1282,7 @@ export default function OrderForm() {
         {step === 4 && (
           <div style={{ animation: 'fadeIn 0.5s ease-out' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '1rem', flexWrap: 'wrap' }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 500, margin: 0 }}>Galeri Kenangan</h2>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 500, margin: 0 }}>{isEn ? 'Memory Gallery' : 'Galeri Kenangan'}</h2>
               <button
                 type="button"
                 onClick={() => openPreviewModal(data.isCircle ? 'gallery-circle' : 'gallery')}
@@ -1329,20 +1304,24 @@ export default function OrderForm() {
                 onMouseEnter={(e) => (e.currentTarget.style.background = `${currentTheme.text}16`)}
                 onMouseLeave={(e) => (e.currentTarget.style.background = `${currentTheme.text}0a`)}
               >
-                <span>Lihat Contoh Galeri</span>
+                <span>{isEn ? 'View Sample Gallery' : 'Lihat Contoh Galeri'}</span>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M7 17L17 7M17 7H7M17 7V17" />
                 </svg>
               </button>
             </div>
             <p style={{ fontSize: '0.85rem', opacity: 0.7, marginBottom: '1.5rem', lineHeight: 1.6 }}>
-              Bagikan momen-momen terbaik kalian. Kami akan menatanya ke dalam galeri digital yang cantik.
+              {isEn ? 'Share your best moments. We will curate them into an elegant digital gallery.' : 'Bagikan momen-momen terbaik kalian. Kami akan menatanya ke dalam galeri digital yang cantik.'}
             </p>
 
             {data.isCircle && (
               <div style={{ padding: '0.85rem 1rem', borderRadius: '14px', background: 'rgba(0,0,0,0.04)', border: `1px solid ${currentTheme.text}20`, marginBottom: '2rem' }}>
                 <p style={{ fontSize: '0.8rem', lineHeight: 1.5, opacity: 0.85, margin: 0 }}>
-                  <strong>Mode Circle Edition:</strong> Galeri ini <em>bersifat opsional</em>. Foto atau video teman-teman akan otomatis terpasang di kartu ucapan masing-masing. Kamu bisa unggah foto si penerima kado atau momen bersama jika ingin galeri tambahan, atau langsung lewati ke bawah.
+                  {isEn ? (
+                    <><strong>Circle Edition Mode:</strong> This gallery is <em>optional</em>. Your friends&apos; photos or videos will automatically appear on their respective wish cards. You can upload photos of the recipient or group moments if you want an extra gallery, or skip straight to the bottom.</>
+                  ) : (
+                    <><strong>Mode Circle Edition:</strong> Galeri ini <em>bersifat opsional</em>. Foto atau video teman-teman akan otomatis terpasang di kartu ucapan masing-masing. Kamu bisa unggah foto si penerima kado atau momen bersama jika ingin galeri tambahan, atau langsung lewati ke bawah.</>
+                  )}
                 </p>
               </div>
             )}
@@ -1352,9 +1331,9 @@ export default function OrderForm() {
               {/* Main Gallery — Instant Upload */}
               <div>
                 <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1rem' }}>
-                  <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>Galeri Foto/Video</span>
+                  <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>{isEn ? 'Photo / Video Gallery' : 'Galeri Foto/Video'}</span>
                   <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>
-                    {uploadedPhotos.filter(p => p.status === 'done').length} / 15 Tersimpan
+                    {uploadedPhotos.filter(p => p.status === 'done').length} / 15 {isEn ? 'Saved' : 'Tersimpan'}
                   </span>
                 </label>
 
@@ -1391,12 +1370,12 @@ export default function OrderForm() {
                         {/* Error overlay — retry */}
                         {item.status === 'error' && (
                           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                            <span style={{ fontSize: '0.6rem', color: '#f87171' }}>Gagal</span>
+                            <span style={{ fontSize: '0.6rem', color: '#f87171' }}>{isEn ? 'Failed' : 'Gagal'}</span>
                             <button
                               style={{ fontSize: '0.6rem', background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer' }}
                               onClick={() => setUploadedPhotos(prev => prev.filter(p => p.id !== item.id))}
                             >
-                              Hapus
+                              {isEn ? 'Delete' : 'Hapus'}
                             </button>
                           </div>
                         )}
@@ -1406,7 +1385,7 @@ export default function OrderForm() {
                           <button
                             onClick={() => setUploadedPhotos(prev => prev.filter(p => p.id !== item.id))}
                             style={{ position: 'absolute', top: '3px', right: '3px', width: '20px', height: '20px', borderRadius: '50%', background: 'rgba(0,0,0,0.6)', border: 'none', color: '#fff', fontSize: '11px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}
-                            title="Hapus foto ini"
+                            title={isEn ? 'Remove this photo' : 'Hapus foto ini'}
                           >
                             ✕
                           </button>
@@ -1430,18 +1409,18 @@ export default function OrderForm() {
                     onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,0,0,0.04)'}
                   >
                     <ImageIcon size={18} strokeWidth={1.5} />
-                    {uploadedPhotos.length === 0 ? 'Pilih Foto / Video (maks. 15)' : '+ Tambah Foto / Video Lagi'}
+                    {uploadedPhotos.length === 0 ? (isEn ? 'Choose Photos / Videos (max. 15)' : 'Pilih Foto / Video (maks. 15)') : (isEn ? '+ Add More Photos / Videos' : '+ Tambah Foto / Video Lagi')}
                   </button>
                 )}
                 <input type="file" multiple accept="image/*,video/mp4" ref={fileInputRef} style={{ display: 'none' }} onChange={(e) => handleFileChange(e, false)} />
-                <p style={{ fontSize: '0.72rem', opacity: 0.5, marginTop: '0.5rem', textAlign: 'center' }}>Video maks. 15MB. Foto akan dikompres otomatis.</p>
+                <p style={{ fontSize: '0.72rem', opacity: 0.5, marginTop: '0.5rem', textAlign: 'center' }}>{isEn ? 'Video max. 15MB. Photos will be automatically compressed.' : 'Video maks. 15MB. Foto akan dikompres otomatis.'}</p>
               </div>
 
               {/* Secret Ending — Instant Upload */}
               <div style={{ animation: 'fadeIn 0.5s ease-out', animationDelay: '0.2s', animationFillMode: 'both' }}>
                 <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1rem' }}>
-                  <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>Foto/Video Kejutan Akhir</span>
-                  <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>Optional</span>
+                  <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>{isEn ? 'Secret Ending Photo / Video' : 'Foto/Video Kejutan Akhir'}</span>
+                  <span style={{ fontSize: '0.75rem', opacity: 0.6 }}>{isEn ? 'Optional' : 'Opsional'}</span>
                 </label>
 
                 <div
@@ -1459,7 +1438,7 @@ export default function OrderForm() {
                       {/* Preview */}
                       {secretPhoto.isVideo ? (
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.9rem', fontWeight: 500, gap: '8px' }}>
-                          <Video size={20} strokeWidth={2} opacity={0.8} /> VIDEO TERPILIH
+                          <Video size={20} strokeWidth={2} opacity={0.8} /> {isEn ? 'VIDEO SELECTED' : 'VIDEO TERPILIH'}
                         </div>
                       ) : (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -1470,7 +1449,7 @@ export default function OrderForm() {
                       {secretPhoto.status === 'uploading' && (
                         <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '8px' }}>
                           <div style={{ width: '26px', height: '26px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-                          <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.7)' }}>Menyimpan...</span>
+                          <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.7)' }}>{isEn ? 'Saving...' : 'Menyimpan...'}</span>
                         </div>
                       )}
 
@@ -1483,7 +1462,7 @@ export default function OrderForm() {
 
                       {/* Hover to change */}
                       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.2s' }} onMouseEnter={e => e.currentTarget.style.opacity = 1} onMouseLeave={e => e.currentTarget.style.opacity = 0}>
-                        <span style={{ color: '#fff', fontSize: '0.85rem', fontWeight: 500 }}>Klik untuk mengganti</span>
+                        <span style={{ color: '#fff', fontSize: '0.85rem', fontWeight: 500 }}>{isEn ? 'Click to change' : 'Klik untuk mengganti'}</span>
                       </div>
                     </div>
                   ) : (
@@ -1491,7 +1470,7 @@ export default function OrderForm() {
                       <div style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'center' }}>
                         <Lock size={48} strokeWidth={1} opacity={0.7} />
                       </div>
-                      <div style={{ fontSize: '0.85rem' }}>Pilih foto / video spesial untuk kejutan di akhir</div>
+                      <div style={{ fontSize: '0.85rem' }}>{isEn ? 'Choose a special photo / video for the secret ending reveal' : 'Pilih foto / video spesial untuk kejutan di akhir'}</div>
                     </>
                   )}
                 </div>
@@ -1502,7 +1481,7 @@ export default function OrderForm() {
                     onClick={(e) => { e.stopPropagation(); setSecretPhoto(null); }}
                     style={{ marginTop: '0.5rem', background: 'transparent', border: 'none', color: currentTheme.text, opacity: 0.5, fontSize: '0.78rem', cursor: 'pointer', display: 'block', width: '100%', textAlign: 'center' }}
                   >
-                    Hapus foto kejutan
+                    {isEn ? 'Remove secret media' : 'Hapus foto kejutan'}
                   </button>
                 )}
                 <input type="file" accept="image/*,video/mp4" ref={secretInputRef} style={{ display: 'none' }} onChange={(e) => handleFileChange(e, true)} />
@@ -1510,9 +1489,9 @@ export default function OrderForm() {
 
               {/* Deadline — di sini sebelum submit */}
               <div style={{ marginTop: '1rem', paddingTop: '1.5rem', borderTop: `1px solid ${currentTheme.text}15` }}>
-                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 500, marginBottom: '0.4rem' }}>Kapan gift harus jadi? (Opsional)</label>
+                <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 500, marginBottom: '0.4rem' }}>{isEn ? 'When does the gift need to be ready? (Optional)' : 'Kapan gift harus jadi? (Opsional)'}</label>
                 <p style={{ fontSize: '0.78rem', opacity: 0.55, marginBottom: '0.75rem', lineHeight: 1.5 }}>
-                  Beri tahu kami jika ada deadline agar kami bisa memprioritaskan pesananmu.
+                  {isEn ? 'Let us know if you have a deadline so we can prioritize your order.' : 'Beri tahu kami jika ada deadline agar kami bisa memprioritaskan pesananmu.'}
                 </p>
                 <input
                   type="datetime-local"
@@ -1533,10 +1512,10 @@ export default function OrderForm() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                   <div>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.9rem', fontWeight: 600 }}>
-                      <Lock size={16} /> Aktifkan Security PIN
+                      <Lock size={16} /> {isEn ? 'Enable Security PIN' : 'Aktifkan Security PIN'}
                     </label>
                     <p style={{ fontSize: '0.78rem', opacity: 0.55, marginTop: '0.3rem', lineHeight: 1.4 }}>
-                      Lindungi kado digitalmu dengan PIN rahasia.
+                      {isEn ? 'Protect your digital gift with a secret PIN.' : 'Lindungi kado digitalmu dengan PIN rahasia.'}
                     </p>
                   </div>
                   <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', flexShrink: 0 }}>
@@ -1572,13 +1551,13 @@ export default function OrderForm() {
                     >
                       <div style={{ marginTop: '1.2rem', paddingLeft: '1rem', borderLeft: `2px solid ${currentTheme.text}20`, display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                         <div>
-                          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.2rem' }}>PIN Code (Maks 6 Angka)</label>
+                          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.2rem' }}>{isEn ? 'PIN Code (Up to 6 Digits)' : 'PIN Code (Maks 6 Angka)'}</label>
                           <input
                             type="text"
                             inputMode="numeric"
                             value={data.pinCode || ''}
                             onChange={e => update('pinCode', e.target.value.replace(/\D/g, '').slice(0, 6))}
-                            placeholder="Contoh: 123456"
+                            placeholder={isEn ? 'Example: 123456' : 'Contoh: 123456'}
                             style={{
                               width: '100%', background: 'transparent', border: 'none',
                               borderBottom: `1px solid ${currentTheme.text}40`, color: 'inherit',
@@ -1590,12 +1569,12 @@ export default function OrderForm() {
                           />
                         </div>
                         <div>
-                          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.2rem' }}>PIN Hint / Clue (Opsional)</label>
+                          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.2rem' }}>{isEn ? 'PIN Hint / Clue (Optional)' : 'PIN Hint / Clue (Opsional)'}</label>
                           <input
                             type="text"
                             value={data.pinHint || ''}
                             onChange={e => update('pinHint', e.target.value)}
-                            placeholder="Contoh: Tanggal jadian kita"
+                            placeholder={isEn ? 'Example: The day we first met' : 'Contoh: Tanggal jadian kita'}
                             style={{
                               width: '100%', background: 'transparent', border: 'none',
                               borderBottom: `1px solid ${currentTheme.text}40`, color: 'inherit',
@@ -1639,7 +1618,7 @@ export default function OrderForm() {
                   padding: '0.8rem 1rem', minHeight: '44px', touchAction: 'manipulation'
                 }}
               >
-                ← Kembali
+                {isEn ? '← Back' : '← Kembali'}
               </button>
 
               {step < 4 ? (
@@ -1653,7 +1632,7 @@ export default function OrderForm() {
                     userSelect: 'none'
                   }}
                 >
-                  Selanjutnya →
+                  {isEn ? 'Next →' : 'Selanjutnya →'}
                 </button>
               ) : (
                 <button
@@ -1662,17 +1641,17 @@ export default function OrderForm() {
                     const stillUploading = uploadedPhotos.some(p => p.status === 'uploading') ||
                       (secretPhoto && secretPhoto.status === 'uploading');
                     if (stillUploading) {
-                      alert('Foto masih dalam proses upload, mohon tunggu sebentar.');
+                      alert(isEn ? 'Media is still uploading, please wait a moment.' : 'Foto masih dalam proses upload, mohon tunggu sebentar.');
                       return;
                     }
                     const hasError = uploadedPhotos.some(p => p.status === 'error') ||
                       (secretPhoto && secretPhoto.status === 'error');
                     if (hasError) {
-                      alert('Ada foto/media yang gagal diunggah. Mohon hapus atau unggah ulang file yang error sebelum melanjutkan.');
+                      alert(isEn ? 'Some media failed to upload. Please remove or re-upload the error files before continuing.' : 'Ada foto/media yang gagal diunggah. Mohon hapus atau unggah ulang file yang error sebelum melanjutkan.');
                       return;
                     }
                     if (data.pinEnabled && (!data.pinCode || data.pinCode.length < 4)) {
-                      alert('PIN Code harus terdiri dari minimal 4 digit angka.');
+                      alert(isEn ? 'PIN Code must be at least 4 digits.' : 'PIN Code harus terdiri dari minimal 4 digit angka.');
                       return;
                     }
                     setShowReviewModal(true);
@@ -1686,7 +1665,7 @@ export default function OrderForm() {
                     touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent'
                   }}
                 >
-                  Tinjau Formulir →
+                  {isEn ? 'Review Order →' : 'Tinjau Formulir →'}
                 </button>
               )}
             </div>
@@ -1703,20 +1682,34 @@ export default function OrderForm() {
             const contributorUrl = typeof window !== 'undefined' ? `${window.location.origin}/c/${slug}` : '';
             const trackerUrl = typeof window !== 'undefined' ? `${window.location.origin}/track/${orderId || slug}` : '';
             const waShareGroupText = encodeURIComponent(
-              `Guys! Tolong isi ucapan & upload foto kenangan kalian buat kado ultah ${data.recipient} di sini yaa (rahasia yaa jangan bilang orangnya):\n\n` +
-              `${contributorUrl}\n\n` +
-              `Tinggal klik link-nya dan submit langsung dari HP. Makasihh yaa guys!`
+              isEn
+                ? `Guys! Please leave your sweet wishes & upload photo memories for ${data.recipient}'s gift here (it's a secret, don't tell them!):\n\n` +
+                  `${contributorUrl}\n\n` +
+                  `Just tap the link and submit right from your phone. Thank you so much!`
+                : `Guys! Tolong isi ucapan & upload foto kenangan kalian buat kado ultah ${data.recipient} di sini yaa (rahasia yaa jangan bilang orangnya):\n\n` +
+                  `${contributorUrl}\n\n` +
+                  `Tinggal klik link-nya dan submit langsung dari HP. Makasihh yaa guys!`
             );
             const waAtelierCircleText = encodeURIComponent(
-              `Halo Digital Atelier!\n\n` +
-              `Saya sudah mendaftarkan kado *Memoria Circle Edition*.\n\n` +
-              `*Detail Pesanan:*\n` +
-              `• Order ID: ${orderId || slug}\n` +
-              `• Koordinator: ${data.sender}\n` +
-              `• Untuk: ${data.recipient}\n` +
-              `• Momen: ${data.moment}${data.milestoneNumber ? ` (ke-${data.milestoneNumber})` : ''}\n` +
-              `• Link Pengumpulan: ${contributorUrl}\n\n` +
-              `Saya sedang mengumpulkan ucapan dari teman-teman. Terima kasih!`
+              isEn
+                ? `Hello Digital Atelier!\n\n` +
+                  `I have registered a *Memoria Circle Edition* gift.\n\n` +
+                  `*Order Details:*\n` +
+                  `• Order ID: ${orderId || slug}\n` +
+                  `• Coordinator: ${data.sender}\n` +
+                  `• For: ${data.recipient}\n` +
+                  `• Occasion: ${data.moment}${data.milestoneNumber ? ` (#${data.milestoneNumber})` : ''}\n` +
+                  `• Collection Link: ${contributorUrl}\n\n` +
+                  `I am now collecting wishes from friends. Thank you!`
+                : `Halo Digital Atelier!\n\n` +
+                  `Saya sudah mendaftarkan kado *Memoria Circle Edition*.\n\n` +
+                  `*Detail Pesanan:*\n` +
+                  `• Order ID: ${orderId || slug}\n` +
+                  `• Koordinator: ${data.sender}\n` +
+                  `• Untuk: ${data.recipient}\n` +
+                  `• Momen: ${data.moment}${data.milestoneNumber ? ` (ke-${data.milestoneNumber})` : ''}\n` +
+                  `• Link Pengumpulan: ${contributorUrl}\n\n` +
+                  `Saya sedang mengumpulkan ucapan dari teman-teman. Terima kasih!`
             );
 
             return (
@@ -1728,19 +1721,25 @@ export default function OrderForm() {
                   Done For You · Memoria Circle Edition
                 </span>
                 <h2 style={{ fontSize: '1.75rem', marginBottom: '0.6rem', fontFamily: 'var(--font-serif)', fontStyle: 'italic', marginTop: '0.3rem' }}>
-                  Pendaftaran Berhasil!
+                  {isEn ? 'Registration Successful!' : 'Pendaftaran Berhasil!'}
                 </h2>
                 <p style={{ fontSize: '0.86rem', opacity: 0.8, marginBottom: '1.5rem', lineHeight: 1.6, maxWidth: '440px', margin: '0 auto 1.5rem' }}>
-                  Kado kejutan untuk <strong>{data.recipient}</strong> siap dikumpulkan. Sebarkan link berikut ke grup teman-teman agar mereka bisa mengirimkan ucapan & foto masing-masing.
+                  {isEn ? (
+                    <>Surprise gift for <strong>{data.recipient}</strong> is ready to be collected. Share the link below to your friends group so each of them can send their wishes & photos.</>
+                  ) : (
+                    <>Kado kejutan untuk <strong>{data.recipient}</strong> siap dikumpulkan. Sebarkan link berikut ke grup teman-teman agar mereka bisa mengirimkan ucapan & foto masing-masing.</>
+                  )}
                 </p>
 
                 {/* Coordinator Hub Card */}
                 <div style={{ background: 'rgba(0,0,0,0.04)', border: `1px solid ${currentTheme.text}20`, padding: '1.5rem', borderRadius: '18px', textAlign: 'center', marginBottom: '1.5rem' }}>
                   <div style={{ fontSize: '0.95rem', fontWeight: 600, marginBottom: '0.35rem' }}>
-                    {data.circleQuota || (createdSlots.length > 0 ? createdSlots.length : 8)} Slot Undangan Unik Siap Digunakan
+                    {data.circleQuota || (createdSlots.length > 0 ? createdSlots.length : 8)} {isEn ? 'Unique Invitation Slots Ready' : 'Slot Undangan Unik Siap Digunakan'}
                   </div>
                   <p style={{ fontSize: '0.78rem', opacity: 0.7, margin: '0 0 1.25rem', lineHeight: 1.5 }}>
-                    Setiap teman mendapatkan link khusus dengan token unik sekali pakai agar tidak sembarang orang bisa mengunggah foto. Kelola dan bagikan link teman langsung dari Hub Pelacak Koordinator.
+                    {isEn
+                      ? 'Each friend receives a dedicated link with a single-use unique token so only authorized friends can submit photos. Manage and share individual links directly from the Coordinator Tracker Hub.'
+                      : 'Setiap teman mendapatkan link khusus dengan token unik sekali pakai agar tidak sembarang orang bisa mengunggah foto. Kelola dan bagikan link teman langsung dari Hub Pelacak Koordinator.'}
                   </p>
                   
                   <a
@@ -1761,11 +1760,11 @@ export default function OrderForm() {
                       boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
                     }}
                   >
-                    Buka Hub Pelacak Koordinator & Salin Link Teman
+                    {isEn ? 'Open Coordinator Tracker Hub & Copy Links' : 'Buka Hub Pelacak Koordinator & Salin Link Teman'}
                   </a>
 
                   <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '0.72rem', opacity: 0.6 }}>Tautan Pelacak:</span>
+                    <span style={{ fontSize: '0.72rem', opacity: 0.6 }}>{isEn ? 'Tracker Link:' : 'Tautan Pelacak:'}</span>
                     <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', fontWeight: 600 }}>{trackerUrl}</span>
                     <button
                       type="button"
@@ -1786,7 +1785,7 @@ export default function OrderForm() {
                         cursor: 'pointer',
                       }}
                     >
-                      {trackerCopied ? 'Tersalin' : 'Salin'}
+                      {trackerCopied ? (isEn ? 'Copied' : 'Tersalin') : (isEn ? 'Copy' : 'Salin')}
                     </button>
                   </div>
                 </div>
@@ -1795,7 +1794,7 @@ export default function OrderForm() {
                 <div style={{ background: 'rgba(0,0,0,0.04)', border: `1px solid ${currentTheme.text}20`, padding: '1.25rem', borderRadius: '18px', textAlign: 'left', marginBottom: '1.5rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
                     <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>
-                      Ucapan Teman Masuk ({trackerWishes.length})
+                      {isEn ? 'Incoming Friend Wishes' : 'Ucapan Teman Masuk'} ({trackerWishes.length})
                     </div>
                     <button
                       type="button"
@@ -1807,7 +1806,7 @@ export default function OrderForm() {
                       }}
                       style={{ background: 'transparent', border: `1px solid ${currentTheme.text}30`, color: currentTheme.text, padding: '0.3rem 0.6rem', borderRadius: '6px', fontSize: '0.7rem', cursor: 'pointer' }}
                     >
-                      Refresh
+                      {isEn ? 'Refresh' : 'Refresh'}
                     </button>
                   </div>
 
@@ -1816,20 +1815,20 @@ export default function OrderForm() {
                       {trackerWishes.map((w, idx) => (
                         <div key={w.id || idx} style={{ background: 'rgba(0,0,0,0.05)', borderRadius: '8px', padding: '0.5rem 0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.8rem' }}>
                           <span style={{ fontWeight: 600 }}>{idx + 1}. {w.name}</span>
-                          <span style={{ opacity: 0.5, fontSize: '0.7rem' }}>Terkirim</span>
+                          <span style={{ opacity: 0.5, fontSize: '0.7rem' }}>{isEn ? 'Submitted' : 'Terkirim'}</span>
                         </div>
                       ))}
                     </div>
                   ) : (
                     <p style={{ fontSize: '0.78rem', opacity: 0.6, margin: 0, textAlign: 'center', padding: '1rem 0' }}>
-                      Belum ada ucapan teman yang masuk.
+                      {isEn ? 'No friend wishes received yet.' : 'Belum ada ucapan teman yang masuk.'}
                     </p>
                   )}
                 </div>
 
                 {/* Bookmark Tracker Link */}
                 <div style={{ marginBottom: '1.5rem', fontSize: '0.75rem', opacity: 0.75, background: 'rgba(0,0,0,0.03)', padding: '0.75rem 1rem', borderRadius: '12px', border: `1px dashed ${currentTheme.text}25` }}>
-                  Simpan atau bookmark tautan pelacak ini untuk cek progres kapan saja: <br />
+                  {isEn ? 'Save or bookmark this tracker link to check progress anytime:' : 'Simpan atau bookmark tautan pelacak ini untuk cek progres kapan saja:'} <br />
                   <a href={trackerUrl} style={{ color: currentTheme.text, fontWeight: 700, wordBreak: 'break-all', display: 'inline-block', marginTop: '4px' }}>
                     {trackerUrl}
                   </a>
@@ -1842,17 +1841,17 @@ export default function OrderForm() {
                       type="button"
                       disabled={markingReady}
                       onClick={async () => {
-                        if (!confirm('Apakah semua teman sudah selesai mengisi? Pesanan akan langsung masuk antrean pembuatan tim FYA.')) return;
+                        if (!confirm(isEn ? 'Have all friends finished submitting? The order will immediately enter the FYA team crafting queue.' : 'Apakah semua teman sudah selesai mengisi? Pesanan akan langsung masuk antrean pembuatan tim FYA.')) return;
                         setMarkingReady(true);
                         try {
                           const res = await fetch(`/api/orders/${orderId || slug}/ready`, { method: 'POST' });
                           if (res.ok) {
                             setIsOrderReady(true);
                           } else {
-                            alert('Gagal mengirim status. Silakan hubungi admin.');
+                            alert(isEn ? 'Failed to update status. Please contact admin.' : 'Gagal mengirim status. Silakan hubungi admin.');
                           }
                         } catch {
-                          alert('Gagal mengirim status.');
+                          alert(isEn ? 'Failed to update status.' : 'Gagal mengirim status.');
                         } finally {
                           setMarkingReady(false);
                         }
@@ -1871,14 +1870,14 @@ export default function OrderForm() {
                         transition: 'all 0.2s',
                       }}
                     >
-                      {markingReady ? 'Menyimpan...' : 'Semua Teman Sudah Isi — Siap Dibuat!'}
+                      {markingReady ? (isEn ? 'Saving...' : 'Menyimpan...') : (isEn ? 'All Friends Submitted — Ready to Craft!' : 'Semua Teman Sudah Isi — Siap Dibuat!')}
                     </button>
                   </div>
                 ) : (
                   <div style={{ padding: '1rem', borderRadius: '16px', background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e', fontSize: '0.85rem', fontWeight: 600, marginBottom: '1.5rem' }}>
-                    Pesanan Berstatus "Siap Dibuat!"<br />
+                    {isEn ? 'Order Status: "Ready to Craft!"' : 'Pesanan Berstatus "Siap Dibuat!"'}<br />
                     <span style={{ fontSize: '0.78rem', fontWeight: 400, opacity: 0.9 }}>
-                      Tim FYA sedang merangkai kado finalnya. Kami akan menghubungi kamu lewat WhatsApp begitu selesai!
+                      {isEn ? 'The FYA team is crafting your final gift. We will notify you via WhatsApp once it is finished!' : 'Tim FYA sedang merangkai kado finalnya. Kami akan menghubungi kamu lewat WhatsApp begitu selesai!'}
                     </span>
                   </div>
                 )}
@@ -1903,7 +1902,7 @@ export default function OrderForm() {
                       fontWeight: 600,
                     }}
                   >
-                    Hubungi Tim FYA via WhatsApp
+                    {isEn ? 'Contact FYA Team via WhatsApp' : 'Hubungi Tim FYA via WhatsApp'}
                   </a>
                 </div>
               </div>
@@ -1913,29 +1912,52 @@ export default function OrderForm() {
           // ── Regular Solo / Couple Order Screen ──
           const waMessage = isUnbox
             ? encodeURIComponent(
-                `Halo Digital Atelier!\n\n` +
-                `Saya sudah selesai mengisi form untuk paket *Unbox the Memory (Gift Box Fisik)*.\n\n` +
-                `*Detail Pesanan:*\n` +
-                `• Order ID: ${orderId || slug}\n` +
-                `• Paket: Unbox the Memory (Hampers Box Fisik)\n` +
-                `• Dari: ${data.sender}${data.relationship ? ` (${data.relationship})` : ''}\n` +
-                `• Untuk: ${data.recipient}${data.nickname ? ` (Panggilan: ${data.nickname})` : ''}\n` +
-                `• Momen: ${data.moment}${data.milestoneNumber ? ` (ke-${data.milestoneNumber})` : ''}\n` +
-                (data.recipientBirthdate ? `• Tgl Lahir Penerima: ${data.recipientBirthdate}\n` : '') +
-                (data.deadline ? `• Deadline: ${new Date(data.deadline).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}\n` : '') +
-                `\nMohon kado digitalnya segera diramu dan hampers box fisik saya segera dirakitkan yaa. Terima kasih!`
+                isEn
+                  ? `Hello Digital Atelier!\n\n` +
+                    `I have finished filling out the form for *Unbox the Memory (Physical Gift Box)*.\n\n` +
+                    `*Order Details:*\n` +
+                    `• Order ID: ${orderId || slug}\n` +
+                    `• Package: Unbox the Memory (Physical Hampers Box)\n` +
+                    `• From: ${data.sender}${data.relationship ? ` (${data.relationship})` : ''}\n` +
+                    `• To: ${data.recipient}${data.nickname ? ` (Nickname: ${data.nickname})` : ''}\n` +
+                    `• Occasion: ${data.moment}${data.milestoneNumber ? ` (#${data.milestoneNumber})` : ''}\n` +
+                    (data.recipientBirthdate ? `• Recipient DOB: ${data.recipientBirthdate}\n` : '') +
+                    (data.deadline ? `• Deadline: ${new Date(data.deadline).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}\n` : '') +
+                    `\nPlease start crafting my digital gift and assembling the gift box. Thank you!`
+                  : `Halo Digital Atelier!\n\n` +
+                    `Saya sudah selesai mengisi form untuk paket *Unbox the Memory (Gift Box Fisik)*.\n\n` +
+                    `*Detail Pesanan:*\n` +
+                    `• Order ID: ${orderId || slug}\n` +
+                    `• Paket: Unbox the Memory (Hampers Box Fisik)\n` +
+                    `• Dari: ${data.sender}${data.relationship ? ` (${data.relationship})` : ''}\n` +
+                    `• Untuk: ${data.recipient}${data.nickname ? ` (Panggilan: ${data.nickname})` : ''}\n` +
+                    `• Momen: ${data.moment}${data.milestoneNumber ? ` (ke-${data.milestoneNumber})` : ''}\n` +
+                    (data.recipientBirthdate ? `• Tgl Lahir Penerima: ${data.recipientBirthdate}\n` : '') +
+                    (data.deadline ? `• Deadline: ${new Date(data.deadline).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}\n` : '') +
+                    `\nMohon kado digitalnya segera diramu dan hampers box fisik saya segera dirakitkan yaa. Terima kasih!`
               )
             : encodeURIComponent(
-                `Halo Digital Atelier!\n\n` +
-                `Saya sudah selesai mengisi form kado digital Memoria.\n\n` +
-                `*Detail Pesanan:*\n` +
-                `• Order ID: ${orderId || slug}\n` +
-                `• Dari: ${data.sender}${data.relationship ? ` (${data.relationship})` : ''}\n` +
-                `• Untuk: ${data.recipient}${data.nickname ? ` (Panggilan: ${data.nickname})` : ''}\n` +
-                `• Momen: ${data.moment}${data.milestoneNumber ? ` (ke-${data.milestoneNumber})` : ''}\n` +
-                (data.recipientBirthdate ? `• Tgl Lahir Penerima: ${data.recipientBirthdate}\n` : '') +
-                (data.deadline ? `• Deadline: ${new Date(data.deadline).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}\n` : '') +
-                `\nMohon kado digital saya segera diproses ya. Terima kasih!`
+                isEn
+                  ? `Hello Digital Atelier!\n\n` +
+                    `I have finished filling out the Memoria digital gift form.\n\n` +
+                    `*Order Details:*\n` +
+                    `• Order ID: ${orderId || slug}\n` +
+                    `• From: ${data.sender}${data.relationship ? ` (${data.relationship})` : ''}\n` +
+                    `• To: ${data.recipient}${data.nickname ? ` (Nickname: ${data.nickname})` : ''}\n` +
+                    `• Occasion: ${data.moment}${data.milestoneNumber ? ` (#${data.milestoneNumber})` : ''}\n` +
+                    (data.recipientBirthdate ? `• Recipient DOB: ${data.recipientBirthdate}\n` : '') +
+                    (data.deadline ? `• Deadline: ${new Date(data.deadline).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}\n` : '') +
+                    `\nPlease process my digital gift soon. Thank you!`
+                  : `Halo Digital Atelier!\n\n` +
+                    `Saya sudah selesai mengisi form kado digital Memoria.\n\n` +
+                    `*Detail Pesanan:*\n` +
+                    `• Order ID: ${orderId || slug}\n` +
+                    `• Dari: ${data.sender}${data.relationship ? ` (${data.relationship})` : ''}\n` +
+                    `• Untuk: ${data.recipient}${data.nickname ? ` (Panggilan: ${data.nickname})` : ''}\n` +
+                    `• Momen: ${data.moment}${data.milestoneNumber ? ` (ke-${data.milestoneNumber})` : ''}\n` +
+                    (data.recipientBirthdate ? `• Tgl Lahir Penerima: ${data.recipientBirthdate}\n` : '') +
+                    (data.deadline ? `• Deadline: ${new Date(data.deadline).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}\n` : '') +
+                    `\nMohon kado digital saya segera diproses ya. Terima kasih!`
               );
 
           return (
@@ -1944,15 +1966,19 @@ export default function OrderForm() {
                 <Sparkles size={64} strokeWidth={1} opacity={0.8} />
               </div>
               <h2 style={{ fontSize: '1.85rem', marginBottom: '0.75rem', fontFamily: 'var(--font-serif)', fontStyle: 'italic' }}>
-                Data Kado Diterima
+                {isEn ? 'Gift Data Received' : 'Data Kado Diterima'}
               </h2>
               <p style={{ fontSize: '0.9rem', opacity: 0.8, marginBottom: '1.5rem', lineHeight: 1.6, maxWidth: '420px', margin: '0 auto 1.5rem' }}>
-                Data kamu sudah kami simpan dengan sepenuh hati. Silakan beritahu kami lewat WhatsApp agar kado untuk <strong>{data.recipient}</strong> segera diramu oleh atelier.
+                {isEn ? (
+                  <>Your details have been saved with care. Please notify us via WhatsApp so the atelier can start crafting the gift for <strong>{data.recipient}</strong> right away.</>
+                ) : (
+                  <>Data kamu sudah kami simpan dengan sepenuh hati. Silakan beritahu kami lewat WhatsApp agar kado untuk <strong>{data.recipient}</strong> segera diramu oleh atelier.</>
+                )}
               </p>
 
               {/* Order ID Badge */}
               <div style={{ background: 'rgba(0,0,0,0.06)', border: `1px solid ${currentTheme.text}20`, padding: '1rem 1.5rem', borderRadius: '16px', display: 'inline-block', minWidth: '220px', marginBottom: '1.5rem' }}>
-                <div style={{ fontSize: '0.7rem', opacity: 0.6, marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>ID Pesanan Anda</div>
+                <div style={{ fontSize: '0.7rem', opacity: 0.6, marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{isEn ? 'YOUR ORDER ID' : 'ID PESANAN ANDA'}</div>
                 <div style={{ fontSize: '1.3rem', fontFamily: 'monospace', fontWeight: 'bold', letterSpacing: '0.05em' }}>{orderId || slug}</div>
               </div>
 
@@ -1985,12 +2011,12 @@ export default function OrderForm() {
                     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
                     <path d="M12 2C6.477 2 2 6.477 2 12c0 1.821.486 3.53 1.337 5.006L2.001 22l5.13-1.322A9.956 9.956 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm0 18a7.96 7.96 0 01-4.065-1.112l-.292-.174-3.046.784.813-2.934-.19-.302A7.965 7.965 0 014 12c0-4.418 3.582-8 8-8s8 3.582 8 8-3.582 8-8 8z"/>
                   </svg>
-                  Beritahu Kami Lewat WhatsApp
+                  {isEn ? 'Notify Us via WhatsApp' : 'Beritahu Kami Lewat WhatsApp'}
                 </a>
               </div>
 
               <p style={{ fontSize: '0.78rem', opacity: 0.55, lineHeight: 1.5, marginTop: '0.5rem' }}>
-                Tekan tombol di atas agar kami segera memproses kado kamu.
+                {isEn ? 'Tap the button above so we can process your gift immediately.' : 'Tekan tombol di atas agar kami segera memproses kado kamu.'}
               </p>
             </div>
           );
@@ -2040,10 +2066,10 @@ export default function OrderForm() {
               fontFamily: 'var(--font-serif)', fontStyle: 'italic',
               animation: 'pulse-slow 2s ease-in-out infinite' 
             }}>
-              Sedang Meramu Kenangan...
+              {isEn ? 'Crafting Your Memories...' : 'Sedang Meramu Kenangan...'}
             </h3>
             <p style={{ fontSize: '0.85rem', opacity: 0.7, marginTop: '0.5rem' }}>
-              Memproses media dan cerita Anda dengan cinta
+              {isEn ? 'Processing your media and stories with love' : 'Memproses media dan cerita Anda dengan cinta'}
             </p>
           </motion.div>
         )}
@@ -2069,7 +2095,7 @@ export default function OrderForm() {
             >
               {/* Header */}
               <div style={{ padding: '1.5rem 1.5rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${currentTheme.text}10` }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 600, margin: 0 }}>Pilih Lagu Latar</h3>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 600, margin: 0 }}>{isEn ? 'Choose Background Music' : 'Pilih Lagu Latar'}</h3>
                 <button onClick={() => setShowPlaylistModal(false)} style={{ background: 'rgba(0,0,0,0.05)', border: 'none', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', color: 'inherit', cursor: 'pointer', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.1)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,0,0,0.05)'}>&times;</button>
               </div>
 
@@ -2127,7 +2153,7 @@ export default function OrderForm() {
                   onMouseDown={e => { if(tempSelectedMusic) e.currentTarget.style.transform = 'scale(0.98)' }}
                   onMouseUp={e => { if(tempSelectedMusic) e.currentTarget.style.transform = 'scale(1)' }}
                 >
-                  {tempSelectedMusic ? 'Pilih Lagu Ini' : 'Pilih lagu terlebih dahulu'}
+                  {tempSelectedMusic ? (isEn ? 'Select This Song' : 'Pilih Lagu Ini') : (isEn ? 'Please select a song first' : 'Pilih lagu terlebih dahulu')}
                 </button>
               </div>
             </motion.div>
@@ -2192,7 +2218,7 @@ export default function OrderForm() {
                 {previewTab === 'reasons' || previewTab === 'letter' ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <div style={{ fontSize: '0.86rem', fontWeight: 600 }}>
-                      {previewTab === 'letter' ? 'Contoh: Surat Utama (Letter)' : 'Contoh: Kartu Alasan'}
+                      {previewTab === 'letter' ? (isEn ? 'Sample: Main Letter' : 'Contoh: Surat Utama (Letter)') : (isEn ? 'Sample: Reason Cards' : 'Contoh: Kartu Alasan')}
                     </div>
                     <span
                       style={{
@@ -2357,9 +2383,9 @@ export default function OrderForm() {
                       background: 'transparent',
                       transition: 'all 0.2s',
                     }}
-                    title="Buka di tab baru"
+                    title={isEn ? 'Open in new tab' : 'Buka di tab baru'}
                   >
-                    <span>Tab Baru</span>
+                    <span>{isEn ? 'New Tab' : 'Tab Baru'}</span>
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M7 17L17 7M17 7H7M17 7V17" />
                     </svg>
@@ -2368,7 +2394,7 @@ export default function OrderForm() {
                   <button
                     type="button"
                     onClick={() => setShowPreviewModal(false)}
-                    aria-label="Tutup preview"
+                    aria-label={isEn ? 'Close preview' : 'Tutup preview'}
                     style={{
                       background: `${currentTheme.text}10`,
                       border: `1px solid ${currentTheme.text}22`,
@@ -2427,7 +2453,7 @@ export default function OrderForm() {
                       }}
                     />
                     <span style={{ fontSize: '0.75rem', opacity: 0.65 }}>
-                      Memuat contoh {previewTab === 'gallery' ? 'Galeri Kenangan' : previewTab === 'gallery-circle' ? 'Galeri Circle Edition' : previewTab === 'circle' ? 'Circle Edition' : previewTab === 'letter' ? 'Surat Utama' : previewTab === 'reasons' ? 'Kartu Alasan' : 'Personal Edition'}...
+                      {isEn ? 'Loading sample ' : 'Memuat contoh '}{previewTab === 'gallery' ? (isEn ? 'Memory Gallery' : 'Galeri Kenangan') : previewTab === 'gallery-circle' ? (isEn ? 'Circle Edition Gallery' : 'Galeri Circle Edition') : previewTab === 'circle' ? 'Circle Edition' : previewTab === 'letter' ? (isEn ? 'Main Letter' : 'Surat Utama') : previewTab === 'reasons' ? (isEn ? 'Reason Cards' : 'Kartu Alasan') : 'Personal Edition'}...
                     </span>
                   </div>
                 )}
@@ -2449,16 +2475,16 @@ export default function OrderForm() {
                   }
                   title={
                     previewTab === 'gallery'
-                      ? 'Contoh Tampilan Galeri Kenangan'
+                      ? (isEn ? 'Sample Memory Gallery' : 'Contoh Tampilan Galeri Kenangan')
                       : previewTab === 'gallery-circle'
-                      ? 'Contoh Tampilan Galeri Circle Edition'
+                      ? (isEn ? 'Sample Circle Edition Gallery' : 'Contoh Tampilan Galeri Circle Edition')
                       : previewTab === 'circle'
-                      ? 'Contoh Tampilan Circle Edition'
+                      ? (isEn ? 'Sample Circle Edition' : 'Contoh Tampilan Circle Edition')
                       : previewTab === 'letter'
-                      ? 'Contoh Tampilan Surat Utama'
+                      ? (isEn ? 'Sample Main Letter' : 'Contoh Tampilan Surat Utama')
                       : previewTab === 'reasons'
-                      ? 'Contoh Tampilan Kartu Alasan'
-                      : 'Contoh Tampilan Personal Edition'
+                      ? (isEn ? 'Sample Reason Cards' : 'Contoh Tampilan Kartu Alasan')
+                      : (isEn ? 'Sample Personal Edition' : 'Contoh Tampilan Personal Edition')
                   }
                   onLoad={() => setPreviewLoading(false)}
                   style={{
@@ -2529,10 +2555,10 @@ export default function OrderForm() {
               >
                 <div>
                   <div style={{ fontSize: '0.88rem', fontWeight: 600, letterSpacing: '0.01em' }}>
-                    Ringkasan Formulir
+                    {isEn ? 'Order Summary' : 'Ringkasan Formulir'}
                   </div>
                   <div style={{ fontSize: '0.67rem', opacity: 0.6, marginTop: '1px' }}>
-                    Periksa kembali data kado sebelum dikirimkan
+                    {isEn ? 'Please double check your gift details before submitting' : 'Periksa kembali data kado sebelum dikirimkan'}
                   </div>
                 </div>
 
@@ -2540,7 +2566,7 @@ export default function OrderForm() {
                   type="button"
                   onClick={() => { if (!submitting) setShowReviewModal(false); }}
                   disabled={submitting}
-                  aria-label="Tutup ringkasan"
+                  aria-label={isEn ? 'Close summary' : 'Tutup ringkasan'}
                   style={{
                     background: `${currentTheme.text}10`,
                     border: `1px solid ${currentTheme.text}22`,
@@ -2601,7 +2627,7 @@ export default function OrderForm() {
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: '0.68rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', opacity: 0.6 }}>
-                      Tentang Kalian
+                      {isEn ? 'About You' : 'Tentang Kalian'}
                     </span>
                     <span
                       style={{
@@ -2614,52 +2640,52 @@ export default function OrderForm() {
                         border: `1px solid ${currentTheme.text}18`,
                       }}
                     >
-                      {data.isCircle ? `Circle Edition (${data.circleQuota || 8} Teman)` : 'Personal Edition'}
+                      {data.isCircle ? `Circle Edition (${data.circleQuota || 8} ${isEn ? 'Friends' : 'Teman'})` : 'Personal Edition'}
                     </span>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.78rem' }}>
                     <div>
-                      <span style={{ opacity: 0.55, display: 'block', fontSize: '0.66rem' }}>Penerima (Untuk)</span>
+                      <span style={{ opacity: 0.55, display: 'block', fontSize: '0.66rem' }}>{isEn ? 'Recipient (To)' : 'Penerima (Untuk)'}</span>
                       <span style={{ fontWeight: 600, wordBreak: 'break-word' }}>
                         {data.recipient || '-'}
                         {data.nickname ? ` (${data.nickname})` : ''}
                       </span>
                     </div>
                     <div>
-                      <span style={{ opacity: 0.55, display: 'block', fontSize: '0.66rem' }}>Pengirim (Dari)</span>
+                      <span style={{ opacity: 0.55, display: 'block', fontSize: '0.66rem' }}>{isEn ? 'Sender (From)' : 'Pengirim (Dari)'}</span>
                       <span style={{ fontWeight: 600, wordBreak: 'break-word' }}>{data.sender || '-'}</span>
                     </div>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.76rem', paddingTop: '6px', borderTop: `1px dashed ${currentTheme.text}12` }}>
                     <div>
-                      <span style={{ opacity: 0.55, display: 'block', fontSize: '0.66rem' }}>Momen Spesial</span>
+                      <span style={{ opacity: 0.55, display: 'block', fontSize: '0.66rem' }}>{isEn ? 'Special Occasion' : 'Momen Spesial'}</span>
                       <span style={{ fontWeight: 500 }}>
-                        {data.moment === 'Lainnya' ? (data.customMoment || 'Lainnya') : (data.moment || '-')}
+                        {data.moment === 'Lainnya' ? (data.customMoment || (isEn ? 'Other' : 'Lainnya')) : (MOMENTS.find(m => m.id === data.moment)?.label || data.moment || '-')}
                       </span>
                     </div>
                     {data.recipientBirthdate && (
                       <div>
-                        <span style={{ opacity: 0.55, display: 'block', fontSize: '0.66rem' }}>Tgl Lahir Penerima</span>
+                        <span style={{ opacity: 0.55, display: 'block', fontSize: '0.66rem' }}>{isEn ? "Recipient's Date of Birth" : 'Tgl Lahir Penerima'}</span>
                         <span style={{ fontWeight: 500 }}>{data.recipientBirthdate}</span>
                       </div>
                     )}
                     {data.milestoneNumber && (
                       <div>
-                        <span style={{ opacity: 0.55, display: 'block', fontSize: '0.66rem' }}>Usia / Ke</span>
+                        <span style={{ opacity: 0.55, display: 'block', fontSize: '0.66rem' }}>{isEn ? 'Age / Milestone' : 'Usia / Ke'}</span>
                         <span style={{ fontWeight: 500 }}>{data.milestoneNumber}</span>
                       </div>
                     )}
                     {data.relationship && (
                       <div>
-                        <span style={{ opacity: 0.55, display: 'block', fontSize: '0.66rem' }}>Status Hubungan</span>
-                        <span style={{ fontWeight: 500 }}>{data.relationship}</span>
+                        <span style={{ opacity: 0.55, display: 'block', fontSize: '0.66rem' }}>{isEn ? 'Relationship Status' : 'Status Hubungan'}</span>
+                        <span style={{ fontWeight: 500 }}>{RELATIONSHIPS.find(r => r.id === data.relationship)?.label || data.relationship}</span>
                       </div>
                     )}
                     {data.deadline && (
                       <div>
-                        <span style={{ opacity: 0.55, display: 'block', fontSize: '0.66rem' }}>Deadline Gift</span>
+                        <span style={{ opacity: 0.55, display: 'block', fontSize: '0.66rem' }}>{isEn ? 'Gift Deadline' : 'Deadline Gift'}</span>
                         <span style={{ fontWeight: 500 }}>{data.deadline}</span>
                       </div>
                     )}
@@ -2679,7 +2705,7 @@ export default function OrderForm() {
                   }}
                 >
                   <span style={{ fontSize: '0.68rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', opacity: 0.6 }}>
-                    Gaya &amp; Musik
+                    {isEn ? 'Style & Music' : 'Gaya & Musik'}
                   </span>
 
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
@@ -2699,7 +2725,7 @@ export default function OrderForm() {
                       </span>
                     </div>
                     <span style={{ fontSize: '0.72rem', opacity: 0.75 }}>
-                      {data.language === 'Lainnya / Custom' ? (data.customLanguage || 'Custom') : data.language}
+                      {data.language === 'Lainnya / Custom' ? (data.customLanguage || 'Custom') : (LANGUAGES.find(l => l.id === data.language)?.label || data.language)}
                     </span>
                   </div>
 
@@ -2721,7 +2747,7 @@ export default function OrderForm() {
                               opacity: 0.85,
                             }}
                           >
-                            {t}
+                            {VIBES.find(v => v.id === t)?.label || t}
                           </span>
                         ))}
                       </div>
@@ -2731,13 +2757,13 @@ export default function OrderForm() {
                   {/* Music info */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.74rem', paddingTop: '6px', borderTop: `1px dashed ${currentTheme.text}12` }}>
                     <Music size={12} style={{ opacity: 0.6, flexShrink: 0 }} />
-                    <span style={{ opacity: 0.6, fontSize: '0.67rem' }}>Lagu:</span>
+                    <span style={{ opacity: 0.6, fontSize: '0.67rem' }}>{isEn ? 'Music:' : 'Lagu:'}</span>
                     <span style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {data.musicChoice === 'random'
-                        ? 'Bebas / Rekomendasi Tim'
+                        ? (isEn ? 'Free / Team Choice' : 'Bebas / Rekomendasi Tim')
                         : data.music
-                        ? (formatMusicInfo(data.music).full || 'Dipilih')
-                        : 'Belum dipilih'}
+                        ? (formatMusicInfo(data.music).full || (isEn ? 'Selected' : 'Dipilih'))
+                        : (isEn ? 'Not selected yet' : 'Belum dipilih')}
                     </span>
                   </div>
                 </div>
@@ -2756,10 +2782,10 @@ export default function OrderForm() {
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: '0.68rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', opacity: 0.6 }}>
-                      Pesan &amp; Konsep
+                      {isEn ? 'Message & Concept' : 'Pesan & Konsep'}
                     </span>
                     <span style={{ fontSize: '0.68rem', opacity: 0.65 }}>
-                      {REASON_THEMES.find(t => t.id === data.reasonChoice)?.title || data.reasonChoice || 'Sifat Spesial'}
+                      {REASON_THEMES.find(t => t.id === data.reasonChoice)?.title || data.reasonChoice || (isEn ? 'Special Qualities' : 'Sifat Spesial')}
                     </span>
                   </div>
 
@@ -2782,20 +2808,20 @@ export default function OrderForm() {
                       &ldquo;{data.message}&rdquo;
                     </div>
                   ) : (
-                    <span style={{ fontSize: '0.74rem', opacity: 0.5, fontStyle: 'italic' }}>Pesan belum diisi</span>
+                    <span style={{ fontSize: '0.74rem', opacity: 0.5, fontStyle: 'italic' }}>{isEn ? 'No message written yet' : 'Pesan belum diisi'}</span>
                   )}
 
                   {data.specialDate && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', opacity: 0.75 }}>
                       <Clock size={12} style={{ opacity: 0.6 }} />
-                      <span>Tanggal Hitungan: <strong>{data.specialDate}</strong> {data.specialDateOccasion ? `(${data.specialDateOccasion})` : ''}</span>
+                      <span>{isEn ? 'Count Date:' : 'Tanggal Hitungan:'} <strong>{data.specialDate}</strong> {data.specialDateOccasion ? `(${data.specialDateOccasion})` : ''}</span>
                     </div>
                   )}
 
                   {data.pinEnabled && data.pinCode && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', opacity: 0.75, paddingTop: '4px', borderTop: `1px dashed ${currentTheme.text}12` }}>
                       <Lock size={12} style={{ opacity: 0.6 }} />
-                      <span>PIN Gate Aktif: <strong>••••••</strong> {data.pinHint ? `(Clue: ${data.pinHint})` : ''}</span>
+                      <span>{isEn ? 'Active PIN Gate:' : 'PIN Gate Aktif:'} <strong>••••••</strong> {data.pinHint ? `(Clue: ${data.pinHint})` : ''}</span>
                     </div>
                   )}
                 </div>
@@ -2814,10 +2840,10 @@ export default function OrderForm() {
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: '0.68rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', opacity: 0.6 }}>
-                      Galeri Foto &amp; Media
+                      {isEn ? 'Photo & Media Gallery' : 'Galeri Foto & Media'}
                     </span>
                     <span style={{ fontSize: '0.72rem', fontWeight: 600 }}>
-                      {uploadedPhotos.filter(p => p.status === 'done').length} Foto Terpilih
+                      {uploadedPhotos.filter(p => p.status === 'done').length} {isEn ? 'Photos Selected' : 'Foto Terpilih'}
                     </span>
                   </div>
 
@@ -2849,7 +2875,7 @@ export default function OrderForm() {
                           ) : (
                             <img
                               src={p.localUrl || p.remoteUrl}
-                              alt={`Foto ${i + 1}`}
+                              alt={isEn ? `Photo ${i + 1}` : `Foto ${i + 1}`}
                               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             />
                           )}
@@ -2871,7 +2897,7 @@ export default function OrderForm() {
                     </div>
                   ) : (
                     <span style={{ fontSize: '0.74rem', opacity: 0.5, fontStyle: 'italic' }}>
-                      Belum ada foto yang diunggah
+                      {isEn ? 'No photos uploaded yet' : 'Belum ada foto yang diunggah'}
                     </span>
                   )}
 
@@ -2887,8 +2913,8 @@ export default function OrderForm() {
                         )}
                       </div>
                       <div style={{ fontSize: '0.72rem' }}>
-                        <span style={{ fontWeight: 600, display: 'block' }}>{secretPhoto.isVideo ? 'Secret Video Disertakan' : 'Secret Media Disertakan'}</span>
-                        <span style={{ opacity: 0.6, fontSize: '0.65rem' }}>Akan muncul di akhir kado</span>
+                        <span style={{ fontWeight: 600, display: 'block' }}>{secretPhoto.isVideo ? (isEn ? 'Secret Video Included' : 'Secret Video Disertakan') : (isEn ? 'Secret Media Included' : 'Secret Media Disertakan')}</span>
+                        <span style={{ opacity: 0.6, fontSize: '0.65rem' }}>{isEn ? 'Will appear at the end of the gift' : 'Akan muncul di akhir kado'}</span>
                       </div>
                     </div>
                   )}
@@ -2928,7 +2954,7 @@ export default function OrderForm() {
                   onMouseEnter={(e) => { if (!submitting) e.currentTarget.style.opacity = '1'; }}
                   onMouseLeave={(e) => { if (!submitting) e.currentTarget.style.opacity = '0.85'; }}
                 >
-                  Kembali Edit
+                  {isEn ? 'Back to Edit' : 'Kembali Edit'}
                 </button>
 
                 <button
@@ -2965,10 +2991,10 @@ export default function OrderForm() {
                           animation: 'spin 0.8s linear infinite',
                         }}
                       />
-                      <span>Mengirim Formulir...</span>
+                      <span>{isEn ? 'Submitting Order...' : 'Mengirim Formulir...'}</span>
                     </>
                   ) : (
-                    <span>Konfirmasi &amp; Kirim Formulir</span>
+                    <span>{isEn ? 'Confirm & Submit Order' : 'Konfirmasi & Kirim Formulir'}</span>
                   )}
                 </button>
               </div>
