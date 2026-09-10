@@ -445,29 +445,59 @@ export default function OrderForm() {
         
         {/* Header */}
         {step < 5 && (
-          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-            <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: '2rem', fontWeight: 400, margin: '0 0 0.5rem 0', fontStyle: 'italic' }}>
+          <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+            {/* Top Bar: Language Switcher (Flows naturally without absolute collision) */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '0.5rem', width: '100%' }}>
+              <label style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                padding: '0.32rem 0.65rem',
+                border: `1px solid ${currentTheme.text}25`,
+                borderRadius: '999px',
+                fontSize: '0.68rem',
+                opacity: 0.85,
+                background: 'rgba(255, 255, 255, 0.04)',
+                cursor: 'pointer',
+              }}>
+                <span style={{ opacity: 0.75 }}>{interfaceLocale === 'id' ? 'Bahasa' : 'Language'}</span>
+                <select
+                  value={interfaceLocale}
+                  onChange={(event) => {
+                    const nextLocale = event.target.value;
+                    setInterfaceLocale(nextLocale);
+                    try { localStorage.setItem(`memoria-form-locale-${slug}`, nextLocale); } catch { /* ignore */ }
+                  }}
+                  aria-label="Interface language"
+                  style={{
+                    border: 'none',
+                    background: 'transparent',
+                    color: 'inherit',
+                    font: 'inherit',
+                    fontWeight: 600,
+                    outline: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <option value="id" style={{ background: currentTheme.bg, color: currentTheme.text }}>Indonesia</option>
+                  <option value="en" style={{ background: currentTheme.bg, color: currentTheme.text }}>English</option>
+                </select>
+              </label>
+            </div>
+
+            <h1 style={{
+              fontFamily: 'var(--font-serif)',
+              fontSize: 'clamp(1.65rem, 5vw, 2rem)',
+              fontWeight: 400,
+              margin: '0 0 0.4rem 0',
+              fontStyle: 'italic',
+              lineHeight: 1.2,
+            }}>
               Digital Atelier
             </h1>
-            <p style={{ fontSize: '0.85rem', opacity: 0.7, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+            <p style={{ fontSize: '0.82rem', opacity: 0.7, letterSpacing: '0.05em', textTransform: 'uppercase', margin: 0 }}>
               Order Form • Step {step} of 4
             </p>
-            <label style={{ position: 'absolute', top: '1rem', right: '1rem', display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.35rem 0.55rem', border: `1px solid ${currentTheme.text}25`, borderRadius: '999px', fontSize: '0.65rem', opacity: 0.8 }}>
-              <span>{interfaceLocale === 'id' ? 'Bahasa' : 'Language'}</span>
-              <select
-                value={interfaceLocale}
-                onChange={(event) => {
-                  const nextLocale = event.target.value;
-                  setInterfaceLocale(nextLocale);
-                  try { localStorage.setItem(`memoria-form-locale-${slug}`, nextLocale); } catch { /* ignore */ }
-                }}
-                aria-label="Interface language"
-                style={{ border: 'none', background: 'transparent', color: 'inherit', font: 'inherit', outline: 'none', cursor: 'pointer' }}
-              >
-                <option value="id">Indonesia</option>
-                <option value="en">English</option>
-              </select>
-            </label>
             <div style={{ display: 'flex', gap: '4px', marginTop: '1.5rem', justifyContent: 'center' }}>
               {[1, 2, 3, 4].map(i => (
                 <div key={i} style={{
