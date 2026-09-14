@@ -203,7 +203,8 @@ export default function GiftPage({ data }) {
     }
   }, [isPlaying]);
 
-  const currentThemeId = data.theme || defaultTheme;
+  const themeOverride = searchParams.get('theme');
+  const currentThemeId = (themeOverride && themes[themeOverride]) ? themeOverride : (data.theme || defaultTheme);
   const t = themes[currentThemeId] || themes[defaultTheme];
   
   const themeStyles = {
