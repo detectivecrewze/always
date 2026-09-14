@@ -3,18 +3,18 @@
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 
-// ─── Flower image assets (PNG with transparent bg) ───────────────────────────
-const LIGHT_FLOWER_SRCS = [
-  '/assets/flower-rose.png',
-  '/assets/flower_daisy.png',
-  '/assets/flower_hydrangea.png',
-];
-
-const DARK_FLOWER_SRCS = [
-  '/assets/flower_hydrangea.png',
-  '/assets/indigo_anemone-removebg-preview.png',
-  '/assets/dark_blue_rose-removebg-preview.png',
-];
+// Each opening uses flowers painted for its own theme palette.
+const BLOOM_FLOWER_SRCS = Object.fromEntries(
+  [
+    'vintage-burgundy', 'classic-light', 'midnight-rose', 'ocean-breeze',
+    'blush-pink', 'midnight-blue', 'velvet-purple',
+  ].map((theme) => [
+    theme,
+    ['rose', 'peony', 'hydrangea', 'anemone'].map(
+      (flower) => `/assets/bloom/${theme}-${flower}.webp`
+    ),
+  ])
+);
 
 // ─── Sparkle data (idle only) ─────────────────────────────────────────────────
 const SPARKLE_DATA = [
@@ -61,8 +61,7 @@ const BLOOM_RINGS = [
 ];
 
 function buildBloomFlowers(themeName) {
-  const isDark = ['midnight-blue', 'midnight-rose', 'ocean-breeze'].includes(themeName);
-  const sources = isDark ? DARK_FLOWER_SRCS : LIGHT_FLOWER_SRCS;
+  const sources = BLOOM_FLOWER_SRCS[themeName] || BLOOM_FLOWER_SRCS['vintage-burgundy'];
 
   return BLOOM_RINGS.flatMap(({ radius, count, size }, ring) =>
     Array.from({ length: count }, (_, index) => {
@@ -92,12 +91,13 @@ export default function GateScreen({ gateSubtitle, onInteraction, onOpen, themeC
   const bloomFlowers = useMemo(() => buildBloomFlowers(themeName), [themeName]);
 
   useEffect(() => {
+    if (disableFountain || reducedMotion) return;
     const sources = new Set(bloomFlowers.map(({ src }) => src));
     sources.forEach((src) => {
       const image = new window.Image();
       image.src = src;
     });
-  }, [bloomFlowers]);
+  }, [bloomFlowers, disableFountain, reducedMotion]);
 
   const activeColor  = themeColors?.[0] || '#E2A9A3';
   const activeAccent = themeColors?.[1] || '#E2859B';
