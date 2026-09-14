@@ -1,13 +1,12 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 
 // ─── Flower image assets (PNG with transparent bg) ───────────────────────────
 const LIGHT_FLOWER_SRCS = [
-  '/assets/flowser-sunflower.png',
-  '/assets/flower_daisy.png',
   '/assets/flower-rose.png',
+  '/assets/flower_daisy.png',
   '/assets/flower_hydrangea.png',
 ];
 
@@ -52,136 +51,53 @@ function SparkleParticle({ x, y, size, delay, dur, color }) {
   );
 }
 
-// ─── FountainFlower: single flower following parabolic arc ───────────────────
-function FountainFlower({ src, size, xEnd, yPeak, yFinal, rotateDirection, rotateSpeed, delay, duration, zIndex, finalScale, exitPhase }) {
-  const isLeft = xEnd < 0;
-  const shouldSwipeLeft = isLeft && (exitPhase === 'left' || exitPhase === 'right');
-  const shouldSwipeRight = !isLeft && exitPhase === 'right';
-  const isSwiping = shouldSwipeLeft || shouldSwipeRight;
+// ─── Flowers emerge one by one from the gift, then fill the viewport ───
+const BLOOM_RINGS = [
+  { radius: 0, count: 1, size: 30 },
+  { radius: 14, count: 7, size: 29 },
+  { radius: 27, count: 11, size: 28 },
+  { radius: 40, count: 16, size: 27 },
+  { radius: 52, count: 23, size: 26 },
+];
 
-  return (
-    <motion.img
-      src={src}
-      draggable={false}
-      decoding="async"
-      className="absolute pointer-events-none select-none"
-      style={{
-        width: size,
-        height: size,
-        left: '50%',
-        top: '50%',
-        marginLeft: -size / 2,
-        marginTop: -size / 2,
-        zIndex,
-        willChange: 'transform, opacity',
-      }}
-      initial={{ x: 0, y: 0, scale: 0.12, opacity: 0, rotate: 0 }}
-      animate={
-        isSwiping
-          ? {
-              x: isLeft ? xEnd - 1500 : xEnd + 1500,
-              y: yFinal,
-              scale: finalScale,
-              opacity: 0,
-              rotate: 360 * rotateDirection,
-            }
-          : {
-              x: [0, xEnd * 0.4, xEnd],
-              y: [0, yPeak, yFinal],
-              scale: [0.12, 0.85, finalScale],
-              opacity: [0, 1, 1],
-              rotate: [0, 360 * rotateDirection],
-            }
-      }
-      transition={
-        isSwiping
-          ? {
-              duration: 1.2,
-              ease: 'easeIn',
-            }
-          : {
-              default: {
-                duration,
-                delay,
-                times: [0, 0.38, 1],
-                ease: 'easeOut',
-              },
-              rotate: {
-                duration: rotateSpeed,
-                delay,
-                repeat: Infinity,
-                ease: 'linear',
-              }
-            }
-      }
-    />
+function buildBloomFlowers(themeName) {
+  const isDark = ['midnight-blue', 'midnight-rose', 'ocean-breeze'].includes(themeName);
+  const sources = isDark ? DARK_FLOWER_SRCS : LIGHT_FLOWER_SRCS;
+
+  return BLOOM_RINGS.flatMap(({ radius, count, size }, ring) =>
+    Array.from({ length: count }, (_, index) => {
+      const angle = (index / count) * Math.PI * 2 + ring * 0.37;
+      const offset = Math.sin((ring + 1) * 19 + index * 11) * 1.6;
+      const distance = radius + offset;
+
+      return {
+        id: ring + '-' + index,
+        src: sources[(index * 5 + ring) % sources.length],
+        x: Math.cos(angle) * distance * 1.15,
+        y: Math.sin(angle) * distance * 1.15,
+        size: size + Math.sin(index * 7 + ring) * 1.5,
+        rotate: (index * 47 + ring * 29) % 360,
+        delay: ring * 0.5 + index * 0.06,
+        spinDuration: 4.8 + ((index + ring) % 6) * 0.45,
+        spinDirection: (index + ring) % 2 === 0 ? '360deg' : '-360deg',
+      };
+    })
   );
 }
-
-// ─── Generate fountain particles (deterministic seeded positions) ─────────────
-function buildParticles(count, themeName) {
-  // Simple seeded-ish randomizer to keep it stable across renders
-  let seed = 42;
-  const rng = () => { seed = (seed * 16807 + 0) % 2147483647; return (seed - 1) / 2147483646; };
-
-  const isDark = ['midnight-blue', 'midnight-rose', 'ocean-breeze'].includes(themeName);
-  const FLOWER_SRCS = isDark ? DARK_FLOWER_SRCS : LIGHT_FLOWER_SRCS;
-
-  const particles = [];
-  for (let i = 0; i < count; i++) {
-    const frac = i / count; // 0..1
-    // ORIGINAL ANGLE LOGIC: Sweeping fan
-    const spread = 240; // Widened slightly to guarantee extreme left/right coverage
-    const baseAngleDeg = -90 + (frac - 0.5) * spread;
-    const jitter = (rng() - 0.5) * 18;
-    const angleDeg = baseAngleDeg + jitter;
-    const angleRad = (angleDeg * Math.PI) / 180;
-
-    // ORIGINAL ARC LOGIC: Scaled up to reach edges and bottom
-    const sidePull = 1 + Math.abs(frac - 0.5) * 1.8; // Stronger pull to corners
-    const dist = 300 + rng() * 550; // Pushed further out
-    const xEnd = Math.cos(angleRad) * dist * sidePull + (rng() - 0.5) * 100;
-    
-    const yPeak = Math.sin(angleRad) * dist - 50 - rng() * 150;   // rises above emitter
-    const yFinal = yPeak + 250 + rng() * 550;                     // falls deeply down to cover bottom gaps
-
-    // EXACT SAME SIZES AS PREVIOUSLY APPROVED MEDIUM
-    const size = 140 + rng() * 140;         // 140–280 px
-    const finalScale = 1.0 + rng() * 0.6;   // 1.0–1.6 scale
-
-    // CONTINUOUS ORGANIC ROTATION
-    const rotateDirection = rng() > 0.5 ? 1 : -1;
-    const rotateSpeed = 6 + rng() * 10; // Slow, graceful continuous spin (6 to 16 seconds per 360 deg)
-
-    // DRAMATIC POPCORN: stagger over 1.6s so each flower pops one by one
-    const delay = frac * 1.6 + rng() * 0.15;
-    const duration = 2.0 + rng() * 1.6; // Longer flight = more dramatic arc
-    const zIndex = Math.floor(i / 5) + 1;    // later particles on top
-
-    particles.push({
-      id: i,
-      src: FLOWER_SRCS[i % FLOWER_SRCS.length],
-      size, xEnd, yPeak, yFinal, finalScale,
-      rotateDirection, rotateSpeed, delay, duration, zIndex,
-    });
-  }
-  return particles;
-}
-
 // ─── Main component ──────────────────────────────────────────────────────────
 export default function GateScreen({ gateSubtitle, onInteraction, onOpen, themeColors, themeName, disableFountain }) {
-  const [phase, setPhase] = useState('idle'); // idle | fountain | done
-  const [exitPhase, setExitPhase] = useState('none'); // none | left | right
+  const [phase, setPhase] = useState('idle'); // idle | bloom | done
   const activeTimersRef = useRef(new Set());
+  const reducedMotion = useReducedMotion();
+  const bloomFlowers = useMemo(() => buildBloomFlowers(themeName), [themeName]);
 
-  // Optimize particle count for mobile
-  const [particleCount, setParticleCount] = useState(300);
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      setParticleCount(280);
-    }
-  }, []);
-  const activeParticles = useMemo(() => buildParticles(particleCount, themeName), [particleCount, themeName]);
+    const sources = new Set(bloomFlowers.map(({ src }) => src));
+    sources.forEach((src) => {
+      const image = new window.Image();
+      image.src = src;
+    });
+  }, [bloomFlowers]);
 
   const activeColor  = themeColors?.[0] || '#E2A9A3';
   const activeAccent = themeColors?.[1] || '#E2859B';
@@ -199,30 +115,20 @@ export default function GateScreen({ gateSubtitle, onInteraction, onOpen, themeC
     return timerId;
   }, []);
 
-  // Click handler: idle → fountain (or skip fountain if disableFountain is true)
+  // Reveal the gift once the flowers cover the viewport.
   const handleClick = useCallback(() => {
     if (phase !== 'idle') return;
     if (onInteraction) onInteraction();
 
-    if (disableFountain) {
-      // Skip flower animation — go straight to gift page
+    if (disableFountain || reducedMotion) {
       setPhase('done');
-      setTrackedTimeout(() => { if (onOpen) onOpen(); }, 400);
+      setTrackedTimeout(() => { if (onOpen) onOpen(); }, 250);
       return;
     }
 
-    setPhase('fountain');
-    
-    // Sequential swipe out animations — start after flowers have settled
-    setTrackedTimeout(() => setExitPhase('left'), 4200);
-    setTrackedTimeout(() => setExitPhase('right'), 4700);
-
-    // After swipe out, transition to gift page
-    setTrackedTimeout(() => {
-      setPhase('done');
-      setTrackedTimeout(() => { if (onOpen) onOpen(); }, 400);
-    }, 5500);
-  }, [phase, onOpen, disableFountain, onInteraction, setTrackedTimeout]);
+    setPhase('bloom');
+    setTrackedTimeout(() => { if (onOpen) onOpen(); }, 5550);
+  }, [phase, onOpen, disableFountain, reducedMotion, onInteraction, setTrackedTimeout]);
 
   useEffect(() => {
     return () => {
@@ -231,7 +137,8 @@ export default function GateScreen({ gateSubtitle, onInteraction, onOpen, themeC
     };
   }, []);
 
-  const isFountain = !disableFountain && (phase === 'fountain' || phase === 'done');
+  const isBlooming = phase === 'bloom';
+  const hasOpened = phase !== 'idle';
 
   return (
     <motion.div
@@ -239,11 +146,11 @@ export default function GateScreen({ gateSubtitle, onInteraction, onOpen, themeC
       style={{ background: 'var(--color-bg)', cursor: phase === 'idle' ? 'pointer' : 'default' }}
       onClick={handleClick}
       exit={{ opacity: 0 }}
-      transition={{ duration: 1.0 }}
+      transition={{ duration: reducedMotion ? 0.15 : 0.9 }}
     >
       {/* ── Idle background glow rings ─────────────────────────────────── */}
       <AnimatePresence>
-        {!isFountain && (
+        {!hasOpened && (
           <motion.div
             key="idleglow"
             className="absolute rounded-full"
@@ -257,7 +164,7 @@ export default function GateScreen({ gateSubtitle, onInteraction, onOpen, themeC
       </AnimatePresence>
 
       <AnimatePresence>
-        {!isFountain && (
+        {!hasOpened && (
           <motion.div
             key="idlering"
             className="absolute rounded-full"
@@ -270,11 +177,69 @@ export default function GateScreen({ gateSubtitle, onInteraction, onOpen, themeC
         )}
       </AnimatePresence>
 
-      {/* ── FOUNTAIN: all flowers erupt from box center ─────────────── */}
+      {/* Each existing flower leaves the box in a staggered bloom. */}
       <AnimatePresence>
-        {isFountain && activeParticles.map((p) => (
-          <FountainFlower key={p.id} {...p} exitPhase={exitPhase} />
-        ))}
+        {isBlooming && (
+          <motion.div
+            key="bloom"
+            className="absolute left-1/2 top-1/2 pointer-events-none"
+            style={{
+              width: '115vmax',
+              height: '115vmax',
+              marginLeft: '-57.5vmax',
+              marginTop: '-57.5vmax',
+              willChange: 'transform, opacity',
+            }}
+            initial={{ scale: 0.09, opacity: 1 }}
+            animate={{ scale: [0.09, 0.28, 0.58, 1], opacity: 1 }}
+            transition={{
+              duration: 5.1,
+              times: [0, 0.26, 0.56, 1],
+              ease: [0.18, 0.7, 0.2, 1],
+            }}
+          >
+            {bloomFlowers.map((flower) => (
+              <motion.div
+                key={flower.id}
+                className="absolute"
+                style={{
+                  left: '50%',
+                  top: '50%',
+                  width: flower.size + '%',
+                  height: flower.size + '%',
+                  marginLeft: -flower.size / 2 + '%',
+                  marginTop: -flower.size / 2 + '%',
+                }}
+                initial={{ x: 0, y: 0, scale: 0.04, opacity: 0 }}
+                animate={{
+                  x: flower.x + 'vmax',
+                  y: flower.y + 'vmax',
+                  scale: [0.04, 1.18, 1],
+                  opacity: [0, 1, 1],
+                }}
+                transition={{
+                  duration: 1.25,
+                  delay: flower.delay,
+                  times: [0, 0.72, 1],
+                  ease: [0.2, 0.7, 0.2, 1],
+                }}
+              >
+                <div
+                  className="memoria-flower-spin h-full w-full"
+                  style={{
+                    backgroundImage: 'url("' + flower.src + '")',
+                    backgroundSize: 'contain',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat',
+                    '--flower-angle': flower.rotate + 'deg',
+                    '--flower-turn': flower.spinDirection,
+                    '--flower-spin-duration': flower.spinDuration + 's',
+                  }}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
       </AnimatePresence>
 
       {/* ── Gift box: floats when idle, falls off when opened ──────────── */}
@@ -329,8 +294,8 @@ export default function GateScreen({ gateSubtitle, onInteraction, onOpen, themeC
           </defs>
           {/* Floor shadow */}
           <motion.ellipse cx="100" cy="182" rx="60" ry="9" fill={activeAccent} filter="url(#gFloor)"
-            animate={{ opacity: isFountain ? 0 : [0.15, 0.28, 0.15] }}
-            transition={isFountain ? { duration: 0.3 } : { duration: 4, repeat: Infinity }}
+            animate={{ opacity: hasOpened ? 0 : [0.15, 0.28, 0.15] }}
+            transition={hasOpened ? { duration: 0.3 } : { duration: 4, repeat: Infinity }}
           />
           {/* Box body */}
           <rect x="30" y="85" width="140" height="88" rx="7" fill="url(#gBoxBody)" stroke={activeAccent} strokeWidth="1.5" />
@@ -355,7 +320,7 @@ export default function GateScreen({ gateSubtitle, onInteraction, onOpen, themeC
         <motion.div
           className="absolute inset-0 pointer-events-none z-20"
           initial={{ y: 0, rotate: 0, opacity: 1 }}
-          animate={isFountain
+          animate={hasOpened
             ? { y: -220, rotate: -45, opacity: 0 }
             : { y: 0, rotate: 0, opacity: 1 }
           }
@@ -412,7 +377,7 @@ export default function GateScreen({ gateSubtitle, onInteraction, onOpen, themeC
       {/* ── Subtitle ─────────────────────────────────────────────────────── */}
       <motion.p
         className="font-serif italic text-base text-text-muted tracking-widest uppercase mb-12 z-10"
-        animate={{ opacity: isFountain ? 0 : 1 }}
+        animate={{ opacity: hasOpened ? 0 : 1 }}
         transition={{ duration: 0.3 }}
       >
         {gateSubtitle}
@@ -421,8 +386,8 @@ export default function GateScreen({ gateSubtitle, onInteraction, onOpen, themeC
       {/* ── Tap hint ─────────────────────────────────────────────────────── */}
       <motion.p
         className="absolute bottom-16 text-[10px] text-accent tracking-[0.3em] uppercase z-10"
-        animate={isFountain ? { opacity: 0 } : { opacity: [0.4, 1, 0.4] }}
-        transition={isFountain ? { duration: 0.3 } : { duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+        animate={hasOpened ? { opacity: 0 } : { opacity: [0.4, 1, 0.4] }}
+        transition={hasOpened ? { duration: 0.3 } : { duration: 2, repeat: Infinity, ease: 'easeInOut' }}
       >
         tap anywhere
       </motion.p>

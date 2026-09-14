@@ -42,6 +42,15 @@
   }
 }
 
+@keyframes memoria-flower-spin {
+  from { transform: rotate(var(--flower-angle)); }
+  to { transform: rotate(calc(var(--flower-angle) + var(--flower-turn))); }
+}
+
+.memoria-flower-spin {
+  animation: memoria-flower-spin var(--flower-spin-duration) linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
