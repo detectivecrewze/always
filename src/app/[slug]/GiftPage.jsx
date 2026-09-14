@@ -249,7 +249,8 @@ export default function GiftPage({ data }) {
       <AnimatePresence mode="wait">
         {effectivePinUnlocked && !effectiveGateOpen && (
           <GateScreen
-            themeName={data.theme}
+            key={currentThemeId}
+            themeName={currentThemeId}
             gateSubtitle={data.gateSubtitle}
             disableFountain={data.disableFountain ?? false}
             onInteraction={handleInteraction}
