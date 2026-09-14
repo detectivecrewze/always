@@ -52,12 +52,14 @@ export default function GiftPage({ data }) {
 
   const [pinUnlocked, setPinUnlocked] = useState(!data.pinEnabled || isStudioMode || isPreviewBypass);
   const [gateOpen, setGateOpen] = useState(isStudioMode || isPreviewBypass);
+  const [revealStarted, setRevealStarted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef(null);
   const wasMusicPlayingBeforeWishVideoRef = useRef(false);
 
   const effectivePinUnlocked = pinUnlocked || !data.pinEnabled || isStudioMode || isPreviewBypass;
   const effectiveGateOpen = gateOpen || isStudioMode || isPreviewBypass;
+  const showGiftContent = effectiveGateOpen || revealStarted;
 
   useEffect(() => {
     if (audioRef.current) {
@@ -250,6 +252,7 @@ export default function GiftPage({ data }) {
             gateSubtitle={data.gateSubtitle}
             disableFountain={data.disableFountain ?? false}
             onInteraction={handleInteraction}
+            onReveal={() => setRevealStarted(true)}
             onOpen={handleGateFinish}
             themeColors={[t.particle, t.accent, t.textMuted]}
           />
@@ -258,9 +261,9 @@ export default function GiftPage({ data }) {
 
       {/* Main Content */}
       <AnimatePresence>
-        {effectiveGateOpen && (
+        {showGiftContent && (
           <motion.div
-            initial={{ opacity: 0 }}
+            initial={{ opacity: isStudioMode || isPreviewBypass ? 0 : 1 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1, ease: [0.25, 0.1, 0.25, 1] }}
           >

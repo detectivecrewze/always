@@ -59,6 +59,8 @@ const BLOOM_RINGS = [
   { radius: 40, count: 16, size: 27 },
   { radius: 52, count: 23, size: 26 },
 ];
+const BLOOM_DURATION_MS = 5100;
+const CURTAIN_DURATION_MS = 1200;
 
 function buildBloomFlowers(themeName) {
   const sources = BLOOM_FLOWER_SRCS[themeName] || BLOOM_FLOWER_SRCS['vintage-burgundy'];
@@ -84,8 +86,8 @@ function buildBloomFlowers(themeName) {
   );
 }
 // ─── Main component ──────────────────────────────────────────────────────────
-export default function GateScreen({ gateSubtitle, onInteraction, onOpen, themeColors, themeName, disableFountain }) {
-  const [phase, setPhase] = useState('idle'); // idle | bloom | done
+export default function GateScreen({ gateSubtitle, onInteraction, onReveal, onOpen, themeColors, themeName, disableFountain }) {
+  const [phase, setPhase] = useState('idle'); // idle | bloom | curtain | done
   const activeTimersRef = useRef(new Set());
   const reducedMotion = useReducedMotion();
   const bloomFlowers = useMemo(() => buildBloomFlowers(themeName), [themeName]);
@@ -127,8 +129,11 @@ export default function GateScreen({ gateSubtitle, onInteraction, onOpen, themeC
     }
 
     setPhase('bloom');
-    setTrackedTimeout(() => { if (onOpen) onOpen(); }, 5550);
-  }, [phase, onOpen, disableFountain, reducedMotion, onInteraction, setTrackedTimeout]);
+    // Mount the gift behind the opaque gate before the curtain opens.
+    setTrackedTimeout(() => { if (onReveal) onReveal(); }, BLOOM_DURATION_MS - 600);
+    setTrackedTimeout(() => setPhase('curtain'), BLOOM_DURATION_MS);
+    setTrackedTimeout(() => { if (onOpen) onOpen(); }, BLOOM_DURATION_MS + CURTAIN_DURATION_MS);
+  }, [phase, onReveal, onOpen, disableFountain, reducedMotion, onInteraction, setTrackedTimeout]);
 
   useEffect(() => {
     return () => {
@@ -137,17 +142,29 @@ export default function GateScreen({ gateSubtitle, onInteraction, onOpen, themeC
     };
   }, []);
 
-  const isBlooming = phase === 'bloom';
+  const isBlooming = phase === 'bloom' || phase === 'curtain';
   const hasOpened = phase !== 'idle';
 
   return (
     <motion.div
       className="fixed inset-0 z-50 flex flex-col items-center justify-center select-none overflow-hidden"
-      style={{ background: 'var(--color-bg)', cursor: phase === 'idle' ? 'pointer' : 'default' }}
+      style={{ cursor: phase === 'idle' ? 'pointer' : 'default' }}
       onClick={handleClick}
-      exit={{ opacity: 0 }}
-      transition={{ duration: reducedMotion ? 0.15 : 0.9 }}
     >
+      {['left', 'right'].map((side) => (
+        <motion.div
+          key={side}
+          className="absolute inset-y-0 pointer-events-none"
+          style={{
+            [side]: 0,
+            width: 'calc(50% + 1px)',
+            background: 'var(--color-bg)',
+            willChange: phase === 'curtain' ? 'transform' : 'auto',
+          }}
+          animate={{ x: phase === 'curtain' ? (side === 'left' ? '-100%' : '100%') : '0%' }}
+          transition={{ duration: CURTAIN_DURATION_MS / 1000, ease: [0.32, 0, 0.2, 1] }}
+        />
+      ))}
       {/* ── Idle background glow rings ─────────────────────────────────── */}
       <AnimatePresence>
         {!hasOpened && (
@@ -191,51 +208,62 @@ export default function GateScreen({ gateSubtitle, onInteraction, onOpen, themeC
               willChange: 'transform, opacity',
             }}
             initial={{ scale: 0.09, opacity: 1 }}
-            animate={{ scale: [0.09, 0.28, 0.58, 1], opacity: 1 }}
+            animate={phase === 'curtain'
+              ? { scale: 1, opacity: 1 }
+              : { scale: [0.09, 0.28, 0.58, 1], opacity: 1 }}
             transition={{
               duration: 5.1,
               times: [0, 0.26, 0.56, 1],
               ease: [0.18, 0.7, 0.2, 1],
             }}
           >
-            {bloomFlowers.map((flower) => (
+            {['left', 'right'].map((side) => (
               <motion.div
-                key={flower.id}
-                className="absolute"
-                style={{
-                  left: '50%',
-                  top: '50%',
-                  width: flower.size + '%',
-                  height: flower.size + '%',
-                  marginLeft: -flower.size / 2 + '%',
-                  marginTop: -flower.size / 2 + '%',
-                }}
-                initial={{ x: 0, y: 0, scale: 0.04, opacity: 0 }}
-                animate={{
-                  x: flower.x + 'vmax',
-                  y: flower.y + 'vmax',
-                  scale: [0.04, 1.18, 1],
-                  opacity: [0, 1, 1],
-                }}
-                transition={{
-                  duration: 1.25,
-                  delay: flower.delay,
-                  times: [0, 0.72, 1],
-                  ease: [0.2, 0.7, 0.2, 1],
-                }}
+                key={side}
+                className="absolute inset-0"
+                animate={{ x: phase === 'curtain' ? (side === 'left' ? '-100vw' : '100vw') : '0vw' }}
+                transition={{ duration: CURTAIN_DURATION_MS / 1000, ease: [0.32, 0, 0.2, 1] }}
               >
-                <div
-                  className="memoria-flower-spin h-full w-full"
-                  style={{
-                    backgroundImage: 'url("' + flower.src + '")',
-                    backgroundSize: 'contain',
-                    backgroundPosition: 'center',
-                    backgroundRepeat: 'no-repeat',
-                    '--flower-angle': flower.rotate + 'deg',
-                    '--flower-turn': flower.spinDirection,
-                    '--flower-spin-duration': flower.spinDuration + 's',
-                  }}
-                />
+                {bloomFlowers.filter((flower) => side === 'left' ? flower.x < 0 : flower.x >= 0).map((flower) => (
+                  <motion.div
+                    key={flower.id}
+                    className="absolute"
+                    style={{
+                      left: '50%',
+                      top: '50%',
+                      width: flower.size + '%',
+                      height: flower.size + '%',
+                      marginLeft: -flower.size / 2 + '%',
+                      marginTop: -flower.size / 2 + '%',
+                    }}
+                    initial={{ x: 0, y: 0, scale: 0.04, opacity: 0 }}
+                    animate={{
+                      x: flower.x + 'vmax',
+                      y: flower.y + 'vmax',
+                      scale: [0.04, 1.18, 1],
+                      opacity: [0, 1, 1],
+                    }}
+                    transition={{
+                      duration: 1.25,
+                      delay: flower.delay,
+                      times: [0, 0.72, 1],
+                      ease: [0.2, 0.7, 0.2, 1],
+                    }}
+                  >
+                    <div
+                      className="memoria-flower-spin h-full w-full"
+                      style={{
+                        backgroundImage: 'url("' + flower.src + '")',
+                        backgroundSize: 'contain',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat',
+                        '--flower-angle': flower.rotate + 'deg',
+                        '--flower-turn': flower.spinDirection,
+                        '--flower-spin-duration': flower.spinDuration + 's',
+                      }}
+                    />
+                  </motion.div>
+                ))}
               </motion.div>
             ))}
           </motion.div>
