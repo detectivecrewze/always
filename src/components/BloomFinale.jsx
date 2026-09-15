@@ -2,108 +2,25 @@
 
 import { motion, useReducedMotion } from 'framer-motion';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { getBloomFlowerSources } from '@/lib/bloomFlowers';
+import { buildBloomFlowers } from '@/lib/bloomFlowers';
 import { getSecretMediaType } from '@/lib/secretMedia';
 
-const CURTAIN_CLOSE_MS = 3200;
-const CURTAIN_REVEAL_MS = 3800;
-const CURTAIN_SETTLE_MS = 4800;
+const BLOOM_DURATION_MS = 3800;
+const CURTAIN_DURATION_MS = 1200;
 
-const GARDEN_LAYOUT = [
-  ...['left', 'right'].flatMap((side) =>
-    Array.from({ length: 30 }, (_, index) => {
-      const column = index % 6;
-      const row = Math.floor(index / 6);
-      const baseLeft = side === 'left' ? -5 + column * 11 : 50 + column * 11;
-      return {
-        id: `${side}-${row}-${column}`,
-        side,
-        left: baseLeft + (row % 2 === 0 ? 0 : 2.8),
-        top: -9 + row * 21 + (column % 2 === 0 ? 0 : 4),
-        size: 0.82 + ((index * 7 + (side === 'right' ? 3 : 0)) % 8) * 0.065,
-        delay: 0.08 + row * 0.2 + column * 0.1 + (side === 'right' ? 0.12 : 0),
-        rotate: -32 + ((index * 47 + (side === 'right' ? 19 : 0)) % 76),
-      };
-    })
-  ),
-];
-
-const PETALS = Array.from({ length: 8 }, (_, index) => ({
+const PETALS = Array.from({ length: 12 }, (_, index) => ({
   id: index,
-  left: 8 + ((index * 17) % 84),
-  delay: index * 0.7,
-  duration: 7 + (index % 4) * 0.85,
-  drift: index % 2 === 0 ? 34 : -30,
-  size: 7 + (index % 3) * 2,
+  left: 6 + ((index * 17) % 88),
+  delay: index * 0.45,
+  duration: 6.5 + (index % 4) * 0.8,
+  drift: index % 2 === 0 ? 32 : -28,
+  size: 8 + (index % 3) * 3,
 }));
-
-function GardenFlower({ flower, src, index, settled, reducedMotion }) {
-  const drifting = index % 4 === 0;
-  const startX = flower.side === 'left' ? -110 - (index % 3) * 25 : 110 + (index % 3) * 25;
-  const curveX = flower.side === 'left' ? 18 + (index % 4) * 7 : -18 - (index % 4) * 7;
-  const startY = 95 + (index % 5) * 20;
-
-  return (
-    <motion.div
-      className="absolute pointer-events-none select-none"
-      style={{
-        left: `${flower.left}%`,
-        top: `${flower.top}%`,
-        width: `calc(clamp(104px, 19vmax, 230px) * ${flower.size})`,
-        aspectRatio: '1',
-        zIndex: index % 7 === 0 ? 3 : 1,
-        transformOrigin: '50% 88%',
-        willChange: settled && !drifting ? 'auto' : 'transform, opacity',
-      }}
-      initial={reducedMotion ? false : {
-        opacity: 0,
-        scale: 0.04,
-        x: startX,
-        y: startY,
-        rotate: flower.rotate + (flower.side === 'left' ? -65 : 65),
-      }}
-      animate={{
-        opacity: 1,
-        scale: reducedMotion ? 1 : [0.04, 1.16, 1],
-        x: reducedMotion ? 0 : [startX, curveX, 0],
-        y: reducedMotion ? 0 : [startY, -14 - (index % 3) * 5, 0],
-        rotate: reducedMotion ? flower.rotate : [
-          flower.rotate + (flower.side === 'left' ? -65 : 65),
-          flower.rotate + (flower.side === 'left' ? 16 : -16),
-          flower.rotate,
-        ],
-      }}
-      transition={{
-        duration: reducedMotion ? 0 : 1.3,
-        delay: reducedMotion ? 0 : flower.delay,
-        times: [0, 0.72, 1],
-        ease: [0.16, 0.78, 0.22, 1],
-      }}
-    >
-      <motion.img
-        src={src}
-        alt=""
-        draggable={false}
-        className="h-full w-full object-contain"
-        animate={settled && drifting && !reducedMotion ? {
-          y: [0, -7, 0],
-          rotate: [0, index % 2 === 0 ? 5 : -5, 0],
-          scale: [1, 1.025, 1],
-        } : {}}
-        transition={settled && drifting && !reducedMotion ? {
-          duration: 5.2 + (index % 4) * 0.6,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        } : {}}
-      />
-    </motion.div>
-  );
-}
 
 function FloatingPetals({ active, reducedMotion }) {
   if (!active || reducedMotion) return null;
   return (
-    <div className="pointer-events-none absolute inset-0 z-[4] overflow-hidden" aria-hidden="true">
+    <div className="pointer-events-none absolute inset-0 z-[5] overflow-hidden" aria-hidden="true">
       {PETALS.map((petal) => (
         <motion.span
           key={petal.id}
@@ -145,27 +62,36 @@ export default function BloomFinale({
   onClose,
   onCinemaToggle,
 }) {
-  const [phase, setPhase] = useState('growing');
+  const [phase, setPhase] = useState('bloom'); // 'bloom' | 'curtain' | 'settled'
   const [mediaFailed, setMediaFailed] = useState(false);
   const closeButtonRef = useRef(null);
-  const flowerSources = useMemo(() => getBloomFlowerSources(themeName), [themeName]);
+  const bloomFlowers = useMemo(() => buildBloomFlowers(themeName), [themeName]);
   const mediaUrl = typeof secretPhoto === 'string' ? secretPhoto.trim() : '';
   const mediaType = getSecretMediaType(mediaUrl);
   const reducedMotion = useReducedMotion();
-  const showCard = phase === 'revealing' || phase === 'revealed';
-  const settled = phase === 'revealed';
+
+  const isCurtainOrSettled = phase === 'curtain' || phase === 'settled';
+  const showCard = isCurtainOrSettled;
+  const settled = phase === 'settled';
 
   useEffect(() => {
     if (reducedMotion) {
-      setPhase('revealed');
+      setPhase('settled');
       return undefined;
     }
-    const timers = [
-      window.setTimeout(() => setPhase('closing'), CURTAIN_CLOSE_MS),
-      window.setTimeout(() => setPhase('revealing'), CURTAIN_REVEAL_MS),
-      window.setTimeout(() => setPhase('revealed'), CURTAIN_SETTLE_MS),
-    ];
-    return () => timers.forEach((timer) => window.clearTimeout(timer));
+
+    const timer1 = window.setTimeout(() => {
+      setPhase('curtain');
+    }, BLOOM_DURATION_MS);
+
+    const timer2 = window.setTimeout(() => {
+      setPhase('settled');
+    }, BLOOM_DURATION_MS + CURTAIN_DURATION_MS);
+
+    return () => {
+      window.clearTimeout(timer1);
+      window.clearTimeout(timer2);
+    };
   }, [reducedMotion]);
 
   useEffect(() => {
@@ -198,66 +124,128 @@ export default function BloomFinale({
     if (!secretVideoMuted && onCinemaToggle) onCinemaToggle(active);
   };
 
-  const curtainOffset = (side) => {
-    if (phase === 'closing') return side === 'left' ? '5vw' : '-5vw';
-    if (showCard) return side === 'left' ? '-30vw' : '30vw';
-    return '0vw';
-  };
-
   return (
     <div
-      className="fixed inset-0 z-[9999] overflow-hidden"
+      className="fixed inset-0 z-[9999] overflow-hidden select-none"
       role="dialog"
       aria-modal="true"
       aria-labelledby="finale-title"
     >
+      {/* ── Background reveal: circular expansion from button position ── */}
       <motion.div
-        className="absolute inset-[-40vmax] rounded-full bg-bg"
-        style={{ transformOrigin: '50% 74%', willChange: 'transform, border-radius' }}
-        initial={reducedMotion ? false : { scale: 0.025, borderRadius: '50%' }}
-        animate={{ scale: 1, borderRadius: '0%' }}
-        transition={{ duration: reducedMotion ? 0 : 1.45, ease: [0.2, 0.72, 0.2, 1] }}
+        className="pointer-events-none absolute inset-[-40vmax] rounded-full z-0"
+        style={{
+          background: 'var(--color-bg)',
+          transformOrigin: '50% 75%',
+          willChange: 'transform',
+        }}
+        initial={reducedMotion ? false : { scale: 0.04 }}
+        animate={{ scale: 1 }}
+        transition={{ duration: reducedMotion ? 0 : 0.6, ease: [0.22, 1, 0.36, 1] }}
       />
 
-      <div className="absolute inset-0 z-[2] overflow-hidden" aria-hidden="true">
+      {/* ── Background Curtain Panels: split left & right when curtain parts ── */}
+      {['left', 'right'].map((side) => (
+        <motion.div
+          key={side}
+          className="pointer-events-none absolute inset-y-0 z-[1]"
+          style={{
+            [side]: 0,
+            width: 'calc(50% + 1px)',
+            background: 'var(--color-bg)',
+            willChange: isCurtainOrSettled ? 'transform' : 'auto',
+          }}
+          animate={{ x: isCurtainOrSettled ? (side === 'left' ? '-100%' : '100%') : '0%' }}
+          transition={{ duration: CURTAIN_DURATION_MS / 1000, ease: [0.32, 0, 0.2, 1] }}
+        />
+      ))}
+
+      {/* ── Dynamic Radial Bloom: concentric rotating flowers from center ── */}
+      <motion.div
+        className="pointer-events-none absolute left-1/2 top-1/2 z-[2]"
+        style={{
+          width: '115vmax',
+          height: '115vmax',
+          marginLeft: '-57.5vmax',
+          marginTop: '-57.5vmax',
+          willChange: 'transform, opacity',
+        }}
+        initial={{ scale: 0.09 }}
+        animate={isCurtainOrSettled
+          ? { scale: 1 }
+          : { scale: [0.09, 0.28, 0.58, 1] }}
+        transition={{
+          duration: BLOOM_DURATION_MS / 1000,
+          times: [0, 0.26, 0.56, 1],
+          ease: [0.18, 0.7, 0.2, 1],
+        }}
+      >
         {['left', 'right'].map((side) => (
           <motion.div
             key={side}
             className="absolute inset-0"
-            animate={{ x: curtainOffset(side), scale: phase === 'closing' ? 1.045 : 1 }}
-            transition={{
-              duration: reducedMotion ? 0 : phase === 'closing' ? 0.6 : showCard ? 1 : 0.25,
-              ease: phase === 'closing' ? [0.45, 0, 0.3, 1] : [0.2, 0.75, 0.2, 1],
-            }}
+            animate={{ x: isCurtainOrSettled ? (side === 'left' ? '-100vw' : '100vw') : '0vw' }}
+            transition={{ duration: CURTAIN_DURATION_MS / 1000, ease: [0.32, 0, 0.2, 1] }}
           >
-            {GARDEN_LAYOUT.filter((flower) => flower.side === side).map((flower) => {
-              const index = GARDEN_LAYOUT.findIndex((item) => item.id === flower.id);
-              return (
-                <GardenFlower
+            {bloomFlowers
+              .filter((flower) => (side === 'left' ? flower.x < 0 : flower.x >= 0))
+              .map((flower) => (
+                <motion.div
                   key={flower.id}
-                  flower={flower}
-                  index={index}
-                  src={flowerSources[index % flowerSources.length]}
-                  settled={settled}
-                  reducedMotion={reducedMotion}
-                />
-              );
-            })}
+                  className="absolute"
+                  style={{
+                    left: '50%',
+                    top: '50%',
+                    width: `${flower.size}%`,
+                    height: `${flower.size}%`,
+                    marginLeft: `-${flower.size / 2}%`,
+                    marginTop: `-${flower.size / 2}%`,
+                  }}
+                  initial={{ x: 0, y: 0, scale: 0.04, opacity: 0 }}
+                  animate={{
+                    x: `${flower.x}vmax`,
+                    y: `${flower.y}vmax`,
+                    scale: [0.04, 1.18, 1],
+                    opacity: [0, 1, 1],
+                  }}
+                  transition={{
+                    duration: 1.25,
+                    delay: flower.delay * 0.75,
+                    times: [0, 0.72, 1],
+                    ease: [0.2, 0.7, 0.2, 1],
+                  }}
+                >
+                  <div
+                    className="memoria-flower-spin h-full w-full"
+                    style={{
+                      backgroundImage: `url("${flower.src}")`,
+                      backgroundSize: 'contain',
+                      backgroundPosition: 'center',
+                      backgroundRepeat: 'no-repeat',
+                      '--flower-angle': `${flower.rotate}deg`,
+                      '--flower-turn': flower.spinDirection,
+                      '--flower-spin-duration': `${flower.spinDuration}s`,
+                    }}
+                  />
+                </motion.div>
+              ))}
           </motion.div>
         ))}
-      </div>
+      </motion.div>
 
+      {/* ── Ambient Petals: gentle floating drift once curtain opens ── */}
       <FloatingPetals active={showCard} reducedMotion={reducedMotion} />
 
+      {/* ── Finale Memory Card: revealed cleanly in the center ── */}
       <motion.div
         className="absolute inset-0 z-10 flex items-center justify-center px-3 py-4 sm:px-6 sm:py-8"
-        initial={reducedMotion ? false : { opacity: 0, y: 38, scale: 0.94 }}
-        animate={showCard ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 38, scale: 0.94 }}
-        transition={{ duration: reducedMotion ? 0 : 0.72, ease: [0.22, 0.75, 0.24, 1] }}
+        initial={reducedMotion ? false : { opacity: 0, y: 32, scale: 0.94 }}
+        animate={showCard ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 32, scale: 0.94 }}
+        transition={{ duration: reducedMotion ? 0 : 0.75, ease: [0.22, 0.75, 0.24, 1] }}
         style={{ pointerEvents: showCard ? 'auto' : 'none' }}
       >
         <article
-          className="relative flex max-h-[calc(100dvh-2rem)] w-full max-w-[640px] flex-col overflow-hidden rounded-[28px] border border-accent/40 bg-surface text-text shadow-2xl"
+          className="theme-paper-card relative flex max-h-[calc(100dvh-2rem)] w-full max-w-[620px] flex-col overflow-hidden rounded-[26px] border border-accent/35 bg-surface text-text shadow-2xl"
           style={{ boxShadow: '0 28px 90px color-mix(in srgb, var(--color-text) 28%, transparent)' }}
         >
           <button
@@ -356,7 +344,7 @@ export default function BloomFinale({
       </motion.div>
 
       <p className="sr-only" aria-live="polite">
-        {settled ? 'Kartu penutup telah terbuka.' : showCard ? 'Tirai bunga sedang terbuka.' : 'Taman bunga sedang tumbuh.'}
+        {settled ? 'Kartu penutup telah terbuka.' : showCard ? 'Tirai bunga sedang terbuka.' : 'Bunga mekar sedang berlangsung.'}
       </p>
     </div>
   );
