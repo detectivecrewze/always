@@ -6,37 +6,37 @@ import { getBloomFlowerSources } from '@/lib/bloomFlowers';
 import { getSecretMediaType } from '@/lib/secretMedia';
 
 // ─── Timing ──────────────────────────────────────────────────────────────────
-const BLOOM_PEAK_MS   = 1900;  // All flowers are on screen; curtain begins parting
-const CARD_RISE_MS    = 2200;  // Card starts rising into the parting gap
-const SETTLE_MS       = 3400;  // Curtain fully settled at 30vw offset; wings framing card
+const BLOOM_PEAK_MS = 2000;   // Flowers fully on screen
+const CARD_RISE_MS  = 2300;   // Card starts appearing
+const SETTLE_MS     = 3500;   // Transition complete
 
-// ─── 60-flower dual-wing garden (30 per side) ────────────────────────────────
-// Columns: left wing 0-55% | right wing 50-106%
-// Row stagger and center-first bloom delay give the "ripple blossom" feel.
+// ─── Garden layout: perfectly mirrored wings ─────────────────────────────────
+// Left  wing: left:  -5% (outer) → left:  50% (center seam)
+// Right wing: right: -5% (outer) → right: 50% (center seam)  ← mirror!
+// 6 columns × 5 rows = 30 flowers per wing = 60 total
 const GARDEN_LAYOUT = [
   ...['left', 'right'].flatMap((side) =>
     Array.from({ length: 30 }, (_, index) => {
       const column = index % 6;
       const row    = Math.floor(index / 6);
 
-      const baseLeft =
-        side === 'left'
-          ? -5 + column * 11        // cols: -5% to 50%
-          : 50 + column * 11;       // cols: 50% to 105%
+      // Same formula for both sides → same coverage → perfect symmetry
+      const edgePos = -5 + column * 11; // -5% (outer) to 50% (center)
 
-      // Distance from center seam: closest column blooms first
-      const colDistFromCenter = side === 'left' ? 5 - column : column;
-      const rowDistFromCenter = Math.abs(row - 2);
+      // Center column (col 5, edgePos 50%) blooms FIRST — ripple out to edge
+      const colFromCenter = 5 - column;  // 0 = center, 5 = outer edge
+      const rowFromCenter = Math.abs(row - 2);
 
       return {
-        id: `${side}-${row}-${column}`,
+        id:    `${side}-${row}-${column}`,
         side,
-        left:    baseLeft + (row % 2 === 0 ? 0 : 2.5),
+        // Left uses CSS `left`, right uses CSS `right` — perfect mirror
+        edgePos: edgePos + (row % 2 === 0 ? 0 : 2.5),
         top:     -8 + row * 21.5 + (column % 2 === 0 ? 0 : 3.5),
-        size:    0.86 + ((index * 7 + (side === 'right' ? 3 : 0)) % 8) * 0.055,
-        delay:   0.04 + colDistFromCenter * 0.12 + rowDistFromCenter * 0.08,
-        rotate:  -35 + ((index * 47 + (side === 'right' ? 23 : 0)) % 80),
-        spinDuration:  18 + ((index * 7  + (side === 'right' ? 5  : 0)) % 14) * 1.1,
+        size:    0.92 + ((index * 7) % 8) * 0.06,   // same for both sides
+        delay:   0.03 + colFromCenter * 0.11 + rowFromCenter * 0.07,
+        rotate:  (index * 47 + (side === 'right' ? 23 : 0)) % 360,
+        spinDuration:  18 + ((index * 7) % 14) * 1.1,
         spinDirection: (index + (side === 'right' ? 1 : 0)) % 2 === 0 ? '360deg' : '-360deg',
       };
     })
@@ -45,30 +45,30 @@ const GARDEN_LAYOUT = [
 
 // ─── Ambient petals ──────────────────────────────────────────────────────────
 const PETALS = Array.from({ length: 9 }, (_, i) => ({
-  id:       i,
-  left:     6 + ((i * 19) % 88),
-  delay:    i * 0.65,
-  duration: 7 + (i % 4) * 0.8,
-  drift:    i % 2 === 0 ? 32 : -28,
-  size:     7 + (i % 3) * 2.5,
+  id: i, left: 6 + ((i * 19) % 88),
+  delay: i * 0.65, duration: 7 + (i % 4) * 0.8,
+  drift: i % 2 === 0 ? 32 : -28, size: 7 + (i % 3) * 2.5,
 }));
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+// ─── GardenFlower ─────────────────────────────────────────────────────────────
+// Uses CSS `left` OR `right` based on side → guaranteed mirror symmetry
+function GardenFlower({ flower, src, reducedMotion }) {
+  const posStyle = flower.side === 'left'
+    ? { left: `${flower.edgePos}%` }
+    : { right: `${flower.edgePos}%` };
 
-function GardenFlower({ flower, src, index, reducedMotion }) {
   return (
     <motion.div
       className="pointer-events-none absolute select-none"
       style={{
-        left:          `${flower.left}%`,
-        top:           `${flower.top}%`,
-        width:         `calc(clamp(115px, 20vmax, 240px) * ${flower.size})`,
-        aspectRatio:   '1',
-        zIndex:        index % 6 === 0 ? 3 : 1,
+        ...posStyle,
+        top:             `${flower.top}%`,
+        width:           `calc(clamp(120px, 21vmax, 260px) * ${flower.size})`,
+        aspectRatio:     '1',
         transformOrigin: '50% 50%',
       }}
       initial={reducedMotion ? false : { scale: 0.04, opacity: 0 }}
-      animate={{ scale: reducedMotion ? 1 : [0.04, 1.16, 1], opacity: [0, 1, 1] }}
+      animate={{ scale: reducedMotion ? 1 : [0.04, 1.18, 1], opacity: [0, 1, 1] }}
       transition={{
         duration: reducedMotion ? 0 : 1.25,
         delay:    reducedMotion ? 0 : flower.delay,
@@ -110,7 +110,6 @@ function FloatingPetals({ active, reducedMotion }) {
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
-
 export default function BloomFinale({
   themeName,
   secretPhoto,
@@ -123,7 +122,7 @@ export default function BloomFinale({
   onClose,
   onCinemaToggle,
 }) {
-  const [phase, setPhase] = useState('blooming'); // 'blooming' | 'curtain' | 'settled'
+  const [phase, setPhase]         = useState('blooming');
   const [showCard, setShowCard]   = useState(false);
   const [mediaFailed, setMediaFailed] = useState(false);
   const closeButtonRef  = useRef(null);
@@ -133,47 +132,39 @@ export default function BloomFinale({
   const mediaType       = getSecretMediaType(mediaUrl);
 
   const isCurtainOpen = phase === 'curtain' || phase === 'settled';
-
-  // Curtain travel: 30vw — flowers stay visible as framing wings on both sides
+  // 30vw curtain travel — wings stay visible on both sides framing the card
   const curtainX = (side) => isCurtainOpen ? (side === 'left' ? '-30vw' : '30vw') : '0vw';
 
-  // ─── Preload images
   useEffect(() => {
     flowerSources.forEach((src) => { const img = new window.Image(); img.src = src; });
   }, [flowerSources]);
 
-  // ─── Orchestrate bloom → curtain → settled
   useEffect(() => {
     if (reducedMotion) { setPhase('settled'); setShowCard(true); return undefined; }
-
-    const t1 = window.setTimeout(() => setPhase('curtain'),        BLOOM_PEAK_MS);
-    const t2 = window.setTimeout(() => setShowCard(true),          CARD_RISE_MS);
-    const t3 = window.setTimeout(() => setPhase('settled'),        SETTLE_MS);
-
+    const t1 = window.setTimeout(() => setPhase('curtain'),    BLOOM_PEAK_MS);
+    const t2 = window.setTimeout(() => setShowCard(true),      CARD_RISE_MS);
+    const t3 = window.setTimeout(() => setPhase('settled'),    SETTLE_MS);
     return () => { window.clearTimeout(t1); window.clearTimeout(t2); window.clearTimeout(t3); };
   }, [reducedMotion]);
 
-  // ─── Scroll lock & cinema cleanup
   useEffect(() => {
     const prevO  = document.body.style.overflow;
     const prevOS = document.body.style.overscrollBehavior;
-    document.body.style.overflow          = 'hidden';
+    document.body.style.overflow           = 'hidden';
     document.body.style.overscrollBehavior = 'none';
     return () => {
-      document.body.style.overflow          = prevO;
+      document.body.style.overflow           = prevO;
       document.body.style.overscrollBehavior = prevOS;
       if (onCinemaToggle) onCinemaToggle(false);
     };
   }, [onCinemaToggle]);
 
-  // ─── Keyboard escape
   useEffect(() => {
     const handler = (e) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
 
-  // ─── Focus close button once card appears
   useEffect(() => {
     if (!showCard) return undefined;
     const frame = window.requestAnimationFrame(() => closeButtonRef.current?.focus({ preventScroll: true }));
@@ -185,61 +176,55 @@ export default function BloomFinale({
   return (
     <div
       className="fixed inset-0 z-[9999] overflow-hidden select-none"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="finale-title"
+      role="dialog" aria-modal="true" aria-labelledby="finale-title"
     >
-      {/* ── Full-screen stage backdrop ── */}
-      <div
-        className="pointer-events-none absolute inset-0 z-0"
-        style={{ background: 'var(--color-bg)' }}
-      />
+      {/* ── Solid stage backdrop ── */}
+      <div className="pointer-events-none absolute inset-0 z-0" style={{ background: 'var(--color-bg)' }} />
 
-      {/* ── Theatrical Curtain Panels + Floral Wings ── */}
-      {/* z-[2] so wings sit above backdrop but behind card z-10 */}
-      <div className="pointer-events-none absolute inset-0 z-[2] overflow-hidden" aria-hidden="true">
-        {['left', 'right'].map((side) => (
-          <motion.div
-            key={side}
-            className="absolute inset-0"
-            animate={{ x: curtainX(side) }}
-            transition={{ duration: reducedMotion ? 0 : 1.45, ease: [0.22, 1, 0.36, 1] }}
-          >
-            {/* Solid curtain half-panel behind the flowers */}
-            <div
-              className="absolute inset-y-0"
-              style={{
-                [side]:    0,
-                width:     'calc(50% + 2px)',
-                background: 'var(--color-bg)',
-                boxShadow:
-                  side === 'left'
-                    ? '14px 0 35px rgba(0,0,0,0.42)'
-                    : '-14px 0 35px rgba(0,0,0,0.42)',
-              }}
+      {/* ── Left wing: flowers bloom from center seam outward ── */}
+      <motion.div
+        className="pointer-events-none absolute inset-0 z-[2] overflow-hidden"
+        animate={{ x: curtainX('left') }}
+        transition={{ duration: reducedMotion ? 0 : 1.45, ease: [0.22, 1, 0.36, 1] }}
+        aria-hidden="true"
+      >
+        {GARDEN_LAYOUT.filter((f) => f.side === 'left').map((flower) => {
+          const idx = GARDEN_LAYOUT.findIndex((item) => item.id === flower.id);
+          return (
+            <GardenFlower
+              key={flower.id}
+              flower={flower}
+              src={flowerSources[idx % flowerSources.length]}
+              reducedMotion={reducedMotion}
             />
+          );
+        })}
+      </motion.div>
 
-            {/* 30 spinning flowers per wing */}
-            {GARDEN_LAYOUT.filter((f) => f.side === side).map((flower) => {
-              const index = GARDEN_LAYOUT.findIndex((item) => item.id === flower.id);
-              return (
-                <GardenFlower
-                  key={flower.id}
-                  flower={flower}
-                  index={index}
-                  src={flowerSources[index % flowerSources.length]}
-                  reducedMotion={reducedMotion}
-                />
-              );
-            })}
-          </motion.div>
-        ))}
-      </div>
+      {/* ── Right wing: perfect mirror of left wing ── */}
+      <motion.div
+        className="pointer-events-none absolute inset-0 z-[2] overflow-hidden"
+        animate={{ x: curtainX('right') }}
+        transition={{ duration: reducedMotion ? 0 : 1.45, ease: [0.22, 1, 0.36, 1] }}
+        aria-hidden="true"
+      >
+        {GARDEN_LAYOUT.filter((f) => f.side === 'right').map((flower) => {
+          const idx = GARDEN_LAYOUT.findIndex((item) => item.id === flower.id);
+          return (
+            <GardenFlower
+              key={flower.id}
+              flower={flower}
+              src={flowerSources[idx % flowerSources.length]}
+              reducedMotion={reducedMotion}
+            />
+          );
+        })}
+      </motion.div>
 
-      {/* ── Floating ambient petals ── */}
+      {/* ── Floating petals once card is visible ── */}
       <FloatingPetals active={showCard} reducedMotion={reducedMotion} />
 
-      {/* ── Memory Card: rises into the curtain gap ── */}
+      {/* ── Memory card rises into the opening gap ── */}
       <motion.div
         className="absolute inset-0 z-10 flex items-center justify-center px-3 py-4 sm:px-6 sm:py-8"
         initial={reducedMotion ? false : { opacity: 0, y: 40, scale: 0.93 }}
@@ -252,9 +237,7 @@ export default function BloomFinale({
           style={{ boxShadow: '0 28px 90px color-mix(in srgb, var(--color-text) 28%, transparent)' }}
         >
           <button
-            ref={closeButtonRef}
-            type="button"
-            onClick={onClose}
+            ref={closeButtonRef} type="button" onClick={onClose}
             className="absolute right-3 top-3 z-30 flex min-h-11 min-w-11 items-center justify-center rounded-full border border-accent/35 bg-bg/85 text-text transition-transform hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:right-4 sm:top-4"
             aria-label="Tutup ending"
           >
@@ -276,11 +259,8 @@ export default function BloomFinale({
                 <div className="relative mx-auto flex max-h-[58dvh] min-h-[180px] w-full items-center justify-center overflow-hidden rounded-2xl border border-accent/25 bg-bg/70 shadow-inner">
                   {!mediaFailed && mediaType === 'video' && (
                     <video
-                      src={mediaUrl}
-                      className="max-h-[58dvh] w-full object-contain"
-                      autoPlay controls playsInline
-                      muted={secretVideoMuted}
-                      preload="metadata"
+                      src={mediaUrl} className="max-h-[58dvh] w-full object-contain"
+                      autoPlay controls playsInline muted={secretVideoMuted} preload="metadata"
                       onPlay={() => handleVideoAudio(true)}
                       onPause={() => handleVideoAudio(false)}
                       onEnded={() => handleVideoAudio(false)}
@@ -317,12 +297,11 @@ export default function BloomFinale({
 
             <div className="mt-6 font-serif italic text-text-muted">
               {finaleSignoff && <p className="whitespace-pre-line break-words text-sm sm:text-base">{finaleSignoff}</p>}
-              {sender && <p className="mt-1 break-words text-lg text-accent sm:text-xl">— {sender}</p>}
+              {sender && <p className="mt-1 break-words text-lg text-accent sm:text-xl">&#8212; {sender}</p>}
             </div>
 
             <button
-              type="button"
-              onClick={onClose}
+              type="button" onClick={onClose}
               className="mt-6 inline-flex min-h-11 items-center justify-center rounded-full border border-accent/35 bg-accent/10 px-6 font-sans text-xs font-semibold uppercase tracking-[0.16em] text-text transition-transform hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
               Kembali ke kado
