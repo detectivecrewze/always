@@ -1,54 +1,115 @@
-'use client';
+﻿'use client';
 
 import { motion, useReducedMotion } from 'framer-motion';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { buildBloomFlowers } from '@/lib/bloomFlowers';
+import { getBloomFlowerSources } from '@/lib/bloomFlowers';
 import { getSecretMediaType } from '@/lib/secretMedia';
 
-const BLOOM_DURATION_MS = 3800;
-const CURTAIN_DURATION_MS = 1200;
+// ─── Timing ──────────────────────────────────────────────────────────────────
+const BLOOM_PEAK_MS   = 1900;  // All flowers are on screen; curtain begins parting
+const CARD_RISE_MS    = 2200;  // Card starts rising into the parting gap
+const SETTLE_MS       = 3400;  // Curtain fully settled at 30vw offset; wings framing card
 
-const PETALS = Array.from({ length: 12 }, (_, index) => ({
-  id: index,
-  left: 6 + ((index * 17) % 88),
-  delay: index * 0.45,
-  duration: 6.5 + (index % 4) * 0.8,
-  drift: index % 2 === 0 ? 32 : -28,
-  size: 8 + (index % 3) * 3,
+// ─── 60-flower dual-wing garden (30 per side) ────────────────────────────────
+// Columns: left wing 0-55% | right wing 50-106%
+// Row stagger and center-first bloom delay give the "ripple blossom" feel.
+const GARDEN_LAYOUT = [
+  ...['left', 'right'].flatMap((side) =>
+    Array.from({ length: 30 }, (_, index) => {
+      const column = index % 6;
+      const row    = Math.floor(index / 6);
+
+      const baseLeft =
+        side === 'left'
+          ? -5 + column * 11        // cols: -5% to 50%
+          : 50 + column * 11;       // cols: 50% to 105%
+
+      // Distance from center seam: closest column blooms first
+      const colDistFromCenter = side === 'left' ? 5 - column : column;
+      const rowDistFromCenter = Math.abs(row - 2);
+
+      return {
+        id: `${side}-${row}-${column}`,
+        side,
+        left:    baseLeft + (row % 2 === 0 ? 0 : 2.5),
+        top:     -8 + row * 21.5 + (column % 2 === 0 ? 0 : 3.5),
+        size:    0.86 + ((index * 7 + (side === 'right' ? 3 : 0)) % 8) * 0.055,
+        delay:   0.04 + colDistFromCenter * 0.12 + rowDistFromCenter * 0.08,
+        rotate:  -35 + ((index * 47 + (side === 'right' ? 23 : 0)) % 80),
+        spinDuration:  18 + ((index * 7  + (side === 'right' ? 5  : 0)) % 14) * 1.1,
+        spinDirection: (index + (side === 'right' ? 1 : 0)) % 2 === 0 ? '360deg' : '-360deg',
+      };
+    })
+  ),
+];
+
+// ─── Ambient petals ──────────────────────────────────────────────────────────
+const PETALS = Array.from({ length: 9 }, (_, i) => ({
+  id:       i,
+  left:     6 + ((i * 19) % 88),
+  delay:    i * 0.65,
+  duration: 7 + (i % 4) * 0.8,
+  drift:    i % 2 === 0 ? 32 : -28,
+  size:     7 + (i % 3) * 2.5,
 }));
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function GardenFlower({ flower, src, index, reducedMotion }) {
+  return (
+    <motion.div
+      className="pointer-events-none absolute select-none"
+      style={{
+        left:          `${flower.left}%`,
+        top:           `${flower.top}%`,
+        width:         `calc(clamp(115px, 20vmax, 240px) * ${flower.size})`,
+        aspectRatio:   '1',
+        zIndex:        index % 6 === 0 ? 3 : 1,
+        transformOrigin: '50% 50%',
+      }}
+      initial={reducedMotion ? false : { scale: 0.04, opacity: 0 }}
+      animate={{ scale: reducedMotion ? 1 : [0.04, 1.16, 1], opacity: [0, 1, 1] }}
+      transition={{
+        duration: reducedMotion ? 0 : 1.25,
+        delay:    reducedMotion ? 0 : flower.delay,
+        times:    [0, 0.68, 1],
+        ease:     [0.2, 0.72, 0.2, 1],
+      }}
+    >
+      <div
+        className="memoria-flower-spin h-full w-full"
+        style={{
+          backgroundImage:    `url("${src}")`,
+          backgroundSize:     'contain',
+          backgroundPosition: 'center',
+          backgroundRepeat:   'no-repeat',
+          '--flower-angle':        `${flower.rotate}deg`,
+          '--flower-turn':          flower.spinDirection,
+          '--flower-spin-duration': `${flower.spinDuration}s`,
+        }}
+      />
+    </motion.div>
+  );
+}
 
 function FloatingPetals({ active, reducedMotion }) {
   if (!active || reducedMotion) return null;
   return (
     <div className="pointer-events-none absolute inset-0 z-[5] overflow-hidden" aria-hidden="true">
-      {PETALS.map((petal) => (
+      {PETALS.map((p) => (
         <motion.span
-          key={petal.id}
+          key={p.id}
           className="absolute block bg-accent/55"
-          style={{
-            left: `${petal.left}%`,
-            top: '-4%',
-            width: petal.size,
-            height: petal.size * 1.55,
-            borderRadius: '75% 15% 70% 25%',
-          }}
-          animate={{
-            x: [0, petal.drift, petal.drift * -0.3, petal.drift * 0.8],
-            y: ['-8vh', '112vh'],
-            rotate: [0, 190, 410],
-            opacity: [0, 0.75, 0.6, 0],
-          }}
-          transition={{
-            duration: petal.duration,
-            delay: petal.delay,
-            repeat: Infinity,
-            ease: 'linear',
-          }}
+          style={{ left: `${p.left}%`, top: '-4%', width: p.size, height: p.size * 1.55, borderRadius: '75% 15% 70% 25%' }}
+          animate={{ x: [0, p.drift, p.drift * -0.3, p.drift * 0.8], y: ['-8vh', '112vh'], rotate: [0, 190, 410], opacity: [0, 0.75, 0.6, 0] }}
+          transition={{ duration: p.duration, delay: p.delay, repeat: Infinity, ease: 'linear' }}
         />
       ))}
     </div>
   );
 }
+
+// ─── Main ─────────────────────────────────────────────────────────────────────
 
 export default function BloomFinale({
   themeName,
@@ -62,67 +123,64 @@ export default function BloomFinale({
   onClose,
   onCinemaToggle,
 }) {
-  const [phase, setPhase] = useState('bloom'); // 'bloom' | 'curtain' | 'settled'
+  const [phase, setPhase] = useState('blooming'); // 'blooming' | 'curtain' | 'settled'
+  const [showCard, setShowCard]   = useState(false);
   const [mediaFailed, setMediaFailed] = useState(false);
-  const closeButtonRef = useRef(null);
-  const bloomFlowers = useMemo(() => buildBloomFlowers(themeName), [themeName]);
-  const mediaUrl = typeof secretPhoto === 'string' ? secretPhoto.trim() : '';
-  const mediaType = getSecretMediaType(mediaUrl);
-  const reducedMotion = useReducedMotion();
+  const closeButtonRef  = useRef(null);
+  const reducedMotion   = useReducedMotion();
+  const flowerSources   = useMemo(() => getBloomFlowerSources(themeName), [themeName]);
+  const mediaUrl        = typeof secretPhoto === 'string' ? secretPhoto.trim() : '';
+  const mediaType       = getSecretMediaType(mediaUrl);
 
-  const isCurtainOrSettled = phase === 'curtain' || phase === 'settled';
-  const showCard = isCurtainOrSettled;
-  const settled = phase === 'settled';
+  const isCurtainOpen = phase === 'curtain' || phase === 'settled';
 
+  // Curtain travel: 30vw — flowers stay visible as framing wings on both sides
+  const curtainX = (side) => isCurtainOpen ? (side === 'left' ? '-30vw' : '30vw') : '0vw';
+
+  // ─── Preload images
   useEffect(() => {
-    if (reducedMotion) {
-      setPhase('settled');
-      return undefined;
-    }
+    flowerSources.forEach((src) => { const img = new window.Image(); img.src = src; });
+  }, [flowerSources]);
 
-    const timer1 = window.setTimeout(() => {
-      setPhase('curtain');
-    }, BLOOM_DURATION_MS);
+  // ─── Orchestrate bloom → curtain → settled
+  useEffect(() => {
+    if (reducedMotion) { setPhase('settled'); setShowCard(true); return undefined; }
 
-    const timer2 = window.setTimeout(() => {
-      setPhase('settled');
-    }, BLOOM_DURATION_MS + CURTAIN_DURATION_MS);
+    const t1 = window.setTimeout(() => setPhase('curtain'),        BLOOM_PEAK_MS);
+    const t2 = window.setTimeout(() => setShowCard(true),          CARD_RISE_MS);
+    const t3 = window.setTimeout(() => setPhase('settled'),        SETTLE_MS);
 
-    return () => {
-      window.clearTimeout(timer1);
-      window.clearTimeout(timer2);
-    };
+    return () => { window.clearTimeout(t1); window.clearTimeout(t2); window.clearTimeout(t3); };
   }, [reducedMotion]);
 
+  // ─── Scroll lock & cinema cleanup
   useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-    const previousOverscroll = document.body.style.overscrollBehavior;
-    document.body.style.overflow = 'hidden';
+    const prevO  = document.body.style.overflow;
+    const prevOS = document.body.style.overscrollBehavior;
+    document.body.style.overflow          = 'hidden';
     document.body.style.overscrollBehavior = 'none';
     return () => {
-      document.body.style.overflow = previousOverflow;
-      document.body.style.overscrollBehavior = previousOverscroll;
+      document.body.style.overflow          = prevO;
+      document.body.style.overscrollBehavior = prevOS;
       if (onCinemaToggle) onCinemaToggle(false);
     };
   }, [onCinemaToggle]);
 
+  // ─── Keyboard escape
   useEffect(() => {
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    const handler = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
 
+  // ─── Focus close button once card appears
   useEffect(() => {
-    if (!settled) return undefined;
+    if (!showCard) return undefined;
     const frame = window.requestAnimationFrame(() => closeButtonRef.current?.focus({ preventScroll: true }));
     return () => window.cancelAnimationFrame(frame);
-  }, [settled]);
+  }, [showCard]);
 
-  const handleVideoAudio = (active) => {
-    if (!secretVideoMuted && onCinemaToggle) onCinemaToggle(active);
-  };
+  const handleVideoAudio = (active) => { if (!secretVideoMuted && onCinemaToggle) onCinemaToggle(active); };
 
   return (
     <div
@@ -131,117 +189,62 @@ export default function BloomFinale({
       aria-modal="true"
       aria-labelledby="finale-title"
     >
-      {/* ── Background reveal: circular expansion from button position ── */}
-      <motion.div
-        className="pointer-events-none absolute inset-[-40vmax] rounded-full z-0"
-        style={{
-          background: 'var(--color-bg)',
-          transformOrigin: '50% 75%',
-          willChange: 'transform',
-        }}
-        initial={reducedMotion ? false : { scale: 0.04 }}
-        animate={{ scale: 1 }}
-        transition={{ duration: reducedMotion ? 0 : 0.6, ease: [0.22, 1, 0.36, 1] }}
+      {/* ── Full-screen stage backdrop ── */}
+      <div
+        className="pointer-events-none absolute inset-0 z-0"
+        style={{ background: 'var(--color-bg)' }}
       />
 
-      {/* ── Background Curtain Panels: split left & right when curtain parts ── */}
-      {['left', 'right'].map((side) => (
-        <motion.div
-          key={side}
-          className="pointer-events-none absolute inset-y-0 z-[1]"
-          style={{
-            [side]: 0,
-            width: 'calc(50% + 1px)',
-            background: 'var(--color-bg)',
-            willChange: isCurtainOrSettled ? 'transform' : 'auto',
-          }}
-          animate={{ x: isCurtainOrSettled ? (side === 'left' ? '-100%' : '100%') : '0%' }}
-          transition={{ duration: CURTAIN_DURATION_MS / 1000, ease: [0.32, 0, 0.2, 1] }}
-        />
-      ))}
-
-      {/* ── Dynamic Radial Bloom: concentric rotating flowers from center ── */}
-      <motion.div
-        className="pointer-events-none absolute left-1/2 top-1/2 z-[2]"
-        style={{
-          width: '115vmax',
-          height: '115vmax',
-          marginLeft: '-57.5vmax',
-          marginTop: '-57.5vmax',
-          willChange: 'transform, opacity',
-        }}
-        initial={{ scale: 0.09 }}
-        animate={isCurtainOrSettled
-          ? { scale: 1 }
-          : { scale: [0.09, 0.28, 0.58, 1] }}
-        transition={{
-          duration: BLOOM_DURATION_MS / 1000,
-          times: [0, 0.26, 0.56, 1],
-          ease: [0.18, 0.7, 0.2, 1],
-        }}
-      >
+      {/* ── Theatrical Curtain Panels + Floral Wings ── */}
+      {/* z-[2] so wings sit above backdrop but behind card z-10 */}
+      <div className="pointer-events-none absolute inset-0 z-[2] overflow-hidden" aria-hidden="true">
         {['left', 'right'].map((side) => (
           <motion.div
             key={side}
             className="absolute inset-0"
-            animate={{ x: isCurtainOrSettled ? (side === 'left' ? '-100vw' : '100vw') : '0vw' }}
-            transition={{ duration: CURTAIN_DURATION_MS / 1000, ease: [0.32, 0, 0.2, 1] }}
+            animate={{ x: curtainX(side) }}
+            transition={{ duration: reducedMotion ? 0 : 1.45, ease: [0.22, 1, 0.36, 1] }}
           >
-            {bloomFlowers
-              .filter((flower) => (side === 'left' ? flower.x < 0 : flower.x >= 0))
-              .map((flower) => (
-                <motion.div
+            {/* Solid curtain half-panel behind the flowers */}
+            <div
+              className="absolute inset-y-0"
+              style={{
+                [side]:    0,
+                width:     'calc(50% + 2px)',
+                background: 'var(--color-bg)',
+                boxShadow:
+                  side === 'left'
+                    ? '14px 0 35px rgba(0,0,0,0.42)'
+                    : '-14px 0 35px rgba(0,0,0,0.42)',
+              }}
+            />
+
+            {/* 30 spinning flowers per wing */}
+            {GARDEN_LAYOUT.filter((f) => f.side === side).map((flower) => {
+              const index = GARDEN_LAYOUT.findIndex((item) => item.id === flower.id);
+              return (
+                <GardenFlower
                   key={flower.id}
-                  className="absolute"
-                  style={{
-                    left: '50%',
-                    top: '50%',
-                    width: `${flower.size}%`,
-                    height: `${flower.size}%`,
-                    marginLeft: `-${flower.size / 2}%`,
-                    marginTop: `-${flower.size / 2}%`,
-                  }}
-                  initial={{ x: 0, y: 0, scale: 0.04, opacity: 0 }}
-                  animate={{
-                    x: `${flower.x}vmax`,
-                    y: `${flower.y}vmax`,
-                    scale: [0.04, 1.18, 1],
-                    opacity: [0, 1, 1],
-                  }}
-                  transition={{
-                    duration: 1.25,
-                    delay: flower.delay * 0.75,
-                    times: [0, 0.72, 1],
-                    ease: [0.2, 0.7, 0.2, 1],
-                  }}
-                >
-                  <div
-                    className="memoria-flower-spin h-full w-full"
-                    style={{
-                      backgroundImage: `url("${flower.src}")`,
-                      backgroundSize: 'contain',
-                      backgroundPosition: 'center',
-                      backgroundRepeat: 'no-repeat',
-                      '--flower-angle': `${flower.rotate}deg`,
-                      '--flower-turn': flower.spinDirection,
-                      '--flower-spin-duration': `${flower.spinDuration}s`,
-                    }}
-                  />
-                </motion.div>
-              ))}
+                  flower={flower}
+                  index={index}
+                  src={flowerSources[index % flowerSources.length]}
+                  reducedMotion={reducedMotion}
+                />
+              );
+            })}
           </motion.div>
         ))}
-      </motion.div>
+      </div>
 
-      {/* ── Ambient Petals: gentle floating drift once curtain opens ── */}
+      {/* ── Floating ambient petals ── */}
       <FloatingPetals active={showCard} reducedMotion={reducedMotion} />
 
-      {/* ── Finale Memory Card: revealed cleanly in the center ── */}
+      {/* ── Memory Card: rises into the curtain gap ── */}
       <motion.div
         className="absolute inset-0 z-10 flex items-center justify-center px-3 py-4 sm:px-6 sm:py-8"
-        initial={reducedMotion ? false : { opacity: 0, y: 32, scale: 0.94 }}
-        animate={showCard ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 32, scale: 0.94 }}
-        transition={{ duration: reducedMotion ? 0 : 0.75, ease: [0.22, 0.75, 0.24, 1] }}
+        initial={reducedMotion ? false : { opacity: 0, y: 40, scale: 0.93 }}
+        animate={showCard ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 40, scale: 0.93 }}
+        transition={{ duration: reducedMotion ? 0 : 0.85, ease: [0.22, 1, 0.36, 1] }}
         style={{ pointerEvents: showCard ? 'auto' : 'none' }}
       >
         <article
@@ -275,28 +278,18 @@ export default function BloomFinale({
                     <video
                       src={mediaUrl}
                       className="max-h-[58dvh] w-full object-contain"
-                      autoPlay
-                      controls
-                      playsInline
+                      autoPlay controls playsInline
                       muted={secretVideoMuted}
                       preload="metadata"
                       onPlay={() => handleVideoAudio(true)}
                       onPause={() => handleVideoAudio(false)}
                       onEnded={() => handleVideoAudio(false)}
-                      onError={() => {
-                        setMediaFailed(true);
-                        handleVideoAudio(false);
-                      }}
+                      onError={() => { setMediaFailed(true); handleVideoAudio(false); }}
                     />
                   )}
                   {!mediaFailed && mediaType === 'image' && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={mediaUrl}
-                      alt="Secret memory"
-                      className="max-h-[58dvh] w-full object-contain"
-                      onError={() => setMediaFailed(true)}
-                    />
+                    <img src={mediaUrl} alt="Secret memory" className="max-h-[58dvh] w-full object-contain" onError={() => setMediaFailed(true)} />
                   )}
                   {(mediaFailed || mediaType === 'link') && (
                     <div className="flex min-h-[220px] w-full flex-col items-center justify-center px-6 py-8">
@@ -304,12 +297,7 @@ export default function BloomFinale({
                       <p className="font-serif text-lg text-text">
                         {mediaFailed ? 'Media belum dapat ditampilkan.' : 'Ada tautan spesial untukmu.'}
                       </p>
-                      <a
-                        href={mediaUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-5 inline-flex min-h-11 items-center rounded-full border border-accent/40 px-5 font-sans text-xs font-semibold uppercase tracking-widest text-text"
-                      >
+                      <a href={mediaUrl} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex min-h-11 items-center rounded-full border border-accent/40 px-5 font-sans text-xs font-semibold uppercase tracking-widest text-text">
                         Buka tautan
                       </a>
                     </div>
@@ -344,7 +332,7 @@ export default function BloomFinale({
       </motion.div>
 
       <p className="sr-only" aria-live="polite">
-        {settled ? 'Kartu penutup telah terbuka.' : showCard ? 'Tirai bunga sedang terbuka.' : 'Bunga mekar sedang berlangsung.'}
+        {phase === 'settled' ? 'Kartu penutup telah terbuka.' : showCard ? 'Tirai bunga sedang terbuka.' : 'Bunga sedang mekar.'}
       </p>
     </div>
   );
