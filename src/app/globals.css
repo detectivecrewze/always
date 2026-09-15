@@ -77,16 +77,14 @@
 }
 
 .gift-theme[data-theme='antique-rose-diary'] .theme-photo-frame {
-  border: 7px solid color-mix(in srgb, var(--color-surface) 82%, #fff) !important;
+  --theme-photo-mat-width: 6px;
+  border: 1px solid color-mix(in srgb, var(--color-ornament) 24%, transparent) !important;
   border-radius: 3px !important;
-  outline: 1px solid color-mix(in srgb, var(--color-ornament) 24%, transparent);
-  box-shadow: 0 16px 36px rgba(73, 48, 37, 0.2) !important;
-}
-
-@media (max-width: 640px) {
-  .gift-theme[data-theme='antique-rose-diary'] .theme-photo-frame {
-    border-width: 5px !important;
-  }
+  outline: 1px solid color-mix(in srgb, var(--color-ornament) 18%, transparent);
+  box-shadow:
+    inset 0 0 0 var(--theme-photo-mat-width) color-mix(in srgb, var(--color-surface) 82%, #fff),
+    0 16px 36px rgba(73, 48, 37, 0.2) !important;
+  box-sizing: border-box;
 }
 
 
@@ -115,10 +113,14 @@
 }
 
 .gift-theme[data-theme='sage-botanical-letter'] .theme-photo-frame {
-  border: 7px solid color-mix(in srgb, var(--color-surface) 76%, #fff) !important;
+  --theme-photo-mat-width: 6px;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 28%, transparent) !important;
   border-radius: 9px !important;
-  outline: 1px solid color-mix(in srgb, var(--color-accent) 28%, transparent);
-  box-shadow: 0 15px 34px rgba(57, 65, 50, 0.18) !important;
+  outline: 1px solid color-mix(in srgb, var(--color-accent) 20%, transparent);
+  box-shadow:
+    inset 0 0 0 var(--theme-photo-mat-width) color-mix(in srgb, var(--color-surface) 76%, #fff),
+    0 15px 34px rgba(57, 65, 50, 0.18) !important;
+  box-sizing: border-box;
 }
 
 /* Espresso Love Letter: an opt-in café stationery palette with warm paper grain. */
@@ -147,16 +149,27 @@
 }
 
 .gift-theme[data-theme='espresso-love-letter'] .theme-photo-frame {
-  border: 7px solid color-mix(in srgb, var(--color-surface) 74%, #fff) !important;
+  --theme-photo-mat-width: 6px;
+  border: 1px solid color-mix(in srgb, var(--color-ornament) 30%, transparent) !important;
   border-radius: 7px !important;
-  outline: 1px solid color-mix(in srgb, var(--color-ornament) 30%, transparent);
-  box-shadow: 0 16px 36px rgba(65, 43, 35, 0.21) !important;
+  outline: 1px solid color-mix(in srgb, var(--color-ornament) 22%, transparent);
+  box-shadow:
+    inset 0 0 0 var(--theme-photo-mat-width) color-mix(in srgb, var(--color-surface) 74%, #fff),
+    0 16px 36px rgba(65, 43, 35, 0.21) !important;
+  box-sizing: border-box;
 }
 
 @media (max-width: 640px) {
+  .gift-theme[data-theme='antique-rose-diary'] .theme-photo-frame,
   .gift-theme[data-theme='sage-botanical-letter'] .theme-photo-frame,
   .gift-theme[data-theme='espresso-love-letter'] .theme-photo-frame {
-    border-width: 5px !important;
+    --theme-photo-mat-width: 4px;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .gift-theme .theme-photo-frame > video {
+    transform: none !important;
   }
 }
 
