@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { motion, useReducedMotion } from 'framer-motion';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -111,12 +111,17 @@ export default function BloomFinale({
   const [showCard, setShowCard]       = useState(false);
   const [mediaFailed, setMediaFailed] = useState(false);
   const closeButtonRef  = useRef(null);
+  const cinemaToggleRef = useRef(onCinemaToggle);
   const reducedMotion   = useReducedMotion();
   const flowerSources   = useMemo(() => getBloomFlowerSources(themeName), [themeName]);
   const mediaUrl        = typeof secretPhoto === 'string' ? secretPhoto.trim() : '';
   const mediaType       = getSecretMediaType(mediaUrl);
   const isCurtainOpen   = phase === 'curtain' || phase === 'settled';
   const curtainX        = (side) => isCurtainOpen ? (side === 'left' ? '-30vw' : '30vw') : '0vw';
+
+  useEffect(() => {
+    cinemaToggleRef.current = onCinemaToggle;
+  }, [onCinemaToggle]);
 
   useEffect(() => {
     flowerSources.forEach((src) => { const img = new window.Image(); img.src = src; });
@@ -138,9 +143,9 @@ export default function BloomFinale({
     return () => {
       document.body.style.overflow           = prevO;
       document.body.style.overscrollBehavior = prevOS;
-      if (onCinemaToggle) onCinemaToggle(false);
+      cinemaToggleRef.current?.(false);
     };
-  }, [onCinemaToggle]);
+  }, []);
 
   useEffect(() => {
     const handler = (e) => { if (e.key === 'Escape') onClose(); };
@@ -154,7 +159,7 @@ export default function BloomFinale({
     return () => window.cancelAnimationFrame(frame);
   }, [showCard]);
 
-  const handleVideoAudio = (active) => { if (!secretVideoMuted && onCinemaToggle) onCinemaToggle(active); };
+  const handleVideoAudio = (active) => { if (!secretVideoMuted) cinemaToggleRef.current?.(active); };
 
   return (
     <div className="fixed inset-0 z-[9999] overflow-hidden select-none" role="dialog" aria-modal="true" aria-labelledby="finale-title">
@@ -219,7 +224,7 @@ export default function BloomFinale({
           {/* Close button — top right, frosted */}
           <button
             ref={closeButtonRef} type="button" onClick={onClose}
-            className="absolute right-3 top-3 z-30 flex min-h-10 min-w-10 items-center justify-center transition-transform hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:right-4 sm:top-4"
+            className="absolute right-3 top-3 z-30 flex min-h-11 min-w-11 items-center justify-center transition-transform hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:right-4 sm:top-4"
             style={{
               borderRadius: '50%',
               background: 'rgba(15,12,10,0.62)',
@@ -273,9 +278,8 @@ export default function BloomFinale({
                     <video
                       src={mediaUrl} className="max-h-[52dvh] w-full object-contain"
                       autoPlay controls playsInline muted={secretVideoMuted} preload="metadata"
-                      onPlay={() => handleVideoAudio(true)} onPause={() => handleVideoAudio(false)}
-                      onEnded={() => handleVideoAudio(false)}
-                      onError={() => { setMediaFailed(true); handleVideoAudio(false); }}
+                      onPlay={() => handleVideoAudio(true)}
+                      onError={() => setMediaFailed(true)}
                     />
                   )}
                   {!mediaFailed && mediaType === 'image' && (
@@ -289,7 +293,7 @@ export default function BloomFinale({
                         {mediaFailed ? 'Media belum dapat ditampilkan.' : 'Ada tautan spesial untukmu.'}
                       </p>
                       <a href={mediaUrl} target="_blank" rel="noopener noreferrer"
-                        className="mt-5 inline-flex min-h-10 items-center px-5"
+                        className="mt-5 inline-flex min-h-11 items-center px-5"
                         style={{ borderRadius: 999, border: '1px solid color-mix(in srgb, var(--color-accent) 40%, transparent)', fontFamily: 'var(--font-sans, sans-serif)', fontSize: 11, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text)' }}
                       >
                         Buka tautan
