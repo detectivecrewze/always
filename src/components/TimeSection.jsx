@@ -83,7 +83,7 @@ function TimeCard({ value, label, delay }) {
       transition={{ duration: 0.8, delay, ease: [0.25, 0.1, 0.25, 1] }}
     >
       <div
-        className="relative flex items-center justify-center"
+        className="theme-paper-card relative flex items-center justify-center"
         style={{
           width: '80px',
           height: '90px',

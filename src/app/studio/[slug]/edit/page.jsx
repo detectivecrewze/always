@@ -43,48 +43,61 @@ const S = {
 // ── Theme Tab ───────────────────────────────────────────────────────
 function TabTheme({ data, set }) {
   const currentTheme = data.theme || 'classic-light';
-  
-  // We redefine the palettes locally for the UI preview
-  const palettes = {
-    'vintage-burgundy': { name: 'Vintage Burgundy', bg: '#2D141E', accent: '#E2859B' },
-    'classic-light':    { name: 'Classic Light',    bg: '#FDFAF5', accent: '#B07D4E' },
-    'midnight-rose':    { name: 'Midnight Rose',    bg: '#0A0408', accent: '#E84D72' },
-    'ocean-breeze':     { name: 'Ocean Breeze',     bg: '#071520', accent: '#4FB8D8' },
-    'blush-pink':       { name: 'Blush Pink',       bg: '#2A0D18', accent: '#F472B6' },
-    'midnight-blue':    { name: 'Midnight Blue',    bg: '#050C1A', accent: '#C9A84C' },
-    'velvet-purple':    { name: 'Velvet Purple',    bg: '#120818', accent: '#A855F7' },
-  };
 
   return (<>
     <div style={S.sectionTitle}>Visual Theme</div>
-    <div style={S.sectionDesc}>Choose the color palette for this gift.</div>
+    <div style={S.sectionDesc}>Choose the color palette and atmosphere for this gift.</div>
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginTop: '1rem' }}>
-      {Object.entries(palettes).map(([id, info]) => {
+      {Object.entries(themes).map(([id, info]) => {
         const isActive = currentTheme === id;
+        const previewColors = info.previewColors || [info.bg, info.surface, info.accent, info.particle];
         return (
           <button
             key={id}
+            type="button"
             onClick={() => set('theme', id)}
             style={{
-              background: '#111',
-              border: isActive ? `2px solid ${info.accent}` : '1px solid #262626',
-              borderRadius: '8px',
-              padding: '1rem',
+              background: `linear-gradient(145deg, ${info.bg}, ${info.surface})`,
+              border: isActive ? `2px solid ${info.accent}` : '1px solid #303030',
+              borderRadius: '10px',
+              padding: '0.85rem 0.65rem',
+              minWidth: 0,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '0.75rem',
+              gap: '0.55rem',
               cursor: 'pointer',
-              transition: 'all 0.2s',
+              transition: 'transform 0.2s, border-color 0.2s',
+              boxShadow: isActive ? `0 0 0 2px #080808, 0 0 0 3px ${info.accent}` : '0 8px 20px rgba(0,0,0,0.18)',
+              color: info.text,
             }}
           >
-            <div style={{ 
-              width: '40px', height: '40px', borderRadius: '50%', background: info.bg,
-              border: `3px solid ${info.accent}`, boxShadow: '0 4px 12px rgba(0,0,0,0.2)' 
-            }} />
-            <span style={{ color: isActive ? '#fff' : '#888', fontSize: '0.75rem', fontWeight: isActive ? 600 : 400 }}>
+            {info.special && (
+              <span style={{
+                padding: '0.18rem 0.45rem', borderRadius: '999px',
+                background: info.accent, color: info.bg, fontSize: '0.52rem',
+                fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
+              }}>Special</span>
+            )}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '4px' }}>
+              {previewColors.map((color, index) => (
+                <span key={`${color}-${index}`} style={{
+                  width: '16px', height: '16px', borderRadius: '50%', background: color,
+                  border: `1px solid ${info.text}35`, boxShadow: '0 2px 5px rgba(0,0,0,0.16)',
+                }} />
+              ))}
+            </div>
+            <span style={{
+              color: info.text, fontSize: '0.7rem', lineHeight: 1.25,
+              textAlign: 'center', fontWeight: isActive ? 700 : 500,
+            }}>
               {info.name}
             </span>
+            {info.description && (
+              <span style={{ color: info.textMuted, fontSize: '0.58rem', lineHeight: 1.35, textAlign: 'center' }}>
+                {info.description}
+              </span>
+            )}
           </button>
         );
       })}

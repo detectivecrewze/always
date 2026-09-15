@@ -112,7 +112,7 @@ export default function SeasonsSection({ seasons, seasonsTitle1, seasonsTitle2, 
                 variants={cardAnim}
                 layout
                 onClick={() => handleCardClick(idx)}
-                className="flex-shrink-0 w-[160px] md:w-auto md:flex-1 cursor-pointer snap-start rounded-[1.25rem] flex flex-col items-center text-center p-6"
+                className="theme-paper-card flex-shrink-0 w-[160px] md:w-auto md:flex-1 cursor-pointer snap-start rounded-[1.25rem] flex flex-col items-center text-center p-6"
                 style={{
                   minHeight: '200px',
                   backgroundColor: isExpanded ? 'color-mix(in srgb, var(--color-text) 8%, transparent)' : 'color-mix(in srgb, var(--color-text) 3%, transparent)',

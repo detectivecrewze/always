@@ -7,7 +7,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 const BLOOM_FLOWER_SRCS = Object.fromEntries(
   [
     'vintage-burgundy', 'classic-light', 'midnight-rose', 'ocean-breeze',
-    'blush-pink', 'midnight-blue', 'velvet-purple',
+    'blush-pink', 'midnight-blue', 'velvet-purple', 'antique-rose-diary',
   ].map((theme) => [
     theme,
     ['rose', 'peony', 'hydrangea', 'anemone'].map(

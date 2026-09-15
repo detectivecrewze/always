@@ -989,6 +989,9 @@ export default function OrderForm() {
                         <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: t.accent }} />
                         <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: t.text }} />
                       </div>
+                      {t.special && (
+                        <div style={{ fontSize: '0.52rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '4px', color: t.accent }}>Special Theme</div>
+                      )}
                       <div style={{ fontSize: '0.7rem', fontWeight: 500 }}>{t.name}</div>
                     </button>
                   ))}

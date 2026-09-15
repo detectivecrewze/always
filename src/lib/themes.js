@@ -62,6 +62,19 @@ export const themes = {
     accent: '#A855F7',       // bright purple
     particle: '#4A1282',     // deep amethyst glow
   },
+  'antique-rose-diary': {
+    name: 'Antique Rose Diary',
+    description: 'Parchment, dusty rose & antique gold',
+    special: true,
+    previewColors: ['#EFE4D2', '#E4D2BC', '#8B4854', '#B19462', '#352823'],
+    bg: '#EFE4D2',
+    surface: '#E4D2BC',
+    text: '#352823',
+    textMuted: '#6B574D',
+    accent: '#8B4854',
+    particle: '#B19462',
+    ornament: '#6F3741',
+  },
 };
 
 export const defaultTheme = 'vintage-burgundy';

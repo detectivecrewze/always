@@ -46,7 +46,7 @@ export default function IntroSection({
       >
         {/* Dark candlelight letter card */}
         <div
-          className="relative flex flex-col items-center text-center overflow-hidden"
+          className="theme-paper-card relative flex flex-col items-center text-center overflow-hidden"
           style={{
             backgroundColor: 'var(--color-surface)',
             borderRadius: '2px',

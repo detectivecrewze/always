@@ -104,7 +104,7 @@ export default function Gallery({ photos, galleryTitle1, galleryTitle2, freeCoun
             <motion.div
               key={i}
               variants={item}
-              className="relative group overflow-hidden rounded-2xl aspect-[4/5] border border-white/10"
+              className="theme-photo-frame relative group overflow-hidden rounded-2xl aspect-[4/5] border border-white/10"
               style={{
                 background: 'rgba(255,255,255,0.03)',
                 boxShadow: '0 8px 40px rgba(0,0,0,0.4)',

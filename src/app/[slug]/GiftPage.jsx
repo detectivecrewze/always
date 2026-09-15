@@ -214,11 +214,12 @@ export default function GiftPage({ data }) {
     '--color-text-muted': t.textMuted,
     '--color-accent': t.accent,
     '--color-particle': t.particle,
+    '--color-ornament': t.ornament || t.accent,
     backgroundColor: 'var(--color-bg)',
   };
 
   return (
-    <main className="relative min-h-screen text-text overflow-x-hidden selection:bg-accent/20" style={themeStyles}>
+    <main className="gift-theme relative min-h-screen text-text overflow-x-hidden selection:bg-accent/20" data-theme={currentThemeId} style={themeStyles}>
       {/* Background Music */}
       {data.music?.file && (
         <audio

@@ -73,7 +73,7 @@ function LockedCard({ index, onReveal }) {
       layout
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="glass rounded-2xl p-5 md:p-6 flex flex-col items-center justify-center cursor-pointer select-none min-h-[140px] border border-accent/10"
+      className="theme-paper-card glass rounded-2xl p-5 md:p-6 flex flex-col items-center justify-center cursor-pointer select-none min-h-[140px] border border-accent/10"
       style={{ background: 'color-mix(in srgb, var(--color-text) 5%, transparent)' }}
       onClick={onReveal}
       whileHover={{ scale: 1.03, borderColor: 'rgba(225,29,72,0.3)' }}
@@ -138,7 +138,7 @@ function RevealedCard({ reason, index }) {
       initial={{ opacity: 0, scale: 0.85, rotateY: 90 }}
       animate={{ opacity: 1, scale: 1, rotateY: 0 }}
       transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-      className="glass rounded-2xl p-5 md:p-6"
+      className="theme-paper-card glass rounded-2xl p-5 md:p-6"
       style={{ perspective: '800px' }}
     >
       <div className="mb-3">
