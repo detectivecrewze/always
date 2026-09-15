@@ -10,6 +10,11 @@ import { isVideoMedia } from '@/lib/videoValidation';
 const HISTORY_PAGE_SIZE = 20;
 const DRAFT_STALE_DAYS = 7;
 
+function getThemeDisplayName(themeId) {
+  if (!themeId) return '-';
+  return themes[themeId]?.name || String(themeId).replace(/-/g, ' ');
+}
+
 export default function StudioDashboard() {
   const [gifts, setGifts] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -1029,7 +1034,7 @@ export default function StudioDashboard() {
 
                     <div style={S.cardName}>From: {o.sender}</div>
                     <div style={{ fontSize: '0.85rem', color: '#aaa', marginBottom: '0.2rem' }}>To: {o.recipient} (/{o.slug})</div>
-                    <div style={{ fontSize: '0.8rem', color: '#888', marginBottom: '0.5rem' }}>Theme: {o.theme} | Moment: {o.moment}</div>
+                    <div style={{ fontSize: '0.8rem', color: '#888', marginBottom: '0.5rem' }}>Theme: {getThemeDisplayName(o.theme)} | Moment: {o.moment}</div>
                     {/* PIN Badge */}
                     {o.pinEnabled || o.pinCode ? (
                       <div style={{
@@ -1114,7 +1119,7 @@ export default function StudioDashboard() {
                       </div>
                       <div style={S.cardName}>From: {d.sender || '...'}</div>
                       <div style={{ fontSize: '0.85rem', color: '#aaa', marginBottom: '0.2rem' }}>To: {d.recipient || '...'} (/{d.slug})</div>
-                      <div style={{ fontSize: '0.8rem', color: '#888', marginBottom: '1rem' }}>Theme: {d.theme}</div>
+                      <div style={{ fontSize: '0.8rem', color: '#888', marginBottom: '1rem' }}>Theme: {getThemeDisplayName(d.theme)}</div>
                       <div style={S.actions}>
                         <button style={S.actionBtn('#8B5CF6')} onClick={() => setSelectedOrder({ ...d, isDraft: true })}>View Progress</button>
                         <button style={{ ...S.actionBtn('#EF4444'), padding: '0.4rem', flex: '0 0 auto', border: '1px solid #EF444440' }} onClick={() => handleDeleteDraft(d.slug)} title="Hapus Draft">🗑️</button>
@@ -1259,7 +1264,7 @@ export default function StudioDashboard() {
               <div key={theme} style={{ ...S.card, padding: '1.25rem', background: '#111' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
                   <h3 style={{ fontSize: '1.15rem', margin: 0, color: '#f5f5f5', textTransform: 'capitalize' }}>
-                    {theme.replace(/-/g, ' ')}
+                    {getThemeDisplayName(theme)}
                   </h3>
                   <span style={{ background: '#333', padding: '4px 10px', borderRadius: '20px', fontSize: '0.8rem', color: '#fff', fontWeight: 600 }}>
                     {count} Kado
@@ -1332,7 +1337,7 @@ export default function StudioDashboard() {
               <div><div style={S.label}>From</div><div style={{ fontSize: '1rem', color: '#f5f5f5' }}>{selectedOrder.sender}</div></div>
               <div><div style={S.label}>To</div><div style={{ fontSize: '1rem', color: '#f5f5f5' }}>{selectedOrder.recipient} {selectedOrder.nickname && <span style={{ opacity: 0.7, fontSize: '0.85em' }}>({selectedOrder.nickname})</span>}</div></div>
               <div><div style={S.label}>Moment</div><div style={{ fontSize: '0.9rem', color: '#f5f5f5' }}>{selectedOrder.moment}{selectedOrder.milestoneNumber ? ` (ke-${selectedOrder.milestoneNumber})` : ''} {selectedOrder.specialDate && `(${selectedOrder.specialDate}${selectedOrder.specialDateOccasion ? ` - ${selectedOrder.specialDateOccasion}` : ''})`}</div></div>
-              <div><div style={S.label}>Theme</div><div style={{ fontSize: '0.9rem', color: '#f5f5f5' }}>{selectedOrder.theme}</div></div>
+              <div><div style={S.label}>Theme</div><div style={{ fontSize: '0.9rem', color: '#f5f5f5' }}>{getThemeDisplayName(selectedOrder.theme)}</div></div>
               {selectedOrder.relationship && (
                 <div><div style={S.label}>Hubungan</div><div style={{ fontSize: '0.9rem', color: '#f5f5f5' }}>{selectedOrder.relationship}</div></div>
               )}

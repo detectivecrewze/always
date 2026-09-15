@@ -75,6 +75,32 @@ export const themes = {
     particle: '#B19462',
     ornament: '#6F3741',
   },
+  'sage-botanical-letter': {
+    name: 'Sage Botanical Letter',
+    description: 'Pressed botanicals, sage ink & warm ivory',
+    special: true,
+    previewColors: ['#F1EDDF', '#DDDCC9', '#68745B', '#B19466', '#30372D'],
+    bg: '#F1EDDF',
+    surface: '#DDDCC9',
+    text: '#30372D',
+    textMuted: '#626A59',
+    accent: '#68745B',
+    particle: '#B19466',
+    ornament: '#7A6548',
+  },
+  'espresso-love-letter': {
+    name: 'Espresso Love Letter',
+    description: 'Mocha paper, dusty rose & muted copper',
+    special: true,
+    previewColors: ['#E6D5C2', '#CEB79F', '#724C40', '#AA7164', '#30231F'],
+    bg: '#E6D5C2',
+    surface: '#CEB79F',
+    text: '#30231F',
+    textMuted: '#6C574D',
+    accent: '#724C40',
+    particle: '#AA7164',
+    ornament: '#845847',
+  },
 };
 
 export const defaultTheme = 'vintage-burgundy';

@@ -8,6 +8,8 @@ export const BLOOM_THEME_IDS = [
   'midnight-blue',
   'velvet-purple',
   'antique-rose-diary',
+  'sage-botanical-letter',
+  'espresso-love-letter',
 ];
 
 const FLOWER_TYPES = ['rose', 'peony', 'hydrangea', 'anemone'];
