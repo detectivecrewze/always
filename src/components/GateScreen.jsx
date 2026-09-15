@@ -2,30 +2,17 @@
 
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { buildBloomFlowers } from '@/lib/bloomFlowers';
 
-// Each opening uses flowers painted for its own theme palette.
-const BLOOM_FLOWER_SRCS = Object.fromEntries(
-  [
-    'vintage-burgundy', 'classic-light', 'midnight-rose', 'ocean-breeze',
-    'blush-pink', 'midnight-blue', 'velvet-purple', 'antique-rose-diary',
-  ].map((theme) => [
-    theme,
-    ['rose', 'peony', 'hydrangea', 'anemone'].map(
-      (flower) => `/assets/bloom/${theme}-${flower}.webp`
-    ),
-  ])
-);
-
-// ─── Sparkle data (idle only) ─────────────────────────────────────────────────
+// Sparkles remain local to the idle gift box; flower assets/layout are shared.
 const SPARKLE_DATA = [
-  { x: -70, y: -60, size: 5, delay: 0,   dur: 3.2 },
-  { x:  65, y: -50, size: 4, delay: 0.8, dur: 2.8 },
-  { x: -55, y:  30, size: 3, delay: 1.5, dur: 3.5 },
-  { x:  72, y:  20, size: 4.5, delay: 0.4, dur: 3.0 },
+  { x: -70, y: -60, size: 5, delay: 0, dur: 3.2 },
+  { x: 65, y: -50, size: 4, delay: 0.8, dur: 2.8 },
+  { x: -55, y: 30, size: 3, delay: 1.5, dur: 3.5 },
+  { x: 72, y: 20, size: 4.5, delay: 0.4, dur: 3.0 },
   { x: -10, y: -80, size: 3.5, delay: 2.0, dur: 2.6 },
 ];
 
-// ─── SparkleParticle ─────────────────────────────────────────────────────────
 function SparkleParticle({ x, y, size, delay, dur, color }) {
   return (
     <motion.div
@@ -51,40 +38,9 @@ function SparkleParticle({ x, y, size, delay, dur, color }) {
   );
 }
 
-// ─── Flowers emerge one by one from the gift, then fill the viewport ───
-const BLOOM_RINGS = [
-  { radius: 0, count: 1, size: 30 },
-  { radius: 14, count: 7, size: 29 },
-  { radius: 27, count: 11, size: 28 },
-  { radius: 40, count: 16, size: 27 },
-  { radius: 52, count: 23, size: 26 },
-];
 const BLOOM_DURATION_MS = 5100;
 const CURTAIN_DURATION_MS = 1200;
 
-function buildBloomFlowers(themeName) {
-  const sources = BLOOM_FLOWER_SRCS[themeName] || BLOOM_FLOWER_SRCS['vintage-burgundy'];
-
-  return BLOOM_RINGS.flatMap(({ radius, count, size }, ring) =>
-    Array.from({ length: count }, (_, index) => {
-      const angle = (index / count) * Math.PI * 2 + ring * 0.37;
-      const offset = Math.sin((ring + 1) * 19 + index * 11) * 1.6;
-      const distance = radius + offset;
-
-      return {
-        id: ring + '-' + index,
-        src: sources[(index * 5 + ring) % sources.length],
-        x: Math.cos(angle) * distance * 1.15,
-        y: Math.sin(angle) * distance * 1.15,
-        size: size + Math.sin(index * 7 + ring) * 1.5,
-        rotate: (index * 47 + ring * 29) % 360,
-        delay: ring * 0.5 + index * 0.06,
-        spinDuration: 4.8 + ((index + ring) % 6) * 0.45,
-        spinDirection: (index + ring) % 2 === 0 ? '360deg' : '-360deg',
-      };
-    })
-  );
-}
 // ─── Main component ──────────────────────────────────────────────────────────
 export default function GateScreen({ gateSubtitle, onInteraction, onReveal, onOpen, themeColors, themeName, disableFountain }) {
   const [phase, setPhase] = useState('idle'); // idle | bloom | curtain | done

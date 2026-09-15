@@ -19,6 +19,7 @@ import ClosingSection from '@/components/ClosingSection';
 import PreviewOnlyBadge from '@/components/PreviewOnlyBadge';
 import LockedSection from '@/components/LockedSection';
 import { themes, defaultTheme } from '@/lib/themes';
+import { isSecretVideoUrl } from '@/lib/secretMedia';
 
 // Runtime normalization: fix audio wishes where photoUrl was incorrectly set to audioUrl
 // This handles data saved before the fix, without requiring a re-sync in Studio
@@ -356,10 +357,14 @@ export default function GiftPage({ data }) {
               closingTitle2={data.closingTitle2}
               closingParagraph={data.closingParagraph}
               celebrateBtnText={data.celebrateBtnText}
+              finaleTitle={data.finaleTitle}
+              finaleMessage={data.finaleMessage}
+              finaleSignoff={data.finaleSignoff}
+              themeName={currentThemeId}
               isLocked={isPreview}
               onCinemaToggle={(isOpen) => {
                 if (!audioRef.current) return;
-                const isVideo = data.secretPhoto && /\.(mp4|webm|mov)$/i.test(data.secretPhoto);
+                const isVideo = isSecretVideoUrl(data.secretPhoto);
                 if (!isVideo || data.secretVideoMuted) return;
                 if (isOpen) {
                   audioRef.current.pause();

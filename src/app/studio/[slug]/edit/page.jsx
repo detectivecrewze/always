@@ -1882,6 +1882,12 @@ function TabClosing({ data, set, slug }) {
     <Field label="Closing Line" value={data.closingLine} onChange={(v) => set('closingLine', v)} placeholder="always yours," />
     <Field label="Sender Name" value={data.sender} onChange={(v) => set('sender', v)} placeholder="Your Name" />
     <Field label="Celebrate Button Text" value={data.celebrateBtnText} onChange={(v) => set('celebrateBtnText', v)} placeholder="celebrate ✨" />
+    <div className="w-full h-px bg-[#1a1a1a] mb-4" />
+    <div style={S.sectionTitle}>Ending Garden Card</div>
+    <div style={S.sectionDesc}>Optional. Leave a field empty to follow the Closing Section content above, so existing gifts remain compatible.</div>
+    <Field label="Final Card Title" value={data.finaleTitle || ''} onChange={(v) => set('finaleTitle', v)} placeholder="Uses Headline 1 + Headline 2 when empty" />
+    <Field label="Final Card Message" value={data.finaleMessage || ''} onChange={(v) => set('finaleMessage', v)} placeholder="Uses Main Paragraph when empty" multiline />
+    <Field label="Final Sign-off" value={data.finaleSignoff || ''} onChange={(v) => set('finaleSignoff', v)} placeholder="Uses Closing Line when empty" />
     <FileUpload label="Secret Photo/Video (Upload)" slug={slug} currentUrl={data.secretPhoto} onUploaded={(url) => set('secretPhoto', url)} onRemove={() => set('secretPhoto', '')} />
     <Field label="Atau Paste Direct Link" value={data.secretPhoto} onChange={(v) => set('secretPhoto', v)} placeholder="https://..." />
     <Field label="Secret Caption" value={data.secretCaption} onChange={(v) => set('secretCaption', v)} placeholder="a special note" />
