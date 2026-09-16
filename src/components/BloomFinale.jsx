@@ -277,8 +277,10 @@ export default function BloomFinale({
                   {!mediaFailed && mediaType === 'video' && (
                     <video
                       src={mediaUrl} className="max-h-[52dvh] w-full object-contain"
-                      autoPlay controls playsInline muted={secretVideoMuted} preload="metadata"
+                      autoPlay loop controls playsInline muted={secretVideoMuted} preload="metadata"
                       onPlay={() => handleVideoAudio(true)}
+                      onPause={() => handleVideoAudio(false)}
+                      onEnded={() => handleVideoAudio(false)}
                       onError={() => setMediaFailed(true)}
                     />
                   )}
