@@ -320,7 +320,7 @@ export default function CircleWishesSection({
           const isEven = index % 2 === 0;
           const tiltClass = isEven ? '-rotate-1 hover:rotate-0' : 'rotate-1 hover:rotate-0';
           const formattedDate = formatDate(wish.createdAt);
-          const isAudioWish = wish.mediaType === 'audio' || Boolean(wish.audioUrl);
+          const isAudioWish = Boolean(wish.audioUrl) || isAudioUrl(wish.mediaUrl) || (wish.mediaType === 'audio' && !isDisplayableMedia(wish.photoUrl));
 
           return (
             <motion.div
@@ -655,12 +655,12 @@ export default function CircleWishesSection({
                   </div>
                 )}
 
-                {/* Voice Note Player if this wish is audio */}
-                {(selectedWish.mediaType === 'audio' || selectedWish.audioUrl) && (
+                {/* Voice Note Player if this wish has actual audio */}
+                {(Boolean(selectedWish.audioUrl) || isAudioUrl(selectedWish.mediaUrl)) && (
                   <>
                     <audio
                       ref={modalAudioRef}
-                      src={selectedWish.audioUrl || selectedWish.mediaUrl}
+                      src={selectedWish.audioUrl || (isAudioUrl(selectedWish.mediaUrl) ? selectedWish.mediaUrl : '')}
                       onTimeUpdate={(e) => setAudioCurrentTime(e.target.currentTime)}
                       onLoadedMetadata={(e) => {
                         const raw = e.target.duration;

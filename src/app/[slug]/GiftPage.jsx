@@ -21,20 +21,39 @@ import LockedSection from '@/components/LockedSection';
 import { themes, defaultTheme } from '@/lib/themes';
 import { isSecretVideoUrl } from '@/lib/secretMedia';
 
-// Runtime normalization: fix audio wishes where photoUrl was incorrectly set to audioUrl
-// This handles data saved before the fix, without requiring a re-sync in Studio
+// Runtime normalization: fix audio wishes and ensure photo wishes aren't wrongly treated as audio
 function normalizeCircleWishes(wishes) {
   if (!wishes || !Array.isArray(wishes)) return wishes;
   return wishes.map((w) => {
-    const isAudioWish = w.mediaType === 'audio' || Boolean(w.audioUrl);
-    if (!isAudioWish) return w;
+    const rawAudio = (w.audioUrl || '').trim();
+    const rawMedia = (w.mediaUrl || '').trim();
+    const rawPhoto = (w.photoUrl || '').trim();
+    
+    // Check if URL points to an actual audio file (.mp3, .m4a, .webm, .wav, etc.)
+    const isAudioFile = (url) => /\.(mp3|m4a|ogg|aac|wav|opus|flac)(\?.*)?$/i.test(url);
+    const audioUrl = rawAudio || (isAudioFile(rawMedia) ? rawMedia : '');
+    
+    // Resolve actual photo URL
+    let photoUrl = rawPhoto;
+    if (!photoUrl && rawMedia && !isAudioFile(rawMedia)) {
+      photoUrl = rawMedia;
+    }
+    // If photoUrl was accidentally set to audio file, clear it
+    if (photoUrl && isAudioFile(photoUrl)) {
+      photoUrl = '';
+    }
 
-    const audioUrl = (w.audioUrl || w.mediaUrl || '').trim();
-    // If photoUrl is the same as audioUrl (or contains audio extension), clear it
-    const isPhotoUrlActuallyAudio = w.photoUrl && w.photoUrl === audioUrl;
-    const photoUrl = isPhotoUrlActuallyAudio ? '' : (w.photoUrl || '');
+    const hasAudio = Boolean(audioUrl);
+    const resolvedMediaType = hasAudio ? 'audio' : (photoUrl ? 'photo' : w.mediaType);
 
-    return { ...w, audioUrl, mediaUrl: audioUrl, photoUrl };
+    return {
+      ...w,
+      mediaType: resolvedMediaType,
+      audioUrl,
+      photoUrl: photoUrl || '',
+      mediaUrl: audioUrl || photoUrl || rawMedia,
+      audioDuration: hasAudio ? w.audioDuration : null,
+    };
   });
 }
 
