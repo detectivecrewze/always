@@ -87,7 +87,7 @@ export default function ClosingSection({
   const resolvedFinaleMessage = finaleMessage?.trim()
     || closingParagraph
     || 'May this little garden keep blooming for you, always.';
-  const resolvedFinaleSignoff = finaleSignoff?.trim() || closingLine || 'always yours,';
+  const resolvedFinaleSignoff = finaleSignoff?.trim() || (closingLine?.trim() ?? '') || '';
 
   const handleCelebrate = useCallback(() => {
     if (isLocked || showFinale) return;
