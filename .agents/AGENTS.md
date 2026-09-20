@@ -63,6 +63,9 @@ When the user asks to process a new order, ALWAYS follow these steps:
 | `celebrateBtnText` | Kreatif & sesuai momen: "celebrate ✨", "miss you ✨", "goodbye ✨", dll |
 | `sender` | **WAJIB ADA** di `giftData`. Nama pengirim (from) agar muncul sebagai tanda tangan di bagian akhir Closing Section. |
 | `disableFountain` | Set `true` jika customer minta **tanpa animasi kelopak bunga di awal**. `GateScreen.jsx` akan otomatis melompati animasi letupan 300 bunga saat amplop dipencet dan langsung menampilkan isi kado. |
+| `circleWishes` | Array hingga 7 slot untuk **Circle Edition** (`CircleWishesSection.jsx`). Tiap item memiliki `{ id, name, message, photoUrl, mediaUrl, audioUrl, mediaType, audioDuration }`. Mendukung foto, video klip (.mp4), dan rekaman suara (.mp3). |
+| `circleTitle1` & `circleTitle2` | Judul utama section Circle Wishes. Default group: `"A Circle of Love"` & `"For You"`. Untuk personal video vault: `"Captured in Motion"` & `"Our Favorite Moments"`. Untuk personal notes: `"Seven Little Notes"` & `"From My Heart"`. |
+| `circleSubtitle` | Subtitle pengantar section Circle Wishes. Sesuaikan konteks: apakah pesan dari sahabat/teman (group) atau cuplikan video / catatan cinta personal (personal vault). |
 
 ---
 
@@ -168,6 +171,19 @@ Biar hasil generate tidak monoton, selalu variasikan judul-judul di bawah ini (j
   - "endless gratitude" | "Thank" "You"
   - "forever yours" | "Always &" "Forever"
 
+### 5. Circle Wishes Section (`circleTitle1`, `circleTitle2`, & `circleSubtitle`)
+- **Mode Group Wishes (Default - Pesan dari Sahabat / Circle):**
+  - Titles: "A Circle of Love" + "For You"
+  - Subtitle: "Untaian pesan hangat dan doa manis dari orang-orang tersayang yang selalu ada untukmu." (atau English: "Warm wishes and heartfelt blessings from those who hold you dear.")
+- **Mode Personal Video Vault (Koleksi Video Kenangan Berdua):**
+  - Titles: "Captured in Motion" + "Our Favorite Moments"
+  - Subtitle: "Cuplikan video manis, tawa, dan kebersamaan kita berdua yang selalu tersimpan rapi di dalam hati."
+  - Opsi Lain: "Little Clips" + "Of Our Love" | "Living Memories" + "Of Us" | "Frames of Love" + "In Motion"
+- **Mode Personal Notes / Personas Vault (Tujuh Sisi / Catatan Kasih):**
+  - Titles: "Seven Little Notes" + "From My Heart"
+  - Subtitle: "Tujuh catatan kecil dan suara tentang hal-hal favoritku darimu yang selalu bikin jatuh cinta."
+  - Opsi Lain: "Pieces of My Heart" + "Just for You" | "Special Notes" + "From Me to You"
+
 ---
 
 ## Common Pitfalls to Avoid
@@ -184,6 +200,86 @@ Biar hasil generate tidak monoton, selalu variasikan judul-judul di bawah ini (j
 - **Tahun lahir salah**: Selalu validasi `timeStartDate`. Jika customer input tahun tidak logis (misal 2026 untuk orang lahir), koreksi ke tahun yang benar berdasarkan usia yang disebutkan.
 - **Menunggu KV ID**: Jika KV ID belum diberikan bersamaan dengan order, **minta dulu** sebelum menulis script agar tidak perlu edit ulang.
 - **Script baru per customer**: Ini normal tapi pastikan nama file unik (processNama.mjs) agar tidak tertimpa.
+- **Audio vs Video/Photo di Circle Wishes (`mediaType` & `audioUrl`)**: JANGAN pernah memasukkan URL gambar atau video ke dalam `audioUrl`! Jika slot hanya berisi foto atau video tanpa rekaman suara asli, pastikan `audioUrl: ""` (string kosong). Mengisi `audioUrl` dengan URL non-audio akan menyebabkan audio player "hantu" merender error atau player kosong di UI. Untuk video, selalu set `mediaType: "video"`.
+- **Judul Circle Wishes Tidak Relevan**: Jika customer menggunakan Circle Wishes untuk video berdua atau catatan pribadi (bukan dari teman-teman), JANGAN biarkan judulnya default "A Circle of Love For You". Selalu reframe menjadi "Captured in Motion / Our Favorite Moments" atau "Seven Little Notes / From My Heart".
+
+---
+
+## Panduan & Standarisasi Circle Wishes (Memoria · Circle Edition)
+
+Circle Wishes adalah fitur interaktif 7 slot lingkaran floating cards / avatars (`src/components/CircleWishesSection.jsx`) yang menampilkan pesan, rekaman suara, foto, atau video beresolusi tinggi dengan modal interaktif dan audio wave.
+
+### 1. Dua Skenario Penggunaan Utama (Dual Use Cases)
+
+Platform ini memiliki dua cara pakai Circle Wishes yang sangat berbeda di lapangan:
+
+#### A. Mode Standar: Group Wishes (Circle Pertemanan / Sahabat)
+- **Konteks**: Pembeli membagikan link form kolektif (`circle-wishes/[slug]`) kepada para sahabat untuk memberikan kejutan bersama bagi penerima.
+- **Karakteristik**:
+  - Tiap slot memiliki nama teman yang berbeda (`name: "Sarah"`, `name: "Dimas"`).
+  - Pesan berisi ucapan selamat, doa, dan kesan pesan persahabatan.
+  - Media bisa berupa foto kebersamaan atau voice note (VN) ucapan selamat.
+- **Standar Judul & Subtitle**:
+  - `circleTitle1`: `"A Circle of Love"`
+  - `circleTitle2`: `"For You"`
+  - `circleSubtitle`: `"Untaian pesan hangat dan doa manis dari orang-orang tersayang yang selalu ada untukmu."`
+
+#### B. Mode Khusus: Personal Vault (Momen Pasangan / Personal Notes & Videos)
+- **Konteks**: Pembeli sengaja membeli Circle Edition atau salah memahami form, lalu mengisinya **sendiri secara personal khusus untuk pasangannya** (BUKAN dari teman-teman).
+- **Hasilnya**: Format ini justru menjadi fitur eksklusif yang sangat manis dan romantis bila disesuaikan dengan benar!
+- **Dua Sub-varian Personal**:
+  1. **Romantic Video Clips Vault (Koleksi Klip Video Berdua)**:
+     - Customer mengunggah 7 video pendek (`.mp4`) yang berisi rekaman candid kencan, liburan bareng, ketawa bersama, atau momen manis berdua.
+     - **WAJIB REFRAME JUDUL**:
+       - `circleTitle1`: `"Captured in Motion"`
+       - `circleTitle2`: `"Our Favorite Moments"`
+       - `circleSubtitle`: `"Cuplikan video manis, tawa, dan kebersamaan kita berdua yang selalu tersimpan rapi di dalam hati."`
+       - Opsi alternatif: `"Little Clips" + "Of Our Love"` atau `"Living Memories" + "Of Us"`.
+     - **Card Settings**:
+       - `mediaType: "video"`
+       - `photoUrl: "https://...mp4"` & `mediaUrl: "https://...mp4"`
+       - `audioUrl: ""` (KOSONGKAN!)
+       - `name`: Nama panggilan romantis pengirim (misal `"fhawaw 🤍"`, `"your boy"`)
+  2. **Personal Notes & Sweet Personas Vault (Tujuh Sisi / Catatan Cinta)**:
+     - Customer mengisi 7 slot dengan catatan cinta, persona lucu pasangan (misal: "Homemade Gift", "Waktu Kamu Ngambek", "Si Paling Ngantuk"), foto kenangan spesifik, dan voice note pribadi.
+     - **WAJIB REFRAME JUDUL**:
+       - `circleTitle1`: `"Seven Little Notes"`
+       - `circleTitle2`: `"From My Heart"`
+       - `circleSubtitle`: `"Tujuh catatan kecil dan suara tentang hal-hal favoritku darimu yang selalu bikin jatuh cinta."`
+       - Opsi alternatif: `"Pieces of My Heart" + "Just for You"`.
+
+### 2. Schema Objek `circleWishes` (Array of max 7 items)
+
+```javascript
+circleWishes: [
+  {
+    id: "slot-1",
+    name: "fhawaw 🤍",                                   // Nama pengirim / persona / judul kartu
+    message: "Always my favorite person to laugh with.",  // Teks pesan romantis / caption
+    photoUrl: "https://cdn.for-you-always.my.id/vid1.mp4", // URL media (foto .jpg/.png atau video .mp4)
+    mediaUrl: "https://cdn.for-you-always.my.id/vid1.mp4", // Wajib sama dengan photoUrl
+    audioUrl: "",                                         // Wajib "" (string kosong) jika BUKAN audio file!
+    mediaType: "video",                                   // "video" | "photo" | "audio"
+    audioDuration: null                                   // Number detik (hanya jika mediaType === "audio")
+  }
+]
+```
+
+### 3. Aturan Teknis Media & Pencegahan Bug
+
+1. **Aturan Saklek `audioUrl` vs `mediaType`**:
+   - `audioUrl` **HANYA** boleh diisi jika file benar-benar berekstensi audio (`.mp3`, `.m4a`, `.wav`, `.ogg`, `.aac`, webm audio).
+   - **JANGAN PERNAH** memasukkan URL foto atau video ke dalam `audioUrl`!
+   - Jika slot adalah video atau foto biasa tanpa voice note, **WAJIB** set `audioUrl: ""` (string kosong).
+   - *Mengapa?* Jika URL video/foto masuk ke `audioUrl`, komponen akan salah mengira ada rekaman suara dan merender player Voice Note palsu / rusak ("audio hantu") di layar user.
+2. **Penetapan `mediaType`**:
+   - Jika URL berakhiran `.mp4`, `.webm`, atau `.mov`: set `mediaType: "video"`.
+   - Jika URL berakhiran `.jpg`, `.jpeg`, `.png`, `.webp`: set `mediaType: "photo"`.
+   - Jika ada rekaman suara: set `mediaType: "audio"` dan sertakan `audioUrl` serta `audioDuration`.
+3. **Copywriting & Format Teks**:
+   - Huruf pertama selalu kapital pada setiap pesan.
+   - **JANGAN PERNAH** menggunakan karakter em-dash (`—`), en-dash (`–`), atau hyphen (`-`) di dalam isi pesan `message`.
+   - Sesuaikan gaya bahasa dengan tone pesanan (Bucin, Romantis, Santai, atau Indoglish).
 
 ---
 
@@ -343,3 +439,10 @@ Biar hasil generate tidak monoton, selalu variasikan judul-judul di bawah ini (j
       3. Jalankan `view_file` pada `temp_grid.jpg` untuk **melihat langsung secara visual** seluruh foto (menguji warna background, objek spesifik seperti masker wajah, serta framing wajah pasangan).
       4. Petakan urutan URL foto secara presisi sesuai pengamatan visual (misal: 8 foto background biru ➔ 4 foto background coklat ➔ 3 foto sisa).
       5. **Hapus seluruh file temporary** (`temp_grid.jpg`, folder `temp_photos/`, dan script python) setelah selesai mem-push KV agar working tree tetap clean.
+
+21. **Adaptasi Circle Wishes untuk Pasangan / Personal Vault**:
+    - Ketika customer mengisi Circle Edition untuk pasangannya sendiri (bukan dari teman-teman):
+      - **Identifikasi Konten**: Cek apakah medianya berupa video berdua (`.mp4`), foto kenangan khusus, atau catatan persona cinta.
+      - **Reframe Judul Otomatis**: Ganti judul standar `"A Circle of Love For You"` menjadi judul yang intimate seperti `"Captured in Motion / Our Favorite Moments"` (untuk video klip) atau `"Seven Little Notes / From My Heart"` (untuk catatan & foto kenangan).
+      - **Sanitasi Media**: Pastikan `mediaType: "video"` untuk file video, dan `audioUrl: ""` (kosong) agar tidak muncul player VN hantu.
+      - **Sign-off / Slot Names**: Buat nama slot konsisten dan manis (menggunakan panggilan sayang pengirim seperti `"fhawaw 🤍"` atau judul topik kartu).
