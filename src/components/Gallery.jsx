@@ -21,40 +21,41 @@ const item = {
 // ── Locked photo placeholder (premium gate) ────────────────────────
 function LockedPhotoCard({ index }) {
   return (
-    <motion.div
-      variants={item}
-      className="relative overflow-hidden rounded-2xl aspect-[4/5]"
-      style={{
-        background: 'rgba(225,29,72,0.04)',
-        border: '1px dashed rgba(225,29,72,0.2)',
-        boxShadow: '0 8px 40px rgba(0,0,0,0.2)',
-      }}
-    >
-      <div style={{
-        position: 'absolute', inset: 0,
-        background: 'linear-gradient(135deg, rgba(225,29,72,0.06) 0%, rgba(0,0,0,0.15) 100%)',
-      }} />
-      <div style={{
-        position: 'absolute', inset: 0,
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center', gap: '8px',
-      }}>
-        <motion.div
-          animate={{ y: [0, -4, 0], opacity: [0.4, 0.75, 0.4] }}
-          transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: index * 0.25 }}
-        >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-            stroke="rgba(225,29,72,0.5)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-          </svg>
-        </motion.div>
-        <p style={{
-          fontFamily: 'Georgia, serif', fontStyle: 'italic',
-          fontSize: '0.65rem', color: 'rgba(225,29,72,0.45)', letterSpacing: '0.04em',
+    <motion.div variants={item} className="w-full min-w-0">
+      <div
+        className="relative overflow-hidden rounded-2xl aspect-[4/5] w-full"
+        style={{
+          background: 'rgba(225,29,72,0.04)',
+          border: '1px dashed rgba(225,29,72,0.2)',
+          boxShadow: '0 8px 40px rgba(0,0,0,0.2)',
+        }}
+      >
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(135deg, rgba(225,29,72,0.06) 0%, rgba(0,0,0,0.15) 100%)',
+        }} />
+        <div style={{
+          position: 'absolute', inset: 0,
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center', gap: '8px',
         }}>
-          premium only
-        </p>
+          <motion.div
+            animate={{ y: [0, -4, 0], opacity: [0.4, 0.75, 0.4] }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: index * 0.25 }}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+              stroke="rgba(225,29,72,0.5)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+          </motion.div>
+          <p style={{
+            fontFamily: 'Georgia, serif', fontStyle: 'italic',
+            fontSize: '0.65rem', color: 'rgba(225,29,72,0.45)', letterSpacing: '0.04em',
+          }}>
+            premium only
+          </p>
+        </div>
       </div>
     </motion.div>
   );
@@ -104,52 +105,56 @@ export default function Gallery({ photos, galleryTitle1, galleryTitle2, freeCoun
             <motion.div
               key={i}
               variants={item}
-              className="theme-photo-frame relative group overflow-hidden rounded-2xl aspect-[4/5] border border-white/10"
-              style={{
-                background: 'rgba(255,255,255,0.03)',
-                boxShadow: '0 8px 40px rgba(0,0,0,0.4)',
-              }}
+              className="w-full min-w-0"
             >
-              {isVideo ? (
-                <video
-                  src={url}
-                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                  autoPlay loop muted playsInline webkit-playsinline="" preload="metadata"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.parentElement.style.background = 'rgba(255,255,255,0.05)';
-                  }}
-                />
-              ) : (
-                <img
-                  src={url}
-                  alt={caption || `Memory ${i + 1}`}
-                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.parentElement.style.background = 'rgba(255,255,255,0.05)';
-                  }}
-                />
-              )}
-
-              {/* Bottom gradient for caption */}
               <div
-                className="absolute inset-x-0 bottom-0 h-28 pointer-events-none"
-                style={{ background: 'linear-gradient(to top, rgba(20,6,12,0.85) 0%, transparent 100%)' }}
-              />
+                className="theme-photo-frame relative group overflow-hidden rounded-2xl aspect-[4/5] w-full border border-white/10"
+                style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  boxShadow: '0 8px 40px rgba(0,0,0,0.4)',
+                }}
+              >
+                {isVideo ? (
+                  <video
+                    src={url}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                    autoPlay loop muted playsInline webkit-playsinline="" preload="metadata"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.parentElement.style.background = 'rgba(255,255,255,0.05)';
+                    }}
+                  />
+                ) : (
+                  <img
+                    src={url}
+                    alt={caption || `Memory ${i + 1}`}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.parentElement.style.background = 'rgba(255,255,255,0.05)';
+                    }}
+                  />
+                )}
 
-              {/* Caption */}
-              {caption && (
-                <motion.p
-                  className="absolute bottom-4 inset-x-0 text-center font-serif italic text-lg md:text-xl text-white/80"
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.3 + i * 0.1 }}
-                >
-                  {caption}
-                </motion.p>
-              )}
+                {/* Bottom gradient for caption */}
+                <div
+                  className="absolute inset-x-0 bottom-0 h-28 pointer-events-none"
+                  style={{ background: 'linear-gradient(to top, rgba(20,6,12,0.85) 0%, transparent 100%)' }}
+                />
+
+                {/* Caption */}
+                {caption && (
+                  <motion.p
+                    className="absolute bottom-4 inset-x-0 text-center font-serif italic text-lg md:text-xl text-white/80"
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.3 + i * 0.1 }}
+                  >
+                    {caption}
+                  </motion.p>
+                )}
+              </div>
             </motion.div>
           );
         })}
