@@ -407,6 +407,7 @@ function TabTime({ data, set }) {
           <option value="Asia/Makassar">WITA (Asia/Makassar)</option>
           <option value="Asia/Jayapura">WIT (Asia/Jayapura)</option>
           <option value="UTC">UTC</option>
+          <option value="Europe/Berlin">Waktu Jerman (Europe/Berlin)</option>
         </select>
       </div>
       
