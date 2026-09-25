@@ -23,7 +23,7 @@ const itemVariants = {
   },
 };
 
-export default function HeroSection({ heroPreTitle, heroLine1, heroLine2, heroSubtitle }) {
+export default function HeroSection({ heroPreTitle, heroLine1, heroLine2, heroLine3, heroSubtitle }) {
   const { scrollY } = useScroll();
   // Fades out and moves down slightly as the user scrolls the first 400px
   const opacity = useTransform(scrollY, [0, 400], [1, 0]);
@@ -46,16 +46,21 @@ export default function HeroSection({ heroPreTitle, heroLine1, heroLine2, heroSu
           </motion.span>
         )}
 
-        {/* 2-line Headline */}
+        {/* Headline */}
         <h1 className="flex flex-col gap-2 md:gap-3">
           {heroLine1 && (
-            <motion.span variants={itemVariants} className="block font-serif text-5xl md:text-6xl lg:text-7xl text-text leading-tight">
+            <motion.span variants={itemVariants} className="block font-serif text-5xl md:text-6xl lg:text-7xl text-text leading-tight whitespace-pre-line">
               {heroLine1}
             </motion.span>
           )}
           {heroLine2 && (
-            <motion.span variants={itemVariants} className="block font-serif italic text-6xl md:text-7xl lg:text-8xl text-accent leading-tight">
+            <motion.span variants={itemVariants} className="block font-serif italic text-6xl md:text-7xl lg:text-8xl text-accent leading-tight whitespace-pre-line">
               {heroLine2}
+            </motion.span>
+          )}
+          {heroLine3 && (
+            <motion.span variants={itemVariants} className="block font-serif italic text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-accent leading-tight whitespace-pre-line">
+              {heroLine3}
             </motion.span>
           )}
         </h1>

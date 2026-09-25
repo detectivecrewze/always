@@ -328,6 +328,7 @@ function TabHero({ data, set }) {
     set('heroPreTitle', preset.preTitle);
     set('heroLine1', preset.line1);
     set('heroLine2', preset.line2);
+    set('heroLine3', preset.line3 || '');
     set('heroSubtitle', preset.subtitle);
   };
 
@@ -341,6 +342,7 @@ function TabHero({ data, set }) {
     <Field label="Pre-title" value={data.heroPreTitle} onChange={(v) => set('heroPreTitle', v)} placeholder="to my dearest" />
     <Field label="Hero Line 1" value={data.heroLine1} onChange={(v) => set('heroLine1', v)} placeholder="Name," />
     <Field label="Hero Line 2" value={data.heroLine2} onChange={(v) => set('heroLine2', v)} placeholder="you are my everything." />
+    <Field label="Hero Line 3 (Opsional)" value={data.heroLine3} onChange={(v) => set('heroLine3', v)} placeholder="Baris tambahan / nama lengkap (opsional)" />
     <Field label="Subtitle" value={data.heroSubtitle} onChange={(v) => set('heroSubtitle', v)} placeholder="scroll to unwrap your gift" />
   </>);
 }

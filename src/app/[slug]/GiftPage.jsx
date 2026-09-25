@@ -298,6 +298,7 @@ export default function GiftPage({ data }) {
               heroPreTitle={data.heroPreTitle}
               heroLine1={data.heroLine1}
               heroLine2={data.heroLine2}
+              heroLine3={data.heroLine3}
               heroSubtitle={data.heroSubtitle}
             />
 

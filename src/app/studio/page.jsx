@@ -193,7 +193,7 @@ export default function StudioDashboard() {
       slug, recipient: newRecipient, sender: 'Your Name',
       gateSubtitle: 'something made just for you',
       heroPreTitle: 'a love letter in bloom',
-      heroLine1: newRecipient + ',', heroLine2: 'My Everything',
+      heroLine1: newRecipient + ',', heroLine2: 'My Everything', heroLine3: '',
       heroSubtitle: 'Every petal holds a whisper of how much you mean to me.',
       introIcons: true, introPreTitle: 'from my heart',
       introHeadline1: 'You are my', introHeadline2: 'wildest dream', introHeadline3: 'come true.',

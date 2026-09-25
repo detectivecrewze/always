@@ -53,6 +53,7 @@ export async function POST(request) {
     heroPreTitle: 'a love letter in bloom',
     heroLine1: 'My Love,',
     heroLine2: 'My Everything',
+    heroLine3: '',
     heroSubtitle: 'Every petal holds a whisper of how much you mean to me.',
     introIcons: true,
     introPreTitle: 'from my heart',
