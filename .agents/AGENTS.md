@@ -60,6 +60,7 @@ When the user asks to process a new order, ALWAYS follow these steps:
 | `introText` | **JANGAN** pernah meringkas/memendekkan pesan asli customer! Gunakan seluruh isi pesan customer. Pisahkan per kalimat atau paragraf menjadi **Array of Strings** (contoh: `introText: ["paragraf 1", "paragraf 2"]`) agar rapi di UI. |
 | `reasons` | **Wajib** buat persis **6 buah Reason Cards**. Gunakan key `desc` BUKAN `text`. Sesuaikan bahasa `title` dengan writing tone. **CRITICAL**: Buat `desc` **sangat padat dan ringkas** (1 kalimat pendek). **JANGAN PERNAH** menggunakan karakter em-dash (`—`) atau tanda hubung panjang di **section manapun**. |
 | `closingTitle1/2` | Sesuaikan dengan momen (Ultah → "Happy Birthday", LDR → "See You Soon", dsb) |
+| `closingLine` | **SELALU KOSONGKAN** (`closingLine: ""`). Jangan pernah diisi template teks seperti "always yours," atau "dengan penuh sayang,". |
 | `celebrateBtnText` | Kreatif & sesuai momen: "celebrate ✨", "miss you ✨", "goodbye ✨", dll |
 | `sender` | **WAJIB ADA** di `giftData`. Nama pengirim (from) agar muncul sebagai tanda tangan di bagian akhir Closing Section. |
 | `disableFountain` | Set `true` jika customer minta **tanpa animasi kelopak bunga di awal**. `GateScreen.jsx` akan otomatis melompati animasi letupan 300 bunga saat amplop dipencet dan langsung menampilkan isi kado. |
@@ -163,7 +164,8 @@ Biar hasil generate tidak monoton, selalu variasikan judul-judul di bawah ini (j
   - "a birthday wish" | "For My" "Beloved"
   - "just wanted to say" | "Dear My" "Everything"
 
-### 4. Closing Section (`closingPreTitle` & `closingTitle1, 2`)
+### 4. Closing Section (`closingPreTitle`, `closingTitle1, 2`, & `closingLine`)
+> **ATURAN MUTLAK**: `closingLine` **SELALU KOSONG** (`closingLine: ""`). Jangan pernah diisi teks!
 - **Default:** "always & forever" | "You Are Loved" "Beyond Words"
 - **Opsi Lain:**
   - "to many more years" | "Happy" "Birthday"
@@ -204,6 +206,7 @@ Biar hasil generate tidak monoton, selalu variasikan judul-judul di bawah ini (j
 - **Audio vs Video/Photo di Circle Wishes (`mediaType` & `audioUrl`)**: JANGAN pernah memasukkan URL gambar atau video ke dalam `audioUrl`! Jika slot hanya berisi foto atau video tanpa rekaman suara asli, pastikan `audioUrl: ""` (string kosong). Mengisi `audioUrl` dengan URL non-audio akan menyebabkan audio player "hantu" merender error atau player kosong di UI. Untuk video, selalu set `mediaType: "video"`.
 - **Judul Circle Wishes Tidak Relevan**: Jika customer menggunakan Circle Wishes untuk video berdua atau catatan pribadi (bukan dari teman-teman), JANGAN biarkan judulnya default "A Circle of Love For You". Selalu reframe menjadi "Captured in Motion / Our Favorite Moments" atau "Seven Little Notes / From My Heart".
 - **Menggunakan `heroLine3` atau `introHeadline3`**: JANGAN PERNAH gunakan baris ke-3 di Hero Section maupun Letter/Intro Section. Selalu batasi hanya sampai 2 baris (`heroLine1`, `heroLine2` dan `introHeadline1`, `introHeadline2`) agar visual tetap elegan, proporsional, dan tidak menumpuk/crowded.
+- **Mengisi `closingLine`**: `closingLine` **WAJIB SELALU KOSONG** (`closingLine: ""`). Jangan pernah mengisi teks apapun di field ini.
 
 ---
 
