@@ -380,6 +380,8 @@ export default function GiftPage({ data }) {
                   endTime: data.invitationEndTime,
                   venueName: data.invitationVenueName,
                   address: data.invitationAddress,
+                  venuePhotoUrl: data.invitationVenuePhotoUrl,
+                  venueNote: data.invitationVenueNote,
                   mapsUrl: data.invitationMapsUrl,
                   mapsLabel: data.invitationMapsLabel,
                   dressCode: data.invitationDressCode,

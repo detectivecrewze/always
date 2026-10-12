@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { CalendarPlus, Clock3, ExternalLink, Map, MapPin, Shirt, X } from 'lucide-react';
-import { resolveMapLocation } from '@/lib/mapLocation';
+import { resolveMapLocation, safeExternalUrl } from '@/lib/mapLocation';
 
 const sectionVariants = {
   hidden: { opacity: 0, y: 36 },
@@ -103,6 +103,7 @@ export default function InvitationSection({ invitation, themeStyles }) {
   const mapCloseRef = useRef(null);
   const date = getDateParts(invitation.date);
   const mapLocation = resolveMapLocation(invitation);
+  const venuePhotoUrl = safeExternalUrl(invitation.venuePhotoUrl);
   const rundown = Array.isArray(invitation.rundown)
     ? invitation.rundown.filter((item) => item && (item.time || item.title || item.note))
     : [];
@@ -355,18 +356,43 @@ export default function InvitationSection({ invitation, themeStyles }) {
             </div>
 
             {mapLocation.embedUrl ? (
-              <div className="relative mx-3 min-h-0 flex-1 overflow-hidden rounded-[1.15rem] border border-text/15 bg-surface sm:mx-5">
-                <iframe
-                  src={mapLocation.embedUrl}
-                  title={`Map for ${invitation.venueName || invitation.address || 'event location'}`}
-                  className="h-[42dvh] min-h-[260px] w-full border-0 sm:h-[420px] sm:min-h-[360px]"
-                  loading="eager"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  allowFullScreen
-                />
-                <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-2 whitespace-nowrap rounded-full border border-white/70 bg-white/95 px-3 py-2 font-sans text-[0.66rem] font-semibold text-[#30231f] shadow-lg backdrop-blur-sm">
-                  <MapPin className="h-3.5 w-3.5 text-accent" fill="currentColor" aria-hidden="true" />
-                  {mapLocation.exact ? 'Exact event pin' : 'Location from address'}
+              <div className={`mx-3 grid min-h-0 flex-1 gap-3 overflow-y-auto sm:mx-5 ${venuePhotoUrl ? 'md:grid-cols-[0.82fr_1.18fr]' : ''}`}>
+                {venuePhotoUrl && (
+                  <aside className="overflow-hidden rounded-[1.15rem] border border-text/15 bg-surface">
+                    <div className="relative h-[132px] overflow-hidden bg-text/5 sm:h-[160px] md:h-[238px]">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={venuePhotoUrl}
+                        alt={invitation.venueName ? `Venue ${invitation.venueName}` : 'Event venue'}
+                        className="h-full w-full object-cover"
+                      />
+                      <span className="absolute bottom-3 left-3 rounded-full border border-white/50 bg-black/55 px-3 py-1.5 font-sans text-[0.62rem] font-semibold text-white backdrop-blur-sm">
+                        Event venue
+                      </span>
+                    </div>
+                    <div className="p-4">
+                      <p className="font-sans text-[0.58rem] font-semibold uppercase tracking-[0.18em] text-accent">Place details</p>
+                      <h4 className="mt-1 font-serif text-lg leading-tight text-text">{invitation.venueName || 'Selected venue'}</h4>
+                      {invitation.venueNote && (
+                        <p className="mt-2 font-sans text-[0.7rem] leading-relaxed text-text-muted">{invitation.venueNote}</p>
+                      )}
+                    </div>
+                  </aside>
+                )}
+
+                <div className="relative min-h-[250px] overflow-hidden rounded-[1.15rem] border border-text/15 bg-surface">
+                  <iframe
+                    src={mapLocation.embedUrl}
+                    title={`Map for ${invitation.venueName || invitation.address || 'event location'}`}
+                    className={`w-full border-0 ${venuePhotoUrl ? 'h-[32dvh] min-h-[250px] md:h-[360px]' : 'h-[42dvh] min-h-[260px] sm:h-[420px] sm:min-h-[360px]'}`}
+                    loading="eager"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    allowFullScreen
+                  />
+                  <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-2 whitespace-nowrap rounded-full border border-white/70 bg-white/95 px-3 py-2 font-sans text-[0.66rem] font-semibold text-[#30231f] shadow-lg backdrop-blur-sm">
+                    <MapPin className="h-3.5 w-3.5 text-accent" fill="currentColor" aria-hidden="true" />
+                    {mapLocation.exact ? 'Exact event pin' : 'Location from address'}
+                  </div>
                 </div>
               </div>
             ) : (

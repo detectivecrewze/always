@@ -156,7 +156,7 @@ function Toggle({ label, desc, value, onChange }) {
   );
 }
 
-function FileUpload({ label, slug, currentUrl, onUploaded, onRemove }) {
+function FileUpload({ label, slug, currentUrl, onUploaded, onRemove, accept = 'image/*,video/*,audio/*' }) {
   const [uploading, setUploading] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -222,7 +222,7 @@ function FileUpload({ label, slug, currentUrl, onUploaded, onRemove }) {
           position: 'relative' 
         }}>
           {uploading ? 'Uploading...' : success ? '✓ Upload Successful!' : 'Click to upload'}
-          <input type="file" style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} onChange={handleFile} accept="image/*,video/*,audio/*" />
+          <input type="file" style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} onChange={handleFile} accept={accept} />
         </label>
       </div>
     </div>
@@ -1857,7 +1857,7 @@ const INVITATION_PRESETS = [
   },
 ];
 
-function TabInvitation({ data, set }) {
+function TabInvitation({ data, set, slug }) {
   const invitationEnabled = Boolean(data.invitationEnabled);
   const rundown = Array.isArray(data.invitationRundown) ? data.invitationRundown : [];
   const mapLocation = resolveMapLocation({
@@ -1954,6 +1954,21 @@ function TabInvitation({ data, set }) {
       <div style={S.sectionDesc}>Bagian ini opsional. Isi nama tempat dan alamat, lalu tempel titik Google Maps jika ingin menampilkan peta.</div>
       <Field label="Venue name (optional)" value={data.invitationVenueName} onChange={(v) => set('invitationVenueName', v)} placeholder="Restaurant or venue name" />
       <Field label="Address (optional)" value={data.invitationAddress} onChange={(v) => set('invitationAddress', v)} placeholder="Full address" />
+      <FileUpload
+        label="Venue photo (optional)"
+        slug={slug}
+        currentUrl={data.invitationVenuePhotoUrl}
+        onUploaded={(url) => set('invitationVenuePhotoUrl', url)}
+        onRemove={() => set('invitationVenuePhotoUrl', '')}
+        accept="image/jpeg,image/png,image/webp"
+      />
+      <Field
+        label="Short venue description (optional)"
+        value={data.invitationVenueNote}
+        onChange={(v) => set('invitationVenueNote', v.slice(0, 180))}
+        placeholder="A warm place for dinner, stories, and a little celebration."
+        help="Ditampilkan bersama foto tempat di dalam modal lokasi. Maksimal 180 karakter."
+      />
       <Field
         label="Google Maps full link or coordinates (optional)"
         value={data.invitationMapsUrl}

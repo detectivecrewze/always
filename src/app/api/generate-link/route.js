@@ -102,6 +102,8 @@ export async function POST(request) {
     invitationEndTime: '',
     invitationVenueName: '',
     invitationAddress: '',
+    invitationVenuePhotoUrl: '',
+    invitationVenueNote: '',
     invitationMapsUrl: '',
     invitationMapsLabel: 'Open location',
     invitationDressCode: '',

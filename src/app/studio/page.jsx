@@ -232,7 +232,7 @@ export default function StudioDashboard() {
       invitationTitle2: 'to Celebrate',
       invitationMessage: 'Please keep this evening for us. I have planned a warm dinner, a little surprise, and time to celebrate you properly.',
       invitationDate: '', invitationStartTime: '', invitationEndTime: '',
-      invitationVenueName: '', invitationAddress: '', invitationMapsUrl: '', invitationMapsLabel: 'Open location',
+      invitationVenueName: '', invitationAddress: '', invitationVenuePhotoUrl: '', invitationVenueNote: '', invitationMapsUrl: '', invitationMapsLabel: 'Open location',
       invitationDressCode: '', invitationDressCodeNote: '', invitationRundownTitle: 'The evening',
       invitationRundown: [
         { time: '18:30', title: 'Meet at the venue', note: 'A little welcome before dinner' },
