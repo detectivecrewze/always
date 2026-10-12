@@ -113,6 +113,8 @@ export default function InvitationSection({ invitation, themeStyles }) {
   const hasPrimaryDetails = Boolean(timeLabel || hasVenue || hasDressCode);
   const showCalendar = Boolean(invitation.calendarEnabled && invitation.date);
   const hasActions = Boolean(mapLocation.available || showCalendar);
+  const hasShortRundown = rundown.length <= 2;
+  const hasLongRundown = rundown.length >= 6;
   const modalThemeStyles = themeStyles
     ? Object.fromEntries(Object.entries(themeStyles).filter(([key]) => key.startsWith('--')))
     : undefined;
@@ -187,19 +189,23 @@ export default function InvitationSection({ invitation, themeStyles }) {
           )}
         </motion.header>
 
-        <div className={`grid gap-5 ${rundown.length > 0 ? 'md:grid-cols-[0.82fr_1.18fr]' : 'mx-auto max-w-[560px]'}`}>
+        <div className={`grid gap-5 ${rundown.length > 0 ? 'md:grid-cols-[0.82fr_1.18fr] md:items-start' : 'mx-auto max-w-[560px]'}`}>
           <motion.article
             variants={itemVariants}
-            className="theme-paper-card rounded-[1.5rem] border border-text/10 p-6 text-center md:p-8"
+            className="theme-paper-card rounded-[1.5rem] border border-text/10 p-6 text-center md:self-start md:p-8"
             style={{ background: 'color-mix(in srgb, var(--color-surface) 78%, transparent)' }}
           >
-            <p className="font-sans text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-text-muted">{date.month}</p>
-            {date.day ? (
-              <p className="my-1 font-serif text-7xl leading-none text-accent md:text-8xl">{date.day}</p>
-            ) : (
-              <CalendarPlus className="mx-auto my-5 h-12 w-12 text-accent" strokeWidth={1.25} aria-hidden="true" />
-            )}
-            <p className="font-sans text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-text">{date.weekday}</p>
+            <div className="flex flex-col items-center">
+              <p className="font-sans text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-text-muted">{date.month}</p>
+              {date.day ? (
+                <p className="-mt-2 mb-1 font-serif text-7xl leading-none text-accent md:mb-0 md:mt-1 md:text-8xl md:leading-[0.72]">{date.day}</p>
+              ) : (
+                <CalendarPlus className="mx-auto my-5 h-12 w-12 text-accent" strokeWidth={1.25} aria-hidden="true" />
+              )}
+              <p className={`${date.day ? 'md:mt-6' : ''} font-sans text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-text`}>
+                {date.weekday}
+              </p>
+            </div>
 
             {hasPrimaryDetails && (
               <div className="mt-7 space-y-4">
@@ -227,13 +233,13 @@ export default function InvitationSection({ invitation, themeStyles }) {
           {rundown.length > 0 && (
             <motion.article
               variants={itemVariants}
-              className="theme-paper-card rounded-[1.5rem] border border-text/10 p-6 md:p-8"
+              className={`theme-paper-card rounded-[1.5rem] border border-text/10 p-6 md:self-start ${hasShortRundown ? 'md:p-7' : 'md:p-8'}`}
               style={{ background: 'color-mix(in srgb, var(--color-surface) 62%, transparent)' }}
             >
               <p className="font-sans text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-accent">
                 {invitation.rundownTitle || 'The evening'}
               </p>
-              <ol className="relative mt-6 space-y-0">
+              <ol className={`relative mt-6 space-y-0 ${hasShortRundown ? 'md:mt-5' : ''}`}>
                 {rundown.length > 1 && (
                   <span
                     className="pointer-events-none absolute bottom-5 left-[3.55rem] top-2 w-px"
@@ -242,7 +248,10 @@ export default function InvitationSection({ invitation, themeStyles }) {
                   />
                 )}
                 {rundown.map((item, index) => (
-                  <li key={`${item.time}-${item.title}-${index}`} className="relative grid grid-cols-[3rem_1fr] gap-6 pb-6 last:pb-0">
+                  <li
+                    key={`${item.time}-${item.title}-${index}`}
+                    className={`relative grid grid-cols-[3rem_1fr] gap-6 pb-6 last:pb-0 ${hasShortRundown ? 'md:pb-5' : hasLongRundown ? 'md:pb-4' : 'md:pb-6'}`}
+                  >
                     <time className="pt-0.5 font-sans text-xs font-semibold text-accent">{item.time || '—'}</time>
                     <span
                       className="pointer-events-none absolute left-[3.3rem] top-[0.34rem] z-10 h-2 w-2 rounded-full"
