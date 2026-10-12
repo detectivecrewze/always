@@ -7,7 +7,7 @@ import AestheticQRCode from '@/components/AestheticQRCode';
 import { themes } from '@/lib/themes';
 import { isVideoMedia } from '@/lib/videoValidation';
 
-const TABS = ['Theme', 'Opening', 'Hero', 'Time', 'Letter', 'Reasons', 'Seasons', 'Circle Wishes', 'Gallery', 'Music', 'Closing'];
+const TABS = ['Theme', 'Opening', 'Hero', 'Time', 'Letter', 'Reasons', 'Seasons', 'Circle Wishes', 'Gallery', 'Invitation', 'Music', 'Closing'];
 
 // ── Styles ────────────────────────────────────────────────────────
 const S = {
@@ -106,15 +106,16 @@ function TabTheme({ data, set }) {
 }
 
 // ── Field Components ──────────────────────────────────────────────
-function Field({ label, value, onChange, multiline, placeholder }) {
+function Field({ label, value, onChange, multiline, placeholder, type = 'text', help }) {
   return (
     <>
       <label style={S.label}>{label}</label>
       {multiline ? (
         <textarea style={S.textarea} value={value || ''} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
       ) : (
-        <input style={S.input} value={value || ''} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
+        <input type={type} style={S.input} value={value || ''} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
       )}
+      {help && <p style={{ margin: '0.35rem 0 0', color: '#666', fontSize: '0.67rem', lineHeight: 1.45 }}>{help}</p>}
     </>
   );
 }
@@ -1778,6 +1779,220 @@ function TabGallery({ data, set, slug }) {
   </>);
 }
 
+// ── Invitation Presets ───────────────────────────────────────────
+const INVITATION_PRESETS = [
+  {
+    id: 'birthday-dinner',
+    name: 'Birthday Dinner',
+    desc: 'An intimate dinner followed by a small surprise',
+    preTitle: 'a little plan for us',
+    title1: "You're Invited",
+    title2: 'to Celebrate',
+    message: 'Please keep this evening for us. I have planned a warm dinner, a little surprise, and time to celebrate you properly.',
+    rundownTitle: 'The evening',
+    dressCode: 'Earth tone',
+    dressCodeNote: 'Wear something comfortable and warm.',
+    notes: 'Please arrive with an empty stomach and no other plans.',
+    rundown: [
+      { time: '18:30', title: 'Meet at the venue', note: 'A little welcome before dinner' },
+      { time: '19:00', title: 'Birthday dinner', note: 'Your favorite menu is waiting' },
+      { time: '20:15', title: 'Cake and surprise', note: 'One wish and one new memory' },
+      { time: '21:00', title: 'Photo together', note: 'So we can keep this night forever' },
+    ],
+  },
+  {
+    id: 'birthday-celebration',
+    name: 'Birthday Celebration',
+    desc: 'A cheerful plan for dinner, cake, and shared memories',
+    preTitle: 'one more birthday surprise',
+    title1: 'A Celebration',
+    title2: 'Made for You',
+    message: 'There is still one more part of your birthday waiting. Come celebrate with good food, warm conversations, and the people who love you.',
+    rundownTitle: 'Celebration plan',
+    dressCode: 'Smart casual',
+    dressCodeNote: 'Choose an outfit you feel happiest in.',
+    notes: 'You only need to bring yourself. Everything else is prepared.',
+    rundown: [
+      { time: '17:30', title: 'Welcome', note: 'Meet and settle in' },
+      { time: '18:00', title: 'Dinner together', note: 'A table prepared for the celebration' },
+      { time: '19:30', title: 'Birthday moment', note: 'Cake, wishes, and a small surprise' },
+      { time: '20:30', title: 'Pictures and stories', note: 'Time to capture the evening' },
+    ],
+  },
+  {
+    id: 'romantic-date',
+    name: 'Romantic Date',
+    desc: 'A simple invitation for dinner and quality time',
+    preTitle: 'a date to remember',
+    title1: "Let's Make",
+    title2: 'a Memory',
+    message: 'I want to take you somewhere special, share a quiet meal, and enjoy a little more time with my favorite person.',
+    rundownTitle: 'Our little plan',
+    dressCode: 'Your favorite outfit',
+    dressCodeNote: 'The one that always makes you feel confident.',
+    notes: 'Keep the rest of the evening free for us.',
+    rundown: [
+      { time: '18:00', title: 'Meet up', note: 'Our evening starts here' },
+      { time: '18:30', title: 'Dinner', note: 'Good food and unhurried conversation' },
+      { time: '20:00', title: 'A little walk', note: 'One more quiet moment together' },
+    ],
+  },
+  {
+    id: 'simple-plan',
+    name: 'Simple Plan',
+    desc: 'A flexible invitation with only the essential details',
+    preTitle: 'save the date',
+    title1: 'A Little Plan',
+    title2: 'Just for Us',
+    message: 'I have prepared a little plan for us. Save the date and let me take care of everything else.',
+    rundownTitle: 'The plan',
+    dressCode: '',
+    dressCodeNote: '',
+    notes: '',
+    rundown: [
+      { time: '18:30', title: 'Meet', note: '' },
+      { time: '19:00', title: 'Celebrate together', note: '' },
+    ],
+  },
+];
+
+function TabInvitation({ data, set }) {
+  const invitationEnabled = Boolean(data.invitationEnabled);
+  const rundown = Array.isArray(data.invitationRundown) ? data.invitationRundown : [];
+  const currentPreset = INVITATION_PRESETS.find(
+    (preset) => preset.title1 === data.invitationTitle1 && preset.title2 === data.invitationTitle2
+  )?.id || null;
+
+  const setRundownItem = (index, key, value) => {
+    const next = rundown.map((item, itemIndex) => (
+      itemIndex === index ? { ...item, [key]: value } : item
+    ));
+    set('invitationRundown', next);
+  };
+
+  const addRundownItem = () => {
+    if (rundown.length >= 8) return;
+    set('invitationRundown', [...rundown, { time: '', title: '', note: '' }]);
+  };
+
+  const removeRundownItem = (index) => {
+    set('invitationRundown', rundown.filter((_, itemIndex) => itemIndex !== index));
+  };
+
+  const moveRundownItem = (index, direction) => {
+    const target = direction === 'up' ? index - 1 : index + 1;
+    if (target < 0 || target >= rundown.length) return;
+    const next = [...rundown];
+    [next[index], next[target]] = [next[target], next[index]];
+    set('invitationRundown', next);
+  };
+
+  const applyPreset = (preset) => {
+    set('invitationEnabled', true);
+    set('invitationPreTitle', preset.preTitle);
+    set('invitationTitle1', preset.title1);
+    set('invitationTitle2', preset.title2);
+    set('invitationMessage', preset.message);
+    set('invitationRundownTitle', preset.rundownTitle);
+    set('invitationDressCode', preset.dressCode);
+    set('invitationDressCodeNote', preset.dressCodeNote);
+    set('invitationNotes', preset.notes);
+    set('invitationRundown', preset.rundown.map((item) => ({ ...item })));
+    if (data.invitationCalendarEnabled === undefined) set('invitationCalendarEnabled', true);
+  };
+
+  return (<>
+    <div style={S.sectionTitle}>Invitation and Rundown</div>
+    <div style={S.sectionDesc}>Add an optional celebration plan near the end of the gift. Location and Maps are optional.</div>
+
+    <Toggle
+      label="Enable Invitation Section"
+      desc="Show the invitation after the Gallery and before the Closing section."
+      value={invitationEnabled}
+      onChange={(value) => {
+        set('invitationEnabled', value);
+        if (value && !data.invitationTitle1) applyPreset(INVITATION_PRESETS[0]);
+      }}
+    />
+
+    <div style={{ opacity: invitationEnabled ? 1 : 0.5, pointerEvents: invitationEnabled ? 'auto' : 'none' }}>
+      <div className="w-full h-px bg-[#1a1a1a] my-5" />
+      <div style={S.sectionTitle}>Choose a Preset</div>
+      <div style={S.sectionDesc}>Start with a suitable occasion, then customize every detail below.</div>
+      <PresetGrid presets={INVITATION_PRESETS} currentId={currentPreset} onApply={applyPreset} />
+
+      <div className="w-full h-px bg-[#1a1a1a] my-5" />
+      <div style={S.sectionTitle}>Invitation Copy</div>
+      <Field label="Pre-title" value={data.invitationPreTitle} onChange={(v) => set('invitationPreTitle', v)} placeholder="a little plan for us" />
+      <Field label="Headline 1" value={data.invitationTitle1} onChange={(v) => set('invitationTitle1', v)} placeholder="You're Invited" />
+      <Field label="Headline 2" value={data.invitationTitle2} onChange={(v) => set('invitationTitle2', v)} placeholder="to Celebrate" />
+      <Field label="Invitation message" value={data.invitationMessage} onChange={(v) => set('invitationMessage', v)} placeholder="Please keep this evening for us..." multiline />
+
+      <div className="w-full h-px bg-[#1a1a1a] my-5" />
+      <div style={S.sectionTitle}>Date and Time</div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <Field label="Date" type="date" value={data.invitationDate} onChange={(v) => set('invitationDate', v)} />
+        <Field label="Start time" type="time" value={data.invitationStartTime} onChange={(v) => set('invitationStartTime', v)} />
+        <Field label="End time" type="time" value={data.invitationEndTime} onChange={(v) => set('invitationEndTime', v)} />
+      </div>
+
+      <div className="w-full h-px bg-[#1a1a1a] my-5" />
+      <div style={S.sectionTitle}>Place and Dress Code</div>
+      <div style={S.sectionDesc}>All fields in this group are optional. Leave them empty when the location is private or has not been decided.</div>
+      <Field label="Venue name (optional)" value={data.invitationVenueName} onChange={(v) => set('invitationVenueName', v)} placeholder="Restaurant or venue name" />
+      <Field label="Address (optional)" value={data.invitationAddress} onChange={(v) => set('invitationAddress', v)} placeholder="Full address" />
+      <Field
+        label="Google Maps or location URL (optional)"
+        type="url"
+        value={data.invitationMapsUrl}
+        onChange={(v) => set('invitationMapsUrl', v)}
+        placeholder="https://maps.google.com/..."
+        help="The Open Location button only appears when a valid http or https URL is provided."
+      />
+      {data.invitationMapsUrl && (
+        <Field label="Maps button label" value={data.invitationMapsLabel} onChange={(v) => set('invitationMapsLabel', v)} placeholder="Open location" />
+      )}
+      <Field label="Dress code (optional)" value={data.invitationDressCode} onChange={(v) => set('invitationDressCode', v)} placeholder="Earth tone" />
+      <Field label="Dress code note (optional)" value={data.invitationDressCodeNote} onChange={(v) => set('invitationDressCodeNote', v)} placeholder="Wear something comfortable and warm." />
+
+      <div className="w-full h-px bg-[#1a1a1a] my-5" />
+      <div style={S.sectionTitle}>Rundown</div>
+      <Field label="Rundown title" value={data.invitationRundownTitle} onChange={(v) => set('invitationRundownTitle', v)} placeholder="The evening" />
+      {rundown.map((item, index) => (
+        <div key={index} style={S.cardWrap}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem', alignItems: 'center', marginBottom: '0.5rem' }}>
+            <span style={{ color: '#777', fontSize: '0.7rem', fontWeight: 600 }}>Schedule {index + 1}</span>
+            <div style={{ display: 'flex', gap: '0.35rem' }}>
+              {index > 0 && <button type="button" style={S.smallBtn('#888')} onClick={() => moveRundownItem(index, 'up')}>Move up</button>}
+              {index < rundown.length - 1 && <button type="button" style={S.smallBtn('#888')} onClick={() => moveRundownItem(index, 'down')}>Move down</button>}
+              <button type="button" style={S.smallBtn('#EF4444')} onClick={() => removeRundownItem(index)}>Remove</button>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-[130px_1fr] gap-3">
+            <Field label="Time" type="time" value={item.time} onChange={(v) => setRundownItem(index, 'time', v)} />
+            <Field label="Activity" value={item.title} onChange={(v) => setRundownItem(index, 'title', v)} placeholder="Birthday dinner" />
+          </div>
+          <Field label="Short note (optional)" value={item.note} onChange={(v) => setRundownItem(index, 'note', v)} placeholder="Your favorite menu is waiting" />
+        </div>
+      ))}
+      <button type="button" style={S.smallBtn('#22C55E')} onClick={addRundownItem} disabled={rundown.length >= 8}>
+        Add Schedule ({rundown.length}/8)
+      </button>
+
+      <div className="w-full h-px bg-[#1a1a1a] my-5" />
+      <div style={S.sectionTitle}>Final Note and Calendar</div>
+      <Field label="Final note (optional)" value={data.invitationNotes} onChange={(v) => set('invitationNotes', v)} placeholder="Please arrive with an empty stomach and no other plans." multiline />
+      <Toggle
+        label="Enable Add to Calendar"
+        desc="Shown only when an invitation date is filled. This does not require Maps."
+        value={data.invitationCalendarEnabled ?? true}
+        onChange={(v) => set('invitationCalendarEnabled', v)}
+      />
+      <Field label="Calendar button label" value={data.invitationCalendarLabel} onChange={(v) => set('invitationCalendarLabel', v)} placeholder="Add to calendar" />
+    </div>
+  </>);
+}
+
 function TabMusic({ data, set, slug }) {
   const music = data.music || {};
   const setMusic = (key, val) => set('music', { ...music, [key]: val });
@@ -1903,7 +2118,7 @@ function TabClosing({ data, set, slug }) {
   </>);
 }
 
-const TAB_COMPONENTS = [TabTheme, TabOpening, TabHero, TabTime, TabLetter, TabReasons, TabSeasons, TabCircleWishes, TabGallery, TabMusic, TabClosing];
+const TAB_COMPONENTS = [TabTheme, TabOpening, TabHero, TabTime, TabLetter, TabReasons, TabSeasons, TabCircleWishes, TabGallery, TabInvitation, TabMusic, TabClosing];
 
 // ── Main Editor ───────────────────────────────────────────────────
 export default function StudioEditor({ params: paramsPromise }) {

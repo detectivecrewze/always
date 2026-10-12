@@ -15,6 +15,7 @@ import SeasonsSection from '@/components/SeasonsSection';
 import CircleWishesSection from '@/components/CircleWishesSection';
 import MusicPlayer from '@/components/MusicPlayer';
 import Gallery from '@/components/Gallery';
+import InvitationSection from '@/components/InvitationSection';
 import ClosingSection from '@/components/ClosingSection';
 import PreviewOnlyBadge from '@/components/PreviewOnlyBadge';
 import LockedSection from '@/components/LockedSection';
@@ -363,6 +364,31 @@ export default function GiftPage({ data }) {
                 galleryTitle1={data.galleryTitle1}
                 galleryTitle2={data.galleryTitle2}
                 freeCount={isPreview ? 2 : undefined}
+              />
+            )}
+
+            {data.invitationEnabled && (
+              <InvitationSection
+                invitation={{
+                  preTitle: data.invitationPreTitle,
+                  title1: data.invitationTitle1,
+                  title2: data.invitationTitle2,
+                  message: data.invitationMessage,
+                  date: data.invitationDate,
+                  startTime: data.invitationStartTime,
+                  endTime: data.invitationEndTime,
+                  venueName: data.invitationVenueName,
+                  address: data.invitationAddress,
+                  mapsUrl: data.invitationMapsUrl,
+                  mapsLabel: data.invitationMapsLabel,
+                  dressCode: data.invitationDressCode,
+                  dressCodeNote: data.invitationDressCodeNote,
+                  rundownTitle: data.invitationRundownTitle,
+                  rundown: data.invitationRundown,
+                  notes: data.invitationNotes,
+                  calendarEnabled: data.invitationCalendarEnabled,
+                  calendarLabel: data.invitationCalendarLabel,
+                }}
               />
             )}
 

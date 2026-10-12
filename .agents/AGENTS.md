@@ -67,6 +67,9 @@ When the user asks to process a new order, ALWAYS follow these steps:
 | `circleWishes` | Array hingga 7 slot untuk **Circle Edition** (`CircleWishesSection.jsx`). Tiap item memiliki `{ id, name, message, photoUrl, mediaUrl, audioUrl, mediaType, audioDuration }`. Mendukung foto, video klip (.mp4), dan rekaman suara (.mp3). |
 | `circleTitle1` & `circleTitle2` | Judul utama section Circle Wishes. Default group: `"A Circle of Love"` & `"For You"`. Untuk personal video vault: `"Captured in Motion"` & `"Our Favorite Moments"`. Untuk personal notes: `"Seven Little Notes"` & `"From My Heart"`. |
 | `circleSubtitle` | Subtitle pengantar section Circle Wishes. Sesuaikan konteks: apakah pesan dari sahabat/teman (group) atau cuplikan video / catatan cinta personal (personal vault). |
+| `invitationEnabled` | Section undangan/rundown opsional. Default `false`. Aktifkan hanya jika customer meminta ajakan makan, perayaan, date, atau rundown acara. |
+| `invitationMapsUrl` | Opsional. Jangan membuat URL Maps sendiri. Jika customer tidak memberi link lokasi, biarkan string kosong; tombol Maps tidak akan dirender. |
+| `invitationRundown` | Array maksimal 8 item dengan bentuk `{ time, title, note }`. Susun berdasarkan urutan waktu dan jangan gunakan section Seasons sebagai pengganti invitation. |
 
 ---
 
