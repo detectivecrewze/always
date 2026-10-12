@@ -68,8 +68,90 @@ When the user asks to process a new order, ALWAYS follow these steps:
 | `circleTitle1` & `circleTitle2` | Judul utama section Circle Wishes. Default group: `"A Circle of Love"` & `"For You"`. Untuk personal video vault: `"Captured in Motion"` & `"Our Favorite Moments"`. Untuk personal notes: `"Seven Little Notes"` & `"From My Heart"`. |
 | `circleSubtitle` | Subtitle pengantar section Circle Wishes. Sesuaikan konteks: apakah pesan dari sahabat/teman (group) atau cuplikan video / catatan cinta personal (personal vault). |
 | `invitationEnabled` | Section undangan/rundown opsional. Default `false`. Aktifkan hanya jika customer meminta ajakan makan, perayaan, date, atau rundown acara. |
-| `invitationMapsUrl` | Opsional. Jangan membuat URL Maps sendiri. Jika customer tidak memberi link lokasi, biarkan string kosong; tombol Maps tidak akan dirender. |
+| `invitationMapsUrl` | Opsional. Menerima full Google Maps URL atau koordinat mentah `latitude, longitude`. Jangan membuat URL atau koordinat sendiri. Jika customer tidak memberi lokasi, biarkan string kosong; tombol Maps tidak akan dirender. |
+| `invitationVenuePhotoUrl` | Opsional. URL foto tempat yang benar-benar diberikan customer atau sudah di-upload ke R2/CDN. Jangan scrape atau hotlink foto dari Google Maps dan website venue. Kosongkan jika tidak tersedia. |
+| `invitationVenueNote` | Opsional, maksimal 180 karakter. Deskripsi singkat suasana/alasan pemilihan tempat. Jangan mengarang fasilitas, rating, harga, atau fakta venue yang tidak diberikan customer. |
 | `invitationRundown` | Array maksimal 8 item dengan bentuk `{ time, title, note }`. Susun berdasarkan urutan waktu dan jangan gunakan section Seasons sebagai pengganti invitation. |
+
+---
+
+## Invitation Section dan Aturan Injection KV
+
+Section Invitation digunakan untuk ajakan makan, ulang tahun, perayaan, date, atau acara lain yang memiliki tanggal, lokasi, dress code, dan rundown. Section ini dirender setelah Gallery dan sebelum Closing.
+
+### 1. Kapan Invitation Diaktifkan
+
+- Default seluruh gift lama dan order biasa adalah `invitationEnabled: false`.
+- Set `invitationEnabled: true` hanya jika customer meminta invitation, ajakan merayakan, agenda makan, date plan, atau rundown acara.
+- Jangan memakai section Seasons sebagai pengganti invitation.
+- Field Invitation harus dimasukkan ke `gift:{kvId}` dan `draft:{kvId}` agar gift publik dan Studio Editor membaca data yang sama.
+
+### 2. Kontrak Field Lengkap
+
+```javascript
+const invitationData = {
+  invitationEnabled: true,
+  invitationPreTitle: "a little plan for us",
+  invitationTitle1: "You're Invited",
+  invitationTitle2: "to Celebrate",
+  invitationMessage: "Please keep this evening for us. I have planned something warm and special for you.",
+
+  // Format tanggal YYYY-MM-DD dan jam HH:mm.
+  invitationDate: "2026-11-19",
+  invitationStartTime: "18:30",
+  invitationEndTime: "21:00", // Boleh string kosong.
+
+  invitationVenueName: "Nama venue",
+  invitationAddress: "Alamat lengkap venue",
+  invitationVenuePhotoUrl: "", // URL R2/CDN milik customer, opsional.
+  invitationVenueNote: "A warm place for dinner, stories, and a little celebration.", // Maks 180 karakter.
+  invitationMapsUrl: "-6.244521, 106.800763", // Atau full Google Maps URL.
+  invitationMapsLabel: "View location",
+
+  invitationDressCode: "Earth tone",
+  invitationDressCodeNote: "Wear something comfortable and warm.",
+
+  invitationRundownTitle: "The evening",
+  invitationRundown: [
+    { time: "18:30", title: "Meet at the venue", note: "A little welcome before dinner" },
+    { time: "19:00", title: "Birthday dinner", note: "Your favorite menu is waiting" },
+    { time: "20:15", title: "Cake and surprise", note: "One wish and one new memory" }
+  ],
+
+  invitationNotes: "Please arrive with an empty stomach and no other plans.",
+  invitationCalendarEnabled: true,
+  invitationCalendarLabel: "Add to calendar"
+};
+
+Object.assign(giftData, invitationData);
+Object.assign(draftData, invitationData);
+```
+
+### 3. Aturan Peta dan Exact Pin
+
+- Prioritas terbaik adalah koordinat mentah dengan format `latitude, longitude`, misalnya `-6.244521, 106.800763`.
+- Full Google Maps URL dari address bar juga diterima. Sistem mengekstrak koordinat atau Place ID secara otomatis dan menampilkan satu exact pin.
+- Link pendek `maps.app.goo.gl` tidak memuat koordinat yang dapat dibaca langsung oleh browser. Jika hanya ada link pendek, simpan link tersebut untuk navigasi tetapi minta full link atau koordinat agar exact pin akurat.
+- Jangan menebak koordinat dari nama restoran atau alamat.
+- Jangan memakai alamat customer sebagai lokasi acara kecuali customer memang menyatakannya.
+- Jika `invitationMapsUrl` kosong, modal dan tombol Maps tidak dirender.
+
+### 4. Aturan Foto dan Detail Venue
+
+- `invitationVenuePhotoUrl` hanya boleh berasal dari upload customer, media pada order, atau aset yang sudah diunggah resmi ke R2/CDN.
+- Jangan mengambil foto Google Maps, Google Reviews, Instagram, atau website venue tanpa izin.
+- Jika foto kosong, layout otomatis menampilkan peta dalam ukuran penuh tanpa panel foto.
+- `invitationVenueNote` adalah copy suasana singkat, bukan data faktual otomatis. Jangan menulis rating, jam buka, menu, harga, aksesibilitas, atau fasilitas jika customer tidak memberikannya.
+- Google rating, ulasan, foto otomatis, dan jam operasional memerlukan Google Places API serta billing. Fitur tersebut belum menjadi bagian dari workflow injection KV.
+
+### 5. Aturan Rundown dan Kalender
+
+- `invitationRundown` maksimal 8 item dan setiap item memakai `{ time, title, note }`.
+- Urutkan item berdasarkan jam acara. `note` boleh string kosong.
+- `invitationDate` wajib memakai `YYYY-MM-DD`. Jam memakai `HH:mm` agar kalender dapat dibuat dengan benar.
+- `invitationEndTime` boleh kosong jika customer belum menentukan jam selesai.
+- Aktifkan `invitationCalendarEnabled` hanya jika `invitationDate` sudah valid.
+- Jika customer tidak memberikan salah satu data opsional, gunakan string kosong. Jangan mengisi fakta buatan hanya agar kartu terlihat penuh.
 
 ---
 
