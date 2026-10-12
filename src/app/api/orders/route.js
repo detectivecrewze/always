@@ -22,12 +22,31 @@ function writeLocalOrders(orders) {
   fs.writeFileSync(filePath, JSON.stringify(orders, null, 2));
 }
 
+function normalizeHttpUrl(value) {
+  if (!value) return '';
+  try {
+    const url = new URL(String(value));
+    return url.protocol === 'https:' || url.protocol === 'http:' ? url.toString() : '';
+  } catch {
+    return '';
+  }
+}
+
 // POST /api/orders — public, no auth needed
 export async function POST(request) {
   try {
     const data = await request.json();
     if (!data.sender || !data.recipient || !data.slug) {
       return NextResponse.json({ error: 'sender, recipient, and slug are required' }, { status: 400 });
+    }
+
+    const invitationEnabled = data.invitationEnabled === true;
+    if (invitationEnabled) {
+      const validDate = /^\d{4}-\d{2}-\d{2}$/.test(data.invitationDate || '');
+      const validStartTime = /^\d{2}:\d{2}$/.test(data.invitationStartTime || '');
+      if (!validDate || !validStartTime || !String(data.invitationVenueName || '').trim()) {
+        return NextResponse.json({ error: 'Invitation requires a valid date, start time, and venue name' }, { status: 400 });
+      }
     }
 
     // VALIDATION: Only allow placing an order for a slug that exists
@@ -47,6 +66,15 @@ export async function POST(request) {
       ...data,
       orderId,
       isCircle,
+      invitationEnabled,
+      invitationDate: invitationEnabled ? data.invitationDate : '',
+      invitationStartTime: invitationEnabled ? data.invitationStartTime : '',
+      invitationEndTime: invitationEnabled ? String(data.invitationEndTime || '') : '',
+      invitationVenueName: invitationEnabled ? String(data.invitationVenueName || '').trim() : '',
+      invitationAddress: invitationEnabled ? String(data.invitationAddress || '').trim() : '',
+      invitationMapsUrl: invitationEnabled ? normalizeHttpUrl(data.invitationMapsUrl) : '',
+      invitationDressCode: invitationEnabled ? String(data.invitationDressCode || '').trim() : '',
+      invitationRundownNotes: invitationEnabled ? String(data.invitationRundownNotes || '').trim() : '',
       ...(isCircle && { circleQuota, slots }),
       status: data.isCircle === true ? 'collecting' : 'pending',
       createdAt: new Date().toISOString(),

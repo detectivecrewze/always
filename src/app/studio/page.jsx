@@ -15,6 +15,42 @@ function getThemeDisplayName(themeId) {
   return themes[themeId]?.name || String(themeId).replace(/-/g, ' ');
 }
 
+function formatInvitationDate(value) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || '');
+  if (!match) return value || 'Tanggal belum diisi';
+  return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])).toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+function parseInvitationRundown(value) {
+  return String(value || '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .slice(0, 8)
+    .map((line) => {
+      const match = /^(\d{1,2})[.:](\d{2})\s*(?:-|–|—|\|)\s*(.+)$/.exec(line);
+      if (!match) return { time: '', title: line, note: '' };
+      return {
+        time: `${match[1].padStart(2, '0')}:${match[2]}`,
+        title: match[3].trim(),
+        note: '',
+      };
+    });
+}
+
+function safeExternalUrl(value) {
+  try {
+    const url = new URL(String(value || ''));
+    return url.protocol === 'https:' || url.protocol === 'http:' ? url.toString() : '';
+  } catch {
+    return '';
+  }
+}
+
 export default function StudioDashboard() {
   const [gifts, setGifts] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -335,6 +371,9 @@ export default function StudioDashboard() {
           console.error('Failed to sync circle wishes:', err);
         }
       }
+      const invitationRundown = order.invitationEnabled
+        ? parseInvitationRundown(order.invitationRundownNotes)
+        : [];
 
       const updatedGift = {
         ...existingGift,
@@ -360,6 +399,18 @@ export default function StudioDashboard() {
           timeStartDate: order.specialDate,
           ...(order.specialDateOccasion && { timeTitle: order.specialDateOccasion })
         }),
+        ...(order.invitationEnabled ? {
+          invitationEnabled: true,
+          invitationDate: order.invitationDate || '',
+          invitationStartTime: order.invitationStartTime || '',
+          invitationEndTime: order.invitationEndTime || '',
+          invitationVenueName: order.invitationVenueName || '',
+          invitationAddress: order.invitationAddress || '',
+          invitationMapsUrl: order.invitationMapsUrl || '',
+          invitationDressCode: order.invitationDressCode || '',
+          invitationRundown,
+          invitationCalendarEnabled: true,
+        } : {}),
       };
       await fetch(`/api/gifts/${order.slug}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updatedGift) });
       await fetch(`/api/orders/${order.orderId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'done' }) });
@@ -1044,6 +1095,18 @@ export default function StudioDashboard() {
                           <span>{o.status === 'ready_to_craft' ? `Ready to Craft · ${o.usedSlots || o.circleWishesCount || 0}/${o.totalSlots || o.circleQuota || 8} ucapan` : `Collecting · ${o.usedSlots || o.circleWishesCount || 0}/${o.totalSlots || o.circleQuota || 8} ucapan`}</span>
                         </div>
                       )}
+                      {o.invitationEnabled && (
+                        <div style={{
+                          display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+                          background: '#EC489918', border: '1px solid #EC489955',
+                          borderRadius: '6px', padding: '0.25rem 0.6rem',
+                          fontSize: '0.72rem', color: '#F9A8D4', fontWeight: 600,
+                        }}>
+                          <span>Invitation</span>
+                          <span style={{ opacity: 0.7 }}>·</span>
+                          <span>{formatInvitationDate(o.invitationDate)}</span>
+                        </div>
+                      )}
                     </div>
 
                     <div style={S.cardName}>From: {o.sender}</div>
@@ -1133,7 +1196,12 @@ export default function StudioDashboard() {
                       </div>
                       <div style={S.cardName}>From: {d.sender || '...'}</div>
                       <div style={{ fontSize: '0.85rem', color: '#aaa', marginBottom: '0.2rem' }}>To: {d.recipient || '...'} (/{d.slug})</div>
-                      <div style={{ fontSize: '0.8rem', color: '#888', marginBottom: '1rem' }}>Theme: {getThemeDisplayName(d.theme)}</div>
+                      <div style={{ fontSize: '0.8rem', color: '#888', marginBottom: d.invitationEnabled ? '0.5rem' : '1rem' }}>Theme: {getThemeDisplayName(d.theme)}</div>
+                      {d.invitationEnabled && (
+                        <div style={{ display: 'inline-flex', background: '#EC489918', border: '1px solid #EC489940', color: '#F9A8D4', borderRadius: '6px', padding: '2px 8px', marginBottom: '0.8rem', fontSize: '0.7rem', fontWeight: 600 }}>
+                          Invitation draft · {formatInvitationDate(d.invitationDate)}
+                        </div>
+                      )}
                       <div style={S.actions}>
                         <button style={S.actionBtn('#8B5CF6')} onClick={() => setSelectedOrder({ ...d, isDraft: true })}>View Progress</button>
                         <button style={{ ...S.actionBtn('#EF4444'), padding: '0.4rem', flex: '0 0 auto', border: '1px solid #EF444440' }} onClick={() => handleDeleteDraft(d.slug)} title="Hapus Draft">🗑️</button>
@@ -1225,6 +1293,19 @@ export default function StudioDashboard() {
                           <span>👥 Circle Edition</span>
                           <span>·</span>
                           <span>{o.usedSlots || o.circleWishesCount || 0}/{o.totalSlots || o.circleQuota || 8} Slot Terisi</span>
+                        </div>
+                      )}
+
+                      {o.invitationEnabled && (
+                        <div style={{
+                          display: 'inline-flex', alignItems: 'center', gap: '5px',
+                          background: 'rgba(236,72,153,0.12)',
+                          border: '1px solid rgba(236,72,153,0.3)',
+                          padding: '2px 8px', borderRadius: '6px',
+                          fontSize: '0.72rem', color: '#F9A8D4', fontWeight: 600,
+                          marginBottom: '0.5rem', marginLeft: o.isCircle ? '0.35rem' : 0,
+                        }}>
+                          Invitation · {formatInvitationDate(o.invitationDate)}
                         </div>
                       )}
 
@@ -1380,6 +1461,35 @@ export default function StudioDashboard() {
                    `Request: ${selectedOrder.music || 'None'}`}
                 </div>
               </div>
+
+              {selectedOrder.invitationEnabled && (
+                <div style={{ gridColumn: 'span 2', background: '#EC489910', border: '1px solid #EC489940', borderRadius: '10px', padding: '0.9rem 1rem' }}>
+                  <div style={{ ...S.label, color: '#F9A8D4', marginBottom: '0.7rem' }}>Invitation Request</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.8rem', fontSize: '0.82rem', color: '#e5e5e5' }}>
+                    <div><div style={{ color: '#888', fontSize: '0.68rem', marginBottom: '2px' }}>TANGGAL</div>{formatInvitationDate(selectedOrder.invitationDate)}</div>
+                    <div><div style={{ color: '#888', fontSize: '0.68rem', marginBottom: '2px' }}>JAM</div>{selectedOrder.invitationStartTime || '-'}{selectedOrder.invitationEndTime ? ` – ${selectedOrder.invitationEndTime}` : ''}</div>
+                    <div><div style={{ color: '#888', fontSize: '0.68rem', marginBottom: '2px' }}>TEMPAT</div>{selectedOrder.invitationVenueName || '-'}</div>
+                    <div><div style={{ color: '#888', fontSize: '0.68rem', marginBottom: '2px' }}>DRESS CODE</div>{selectedOrder.invitationDressCode || 'Tidak diisi'}</div>
+                  </div>
+                  {selectedOrder.invitationAddress && (
+                    <div style={{ marginTop: '0.75rem', fontSize: '0.8rem', lineHeight: 1.5, color: '#bbb' }}>
+                      <div style={{ color: '#888', fontSize: '0.68rem', marginBottom: '2px' }}>ALAMAT</div>
+                      {selectedOrder.invitationAddress}
+                    </div>
+                  )}
+                  {safeExternalUrl(selectedOrder.invitationMapsUrl) && (
+                    <a href={safeExternalUrl(selectedOrder.invitationMapsUrl)} target="_blank" rel="noreferrer" style={{ display: 'inline-block', marginTop: '0.7rem', color: '#F9A8D4', fontSize: '0.78rem' }}>
+                      Buka link Google Maps
+                    </a>
+                  )}
+                  {selectedOrder.invitationRundownNotes && (
+                    <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #EC489928', fontSize: '0.8rem', lineHeight: 1.6, color: '#ddd', whiteSpace: 'pre-wrap' }}>
+                      <div style={{ color: '#888', fontSize: '0.68rem', marginBottom: '4px' }}>RENCANA SINGKAT</div>
+                      {selectedOrder.invitationRundownNotes}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* PIN Protection Info */}
               <div style={{ gridColumn: 'span 2', background: selectedOrder.pinEnabled || selectedOrder.pinCode ? '#7C3AED12' : '#ffffff08', border: `1px solid ${selectedOrder.pinEnabled || selectedOrder.pinCode ? '#7C3AED40' : '#ffffff10'}`, borderRadius: '8px', padding: '0.75rem 1rem' }}>

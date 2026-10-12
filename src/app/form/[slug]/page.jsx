@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { themes } from '@/lib/themes';
 import playlist from '@/app/studio/playlist.json';
-import { Flower2, Leaf, Clock, Heart, Music, Image as ImageIcon, Lock, CheckCircle2, Sparkles, Video, Star, Camera, Handshake, HeartHandshake } from 'lucide-react';
+import { Flower2, Leaf, Clock, Heart, Music, Image as ImageIcon, Lock, CheckCircle2, Sparkles, Video, Star, Camera, Handshake, HeartHandshake, CalendarDays, MapPin } from 'lucide-react';
 
 
 
@@ -66,6 +66,15 @@ export default function OrderForm() {
     recipientBirthdate: '',
     relationship: '',
     deadline: '',
+    invitationEnabled: false,
+    invitationDate: '',
+    invitationStartTime: '',
+    invitationEndTime: '',
+    invitationVenueName: '',
+    invitationAddress: '',
+    invitationMapsUrl: '',
+    invitationDressCode: '',
+    invitationRundownNotes: '',
     theme: 'vintage-burgundy',
     tone: ['Santai'],
     language: 'Full Indonesia',
@@ -175,6 +184,21 @@ export default function OrderForm() {
 
   const [validationError, setValidationError] = useState('');
 
+  const getInvitationValidationError = () => {
+    if (!data.invitationEnabled) return '';
+    if (!data.invitationDate || !data.invitationStartTime) {
+      return isEn
+        ? 'Please fill in the invitation date and start time.'
+        : 'Mohon isi tanggal dan jam mulai acara.';
+    }
+    if (!data.invitationVenueName?.trim()) {
+      return isEn
+        ? 'Please fill in the venue name.'
+        : 'Mohon isi nama tempat acara.';
+    }
+    return '';
+  };
+
   const handleNext = () => {
     setValidationError('');
     if (step === 1 && (!data.sender?.trim() || !data.recipient?.trim())) {
@@ -273,6 +297,11 @@ export default function OrderForm() {
     }
     if (!data.message?.trim()) {
       alert(isEn ? 'Please fill in the main message you want to share.' : 'Mohon isi pesan utama yang ingin disampaikan.');
+      return;
+    }
+    const invitationError = getInvitationValidationError();
+    if (invitationError) {
+      alert(invitationError);
       return;
     }
     if (data.pinEnabled && (!data.pinCode || data.pinCode.length < 4)) {
@@ -1490,6 +1519,153 @@ export default function OrderForm() {
                 <input type="file" accept="image/*,video/mp4" ref={secretInputRef} style={{ display: 'none' }} onChange={(e) => handleFileChange(e, true)} />
               </div>
 
+              {/* Optional Invitation Request */}
+              <div style={{ marginTop: '1rem', paddingTop: '1.5rem', borderTop: `1px solid ${currentTheme.text}15` }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+                  <div style={{ minWidth: 0 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.9rem', fontWeight: 600 }}>
+                      <CalendarDays size={16} strokeWidth={1.7} />
+                      {isEn ? 'Add an event invitation' : 'Tambahkan undangan acara'}
+                    </label>
+                    <p style={{ fontSize: '0.78rem', opacity: 0.58, marginTop: '0.3rem', lineHeight: 1.45 }}>
+                      {isEn
+                        ? 'Optional. Use this if the gift also includes a dinner, birthday, or celebration plan.'
+                        : 'Opsional. Gunakan jika gift ini sekaligus berisi ajakan makan atau rencana perayaan.'}
+                    </p>
+                  </div>
+                  <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', flexShrink: 0 }}>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(data.invitationEnabled)}
+                      onChange={e => update('invitationEnabled', e.target.checked)}
+                      aria-label={isEn ? 'Add an event invitation' : 'Tambahkan undangan acara'}
+                      style={{ opacity: 0, width: 0, height: 0, position: 'absolute' }}
+                    />
+                    <span style={{
+                      position: 'absolute', cursor: 'pointer', inset: 0,
+                      backgroundColor: data.invitationEnabled ? currentTheme.text : 'rgba(0,0,0,0.1)',
+                      transition: '.3s', borderRadius: '24px',
+                      border: `1px solid ${data.invitationEnabled ? 'transparent' : currentTheme.text + '25'}`
+                    }}>
+                      <span style={{
+                        position: 'absolute', height: '18px', width: '18px',
+                        left: data.invitationEnabled ? '22px' : '2px', bottom: '2px',
+                        backgroundColor: data.invitationEnabled ? currentTheme.bg : currentTheme.text,
+                        transition: '.3s', borderRadius: '50%'
+                      }} />
+                    </span>
+                  </label>
+                </div>
+
+                <AnimatePresence>
+                  {data.invitationEnabled && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      style={{ overflow: 'hidden' }}
+                    >
+                      <div style={{ marginTop: '1rem', padding: '1rem', borderRadius: '14px', background: `${currentTheme.text}06`, border: `1px solid ${currentTheme.text}18`, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <p style={{ margin: 0, fontSize: '0.74rem', opacity: 0.62, lineHeight: 1.5 }}>
+                          {isEn
+                            ? 'Fill in the essential details. Our team will arrange the wording and visual presentation.'
+                            : 'Isi detail utamanya saja. Tim kami akan merapikan kata-kata dan tampilan undangannya.'}
+                        </p>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '0.85rem' }}>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 500, marginBottom: '0.3rem' }}>{isEn ? 'Event date' : 'Tanggal acara'} *</label>
+                            <input
+                              type="date"
+                              value={data.invitationDate || ''}
+                              onChange={e => update('invitationDate', e.target.value)}
+                              style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(0,0,0,0.08)', border: `1px solid ${currentTheme.text}28`, borderRadius: '9px', color: 'inherit', padding: '0.65rem 0.7rem', fontSize: '0.82rem', outline: 'none' }}
+                            />
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 500, marginBottom: '0.3rem' }}>{isEn ? 'Start time' : 'Jam mulai'} *</label>
+                            <input
+                              type="time"
+                              value={data.invitationStartTime || ''}
+                              onChange={e => update('invitationStartTime', e.target.value)}
+                              style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(0,0,0,0.08)', border: `1px solid ${currentTheme.text}28`, borderRadius: '9px', color: 'inherit', padding: '0.65rem 0.7rem', fontSize: '0.82rem', outline: 'none' }}
+                            />
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 500, marginBottom: '0.3rem' }}>{isEn ? 'End time' : 'Jam selesai'} <span style={{ opacity: 0.55 }}>({isEn ? 'optional' : 'opsional'})</span></label>
+                            <input
+                              type="time"
+                              value={data.invitationEndTime || ''}
+                              onChange={e => update('invitationEndTime', e.target.value)}
+                              style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(0,0,0,0.08)', border: `1px solid ${currentTheme.text}28`, borderRadius: '9px', color: 'inherit', padding: '0.65rem 0.7rem', fontSize: '0.82rem', outline: 'none' }}
+                            />
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '0.85rem' }}>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 500, marginBottom: '0.3rem' }}>{isEn ? 'Venue name' : 'Nama tempat'} *</label>
+                            <input
+                              type="text"
+                              value={data.invitationVenueName || ''}
+                              onChange={e => update('invitationVenueName', e.target.value)}
+                              placeholder={isEn ? 'Restaurant or venue name' : 'Nama restoran atau tempat acara'}
+                              style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(0,0,0,0.08)', border: `1px solid ${currentTheme.text}28`, borderRadius: '9px', color: 'inherit', padding: '0.65rem 0.7rem', fontSize: '0.82rem', outline: 'none' }}
+                            />
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 500, marginBottom: '0.3rem' }}>{isEn ? 'Dress code' : 'Dress code'} <span style={{ opacity: 0.55 }}>({isEn ? 'optional' : 'opsional'})</span></label>
+                            <input
+                              type="text"
+                              value={data.invitationDressCode || ''}
+                              onChange={e => update('invitationDressCode', e.target.value)}
+                              placeholder={isEn ? 'Example: Smart casual' : 'Contoh: Smart casual'}
+                              style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(0,0,0,0.08)', border: `1px solid ${currentTheme.text}28`, borderRadius: '9px', color: 'inherit', padding: '0.65rem 0.7rem', fontSize: '0.82rem', outline: 'none' }}
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 500, marginBottom: '0.3rem' }}>{isEn ? 'Full address' : 'Alamat lengkap'}</label>
+                          <textarea
+                            value={data.invitationAddress || ''}
+                            onChange={e => update('invitationAddress', e.target.value)}
+                            placeholder={isEn ? 'Street, area, city' : 'Jalan, kawasan, kota'}
+                            rows={2}
+                            style={{ width: '100%', boxSizing: 'border-box', resize: 'vertical', background: 'rgba(0,0,0,0.08)', border: `1px solid ${currentTheme.text}28`, borderRadius: '9px', color: 'inherit', padding: '0.65rem 0.7rem', fontSize: '0.82rem', lineHeight: 1.5, outline: 'none' }}
+                          />
+                        </div>
+
+                        <div>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.76rem', fontWeight: 500, marginBottom: '0.3rem' }}>
+                            <MapPin size={13} strokeWidth={1.8} />
+                            Google Maps link <span style={{ opacity: 0.55 }}>({isEn ? 'optional' : 'opsional'})</span>
+                          </label>
+                          <input
+                            type="url"
+                            value={data.invitationMapsUrl || ''}
+                            onChange={e => update('invitationMapsUrl', e.target.value)}
+                            placeholder="https://maps.app.goo.gl/..."
+                            style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(0,0,0,0.08)', border: `1px solid ${currentTheme.text}28`, borderRadius: '9px', color: 'inherit', padding: '0.65rem 0.7rem', fontSize: '0.82rem', outline: 'none' }}
+                          />
+                        </div>
+
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 500, marginBottom: '0.3rem' }}>{isEn ? 'Simple plan' : 'Rencana singkat'} <span style={{ opacity: 0.55 }}>({isEn ? 'optional' : 'opsional'})</span></label>
+                          <textarea
+                            value={data.invitationRundownNotes || ''}
+                            onChange={e => update('invitationRundownNotes', e.target.value)}
+                            placeholder={isEn ? '17:30 - Meet at the venue\n18:00 - Dinner together\n19:30 - Cake and photos' : '17:30 - Bertemu di lokasi\n18:00 - Makan bersama\n19:30 - Tiup lilin dan foto'}
+                            rows={3}
+                            style={{ width: '100%', boxSizing: 'border-box', resize: 'vertical', background: 'rgba(0,0,0,0.08)', border: `1px solid ${currentTheme.text}28`, borderRadius: '9px', color: 'inherit', padding: '0.65rem 0.7rem', fontSize: '0.82rem', lineHeight: 1.55, outline: 'none' }}
+                          />
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
               {/* Deadline — di sini sebelum submit */}
               <div style={{ marginTop: '1rem', paddingTop: '1.5rem', borderTop: `1px solid ${currentTheme.text}15` }}>
                 <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 500, marginBottom: '0.4rem' }}>{isEn ? 'When does the gift need to be ready? (Optional)' : 'Kapan gift harus jadi? (Opsional)'}</label>
@@ -1651,6 +1827,11 @@ export default function OrderForm() {
                       (secretPhoto && secretPhoto.status === 'error');
                     if (hasError) {
                       alert(isEn ? 'Some media failed to upload. Please remove or re-upload the error files before continuing.' : 'Ada foto/media yang gagal diunggah. Mohon hapus atau unggah ulang file yang error sebelum melanjutkan.');
+                      return;
+                    }
+                    const invitationError = getInvitationValidationError();
+                    if (invitationError) {
+                      alert(invitationError);
                       return;
                     }
                     if (data.pinEnabled && (!data.pinCode || data.pinCode.length < 4)) {
@@ -2828,6 +3009,35 @@ export default function OrderForm() {
                     </div>
                   )}
                 </div>
+
+                {data.invitationEnabled && (
+                  <div
+                    style={{
+                      background: `${currentTheme.text}06`,
+                      border: `1px solid ${currentTheme.text}15`,
+                      borderRadius: '16px',
+                      padding: '0.85rem 0.95rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.68rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', opacity: 0.7 }}>
+                        <CalendarDays size={12} />
+                        {isEn ? 'Event invitation' : 'Undangan acara'}
+                      </span>
+                      <span style={{ fontSize: '0.66rem', fontWeight: 600, padding: '2px 7px', borderRadius: '6px', background: `${currentTheme.accent || currentTheme.text}1a`, border: `1px solid ${currentTheme.text}18` }}>
+                        {isEn ? 'Included' : 'Disertakan'}
+                      </span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '7px', fontSize: '0.74rem' }}>
+                      <span><strong>{data.invitationDate || '-'}</strong></span>
+                      <span>{data.invitationStartTime || '-'}{data.invitationEndTime ? ` – ${data.invitationEndTime}` : ''}</span>
+                      <span style={{ gridColumn: 'span 2' }}>{data.invitationVenueName || data.invitationAddress || '-'}</span>
+                    </div>
+                  </div>
+                )}
 
                 {/* Card 4: Galeri Media & Foto */}
                 <div

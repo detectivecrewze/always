@@ -153,6 +153,31 @@ Object.assign(draftData, invitationData);
 - Aktifkan `invitationCalendarEnabled` hanya jika `invitationDate` sudah valid.
 - Jika customer tidak memberikan salah satu data opsional, gunakan string kosong. Jangan mengisi fakta buatan hanya agar kartu terlihat penuh.
 
+### 6. Data Invitation dari Form Customer
+
+Form customer menampilkan opsi Invitation di Step 4 sebagai toggle yang default-nya mati. Jika toggle mati, order biasa tidak boleh terganggu dan section Invitation tetap nonaktif.
+
+Field intake yang tersimpan pada order:
+
+```javascript
+{
+  invitationEnabled: true,
+  invitationDate: "2026-11-19",          // Wajib jika aktif.
+  invitationStartTime: "17:30",          // Wajib jika aktif.
+  invitationEndTime: "20:30",            // Opsional.
+  invitationVenueName: "Nama tempat",     // Wajib jika aktif.
+  invitationAddress: "Alamat lengkap",    // Opsional.
+  invitationMapsUrl: "https://maps...",   // Opsional; hanya http/https.
+  invitationDressCode: "Smart casual",    // Opsional.
+  invitationRundownNotes: "17:30 - Welcome\n18:00 - Dinner" // Opsional, teks mentah customer.
+}
+```
+
+- `invitationRundownNotes` bukan schema final gift. Saat order diterapkan, setiap baris diubah menjadi item `invitationRundown`; setelah itu rapikan judul dan tambahkan `note` di Studio Editor bila perlu.
+- Jangan mengarang tanggal, jam, venue, Maps, dress code, atau agenda yang tidak diberikan customer.
+- Order dengan Invitation memiliki badge `Invitation` pada Incoming Orders dan Order History. Detail lengkapnya tampil di modal Order Details.
+- Saat tombol Apply to Gift digunakan, data dasar Invitation diteruskan ke gift dan kalender diaktifkan. Copy judul, pesan pembuka, detail venue, foto venue, serta final note tetap perlu ditinjau di Studio sebelum publish.
+
 ---
 
 ## Writing Tone Templates
