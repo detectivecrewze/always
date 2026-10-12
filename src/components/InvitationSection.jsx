@@ -115,9 +115,10 @@ export default function InvitationSection({ invitation }) {
   const hasDressCode = Boolean(invitation.dressCode || invitation.dressCodeNote);
   const hasPrimaryDetails = Boolean(timeLabel || hasVenue || hasDressCode);
   const showCalendar = Boolean(invitation.calendarEnabled && invitation.date);
+  const hasActions = Boolean(mapUrl || showCalendar);
 
   return (
-    <section className="relative z-10 overflow-hidden px-5 py-20 md:px-8 md:py-28">
+    <section className={`relative z-10 overflow-hidden px-5 pt-20 md:px-8 md:pt-28 ${hasActions ? 'pb-20 md:pb-28' : 'pb-12 md:pb-16'}`}>
       <div
         className="pointer-events-none absolute -right-32 bottom-0 h-72 w-72 rounded-full blur-3xl"
         style={{ background: 'color-mix(in srgb, var(--color-accent) 12%, transparent)' }}
@@ -192,11 +193,23 @@ export default function InvitationSection({ invitation }) {
               <p className="font-sans text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-accent">
                 {invitation.rundownTitle || 'The evening'}
               </p>
-              <ol className="relative mt-6 space-y-0 before:absolute before:bottom-5 before:left-[3.55rem] before:top-2 before:w-px before:bg-accent/25">
+              <ol className="relative mt-6 space-y-0">
+                {rundown.length > 1 && (
+                  <span
+                    className="pointer-events-none absolute bottom-5 left-[3.55rem] top-2 w-px"
+                    style={{ background: 'color-mix(in srgb, var(--color-accent) 42%, transparent)' }}
+                    aria-hidden="true"
+                  />
+                )}
                 {rundown.map((item, index) => (
                   <li key={`${item.time}-${item.title}-${index}`} className="relative grid grid-cols-[3rem_1fr] gap-6 pb-6 last:pb-0">
                     <time className="pt-0.5 font-sans text-xs font-semibold text-accent">{item.time || '—'}</time>
-                    <span className="relative block pl-3 before:absolute before:-left-[0.7rem] before:top-[0.36rem] before:h-2 before:w-2 before:rounded-full before:bg-accent">
+                    <span
+                      className="pointer-events-none absolute left-[3.3rem] top-[0.34rem] z-10 h-2 w-2 rounded-full"
+                      style={{ backgroundColor: 'var(--color-accent)' }}
+                      aria-hidden="true"
+                    />
+                    <span className="relative block pl-3">
                       {item.title && <strong className="block font-serif text-base font-medium text-text">{item.title}</strong>}
                       {item.note && <span className="mt-1 block font-sans text-xs leading-relaxed text-text-muted">{item.note}</span>}
                     </span>
@@ -208,15 +221,24 @@ export default function InvitationSection({ invitation }) {
         </div>
 
         {invitation.notes && (
-          <motion.div variants={itemVariants} className="mx-auto mt-9 max-w-[650px] text-center">
-            <div className="mx-auto mb-4 h-px w-14 bg-accent/40" aria-hidden="true" />
-            <p className="font-serif text-base italic leading-relaxed text-text-muted md:text-lg">
+          <motion.div variants={itemVariants} className="mx-auto mt-5 flex max-w-[820px] items-center gap-4 text-center md:mt-6 md:gap-6">
+            <span
+              className="h-px min-w-6 flex-1"
+              style={{ background: 'color-mix(in srgb, var(--color-accent) 38%, transparent)' }}
+              aria-hidden="true"
+            />
+            <p className="max-w-[610px] font-serif text-base italic leading-relaxed text-text-muted md:text-lg">
               {invitation.notes}
             </p>
+            <span
+              className="h-px min-w-6 flex-1"
+              style={{ background: 'color-mix(in srgb, var(--color-accent) 38%, transparent)' }}
+              aria-hidden="true"
+            />
           </motion.div>
         )}
 
-        {(mapUrl || showCalendar) && (
+        {hasActions && (
           <motion.div variants={itemVariants} className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             {mapUrl && (
               <a
