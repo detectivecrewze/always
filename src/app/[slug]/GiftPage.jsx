@@ -369,6 +369,7 @@ export default function GiftPage({ data }) {
 
             {data.invitationEnabled && (
               <InvitationSection
+                themeStyles={themeStyles}
                 invitation={{
                   preTitle: data.invitationPreTitle,
                   title1: data.invitationTitle1,
