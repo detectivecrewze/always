@@ -1929,11 +1929,18 @@ function TabInvitation({ data, set }) {
       <Field label="Invitation message" value={data.invitationMessage} onChange={(v) => set('invitationMessage', v)} placeholder="Please keep this evening for us..." multiline />
 
       <div className="w-full h-px bg-[#1a1a1a] my-5" />
-      <div style={S.sectionTitle}>Date and Time</div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <Field label="Date" type="date" value={data.invitationDate} onChange={(v) => set('invitationDate', v)} />
-        <Field label="Start time" type="time" value={data.invitationStartTime} onChange={(v) => set('invitationStartTime', v)} />
-        <Field label="End time" type="time" value={data.invitationEndTime} onChange={(v) => set('invitationEndTime', v)} />
+      <div style={S.sectionTitle}>Jadwal Acara</div>
+      <div style={S.sectionDesc}>Isi tanggal dan jam mulai. Jam selesai boleh dikosongkan jika belum ditentukan.</div>
+      <div className="grid grid-cols-1 sm:grid-cols-[1.2fr_1fr_1fr] gap-3 items-start">
+        <div>
+          <Field label="Tanggal acara" type="date" value={data.invitationDate} onChange={(v) => set('invitationDate', v)} />
+        </div>
+        <div>
+          <Field label="Jam mulai" type="time" value={data.invitationStartTime} onChange={(v) => set('invitationStartTime', v)} />
+        </div>
+        <div>
+          <Field label="Jam selesai (opsional)" type="time" value={data.invitationEndTime} onChange={(v) => set('invitationEndTime', v)} />
+        </div>
       </div>
 
       <div className="w-full h-px bg-[#1a1a1a] my-5" />
@@ -1968,9 +1975,13 @@ function TabInvitation({ data, set }) {
               <button type="button" style={S.smallBtn('#EF4444')} onClick={() => removeRundownItem(index)}>Remove</button>
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-[130px_1fr] gap-3">
-            <Field label="Time" type="time" value={item.time} onChange={(v) => setRundownItem(index, 'time', v)} />
-            <Field label="Activity" value={item.title} onChange={(v) => setRundownItem(index, 'title', v)} placeholder="Birthday dinner" />
+          <div className="grid grid-cols-1 sm:grid-cols-[130px_1fr] gap-3 items-start">
+            <div>
+              <Field label="Jam" type="time" value={item.time} onChange={(v) => setRundownItem(index, 'time', v)} />
+            </div>
+            <div>
+              <Field label="Nama kegiatan" value={item.title} onChange={(v) => setRundownItem(index, 'title', v)} placeholder="Birthday dinner" />
+            </div>
           </div>
           <Field label="Short note (optional)" value={item.note} onChange={(v) => setRundownItem(index, 'note', v)} placeholder="Your favorite menu is waiting" />
         </div>

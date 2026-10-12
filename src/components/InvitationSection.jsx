@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { CalendarPlus, Clock3, Map, MapPin, Shirt, Sparkles } from 'lucide-react';
+import { CalendarPlus, Clock3, Map, MapPin, Shirt } from 'lucide-react';
 
 const sectionVariants = {
   hidden: { opacity: 0, y: 36 },
@@ -208,10 +208,12 @@ export default function InvitationSection({ invitation }) {
         </div>
 
         {invitation.notes && (
-          <motion.p variants={itemVariants} className="mx-auto mt-7 flex max-w-[650px] items-start justify-center gap-2 text-center font-serif text-sm italic leading-relaxed text-text-muted">
-            <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
-            <span>{invitation.notes}</span>
-          </motion.p>
+          <motion.div variants={itemVariants} className="mx-auto mt-9 max-w-[650px] text-center">
+            <div className="mx-auto mb-4 h-px w-14 bg-accent/40" aria-hidden="true" />
+            <p className="font-serif text-base italic leading-relaxed text-text-muted md:text-lg">
+              {invitation.notes}
+            </p>
+          </motion.div>
         )}
 
         {(mapUrl || showCalendar) && (
