@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import playlistData from '../../playlist.json';
 import AestheticQRCode from '@/components/AestheticQRCode';
 import { themes } from '@/lib/themes';
+import { resolveMapLocation } from '@/lib/mapLocation';
 import { isVideoMedia } from '@/lib/videoValidation';
 
 const TABS = ['Theme', 'Opening', 'Hero', 'Time', 'Letter', 'Reasons', 'Seasons', 'Circle Wishes', 'Gallery', 'Invitation', 'Music', 'Closing'];
@@ -1859,6 +1860,11 @@ const INVITATION_PRESETS = [
 function TabInvitation({ data, set }) {
   const invitationEnabled = Boolean(data.invitationEnabled);
   const rundown = Array.isArray(data.invitationRundown) ? data.invitationRundown : [];
+  const mapLocation = resolveMapLocation({
+    mapsUrl: data.invitationMapsUrl,
+    venueName: data.invitationVenueName,
+    address: data.invitationAddress,
+  });
   const currentPreset = INVITATION_PRESETS.find(
     (preset) => preset.title1 === data.invitationTitle1 && preset.title2 === data.invitationTitle2
   )?.id || null;
@@ -1944,18 +1950,39 @@ function TabInvitation({ data, set }) {
       </div>
 
       <div className="w-full h-px bg-[#1a1a1a] my-5" />
-      <div style={S.sectionTitle}>Place and Dress Code</div>
-      <div style={S.sectionDesc}>All fields in this group are optional. Leave them empty when the location is private or has not been decided.</div>
+      <div style={S.sectionTitle}>Location and Dress Code</div>
+      <div style={S.sectionDesc}>Bagian ini opsional. Isi nama tempat dan alamat, lalu tempel titik Google Maps jika ingin menampilkan peta.</div>
       <Field label="Venue name (optional)" value={data.invitationVenueName} onChange={(v) => set('invitationVenueName', v)} placeholder="Restaurant or venue name" />
       <Field label="Address (optional)" value={data.invitationAddress} onChange={(v) => set('invitationAddress', v)} placeholder="Full address" />
       <Field
-        label="Google Maps or location URL (optional)"
-        type="url"
+        label="Google Maps full link or coordinates (optional)"
         value={data.invitationMapsUrl}
         onChange={(v) => set('invitationMapsUrl', v)}
-        placeholder="https://maps.google.com/..."
-        help="The Open Location button only appears when a valid http or https URL is provided."
+        placeholder="-6.244521, 106.800763"
+        help="Paste koordinat atau link lengkap dari address bar Google Maps. Studio mengambil titiknya otomatis agar hanya satu pin yang tampil."
       />
+      {data.invitationMapsUrl && (
+        <div style={{
+          display: 'flex', alignItems: 'flex-start', gap: '0.55rem', marginTop: '0.55rem', padding: '0.7rem 0.8rem',
+          borderRadius: '8px', border: `1px solid ${mapLocation.exact ? '#22C55E35' : '#F59E0B35'}`,
+          background: mapLocation.exact ? '#22C55E0A' : '#F59E0B0A',
+        }}>
+          <span style={{
+            width: '8px', height: '8px', marginTop: '0.2rem', flex: '0 0 auto', borderRadius: '50%',
+            background: mapLocation.exact ? '#22C55E' : '#F59E0B',
+          }} />
+          <div style={{ minWidth: 0 }}>
+            <strong style={{ display: 'block', color: mapLocation.exact ? '#86EFAC' : '#FCD34D', fontSize: '0.7rem', fontWeight: 600 }}>
+              {mapLocation.exact ? 'Titik lokasi berhasil dibaca' : 'Titik lokasi belum terbaca pasti'}
+            </strong>
+            <span style={{ display: 'block', marginTop: '0.15rem', color: '#777', fontSize: '0.66rem', lineHeight: 1.45 }}>
+              {mapLocation.exact
+                ? (mapLocation.coordinateText || 'Google Maps place ID terdeteksi. Peta akan langsung berpusat pada tempat ini.')
+                : 'Gunakan link lengkap dari address bar atau koordinat. Link pendek maps.app.goo.gl hanya dapat menampilkan perkiraan dari alamat.'}
+            </span>
+          </div>
+        </div>
+      )}
       {data.invitationMapsUrl && (
         <Field label="Maps button label" value={data.invitationMapsLabel} onChange={(v) => set('invitationMapsLabel', v)} placeholder="Open location" />
       )}

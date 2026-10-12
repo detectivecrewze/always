@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { CalendarPlus, Clock3, ExternalLink, Map, MapPin, Shirt, X } from 'lucide-react';
+import { resolveMapLocation } from '@/lib/mapLocation';
 
 const sectionVariants = {
   hidden: { opacity: 0, y: 36 },
@@ -18,16 +19,6 @@ const itemVariants = {
   hidden: { opacity: 0, y: 18 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.65, ease: [0.25, 0.1, 0.25, 1] } },
 };
-
-function safeExternalUrl(value) {
-  if (!value) return '';
-  try {
-    const url = new URL(value);
-    return url.protocol === 'https:' || url.protocol === 'http:' ? url.toString() : '';
-  } catch {
-    return '';
-  }
-}
 
 function parseLocalDate(value) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || '');
@@ -111,7 +102,7 @@ export default function InvitationSection({ invitation, themeStyles }) {
   const mapDialogRef = useRef(null);
   const mapCloseRef = useRef(null);
   const date = getDateParts(invitation.date);
-  const mapUrl = safeExternalUrl(invitation.mapsUrl);
+  const mapLocation = resolveMapLocation(invitation);
   const rundown = Array.isArray(invitation.rundown)
     ? invitation.rundown.filter((item) => item && (item.time || item.title || item.note))
     : [];
@@ -120,11 +111,7 @@ export default function InvitationSection({ invitation, themeStyles }) {
   const hasDressCode = Boolean(invitation.dressCode || invitation.dressCodeNote);
   const hasPrimaryDetails = Boolean(timeLabel || hasVenue || hasDressCode);
   const showCalendar = Boolean(invitation.calendarEnabled && invitation.date);
-  const hasActions = Boolean(mapUrl || showCalendar);
-  const mapQuery = [invitation.venueName, invitation.address].filter(Boolean).join(', ');
-  const mapEmbedUrl = mapQuery
-    ? `https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed`
-    : '';
+  const hasActions = Boolean(mapLocation.available || showCalendar);
   const modalThemeStyles = themeStyles
     ? Object.fromEntries(Object.entries(themeStyles).filter(([key]) => key.startsWith('--')))
     : undefined;
@@ -292,7 +279,7 @@ export default function InvitationSection({ invitation, themeStyles }) {
 
         {hasActions && (
           <motion.div variants={itemVariants} className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            {mapUrl && (
+            {mapLocation.available && (
               <button
                 type="button"
                 onClick={() => setMapOpen(true)}
@@ -318,7 +305,7 @@ export default function InvitationSection({ invitation, themeStyles }) {
 
       {mapOpen && typeof document !== 'undefined' && createPortal(
         <div
-          className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-6"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/65 p-4 backdrop-blur-md sm:p-6"
           style={modalThemeStyles}
           role="presentation"
           onMouseDown={(event) => {
@@ -334,15 +321,27 @@ export default function InvitationSection({ invitation, themeStyles }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.98 }}
             transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
-            className="w-full max-w-[760px] overflow-hidden rounded-t-[1.5rem] border border-text/15 bg-bg text-text shadow-2xl sm:rounded-[1.5rem]"
+            className="flex max-h-[calc(100dvh-2rem)] w-full max-w-[720px] flex-col overflow-hidden rounded-[1.6rem] border border-text/15 bg-bg text-text shadow-[0_28px_90px_rgba(0,0,0,0.42)]"
           >
-            <div className="flex items-start justify-between gap-5 border-b border-text/10 px-5 py-5 sm:px-7">
-              <div>
-                <p className="font-sans text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-accent">Event location</p>
-                <h3 id="invitation-map-title" className="mt-1 font-serif text-2xl text-text">
-                  {invitation.venueName || 'Location details'}
-                </h3>
-                {invitation.address && <p className="mt-1 font-sans text-xs leading-relaxed text-text-muted">{invitation.address}</p>}
+            <div className="flex items-start justify-between gap-4 px-5 pb-4 pt-5 sm:px-7 sm:pb-5 sm:pt-6">
+              <div className="flex min-w-0 items-start gap-3.5">
+                <span
+                  className="mt-0.5 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-accent/25 bg-accent/10 text-accent"
+                  aria-hidden="true"
+                >
+                  <MapPin className="h-5 w-5" strokeWidth={1.8} />
+                </span>
+                <div className="min-w-0">
+                  <p className="font-sans text-[0.6rem] font-semibold uppercase tracking-[0.2em] text-accent">Event location</p>
+                  <h3 id="invitation-map-title" className="mt-1 truncate font-serif text-[1.45rem] leading-tight text-text sm:text-2xl">
+                    {invitation.venueName || 'Location details'}
+                  </h3>
+                  {invitation.address && (
+                    <p className="mt-1.5 max-w-[560px] font-sans text-[0.72rem] leading-[1.55] text-text-muted sm:text-xs">
+                      {invitation.address}
+                    </p>
+                  )}
+                </div>
               </div>
               <button
                 ref={mapCloseRef}
@@ -355,15 +354,21 @@ export default function InvitationSection({ invitation, themeStyles }) {
               </button>
             </div>
 
-            {mapEmbedUrl ? (
-              <iframe
-                src={mapEmbedUrl}
-                title={`Map for ${invitation.venueName || invitation.address || 'event location'}`}
-                className="h-[52vh] min-h-[320px] w-full border-0 sm:h-[430px]"
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                allowFullScreen
-              />
+            {mapLocation.embedUrl ? (
+              <div className="relative mx-3 min-h-0 flex-1 overflow-hidden rounded-[1.15rem] border border-text/15 bg-surface sm:mx-5">
+                <iframe
+                  src={mapLocation.embedUrl}
+                  title={`Map for ${invitation.venueName || invitation.address || 'event location'}`}
+                  className="h-[42dvh] min-h-[260px] w-full border-0 sm:h-[420px] sm:min-h-[360px]"
+                  loading="eager"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  allowFullScreen
+                />
+                <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-2 whitespace-nowrap rounded-full border border-white/70 bg-white/95 px-3 py-2 font-sans text-[0.66rem] font-semibold text-[#30231f] shadow-lg backdrop-blur-sm">
+                  <MapPin className="h-3.5 w-3.5 text-accent" fill="currentColor" aria-hidden="true" />
+                  {mapLocation.exact ? 'Exact event pin' : 'Location from address'}
+                </div>
+              </div>
             ) : (
               <div className="flex min-h-[260px] flex-col items-center justify-center px-6 text-center">
                 <MapPin className="h-9 w-9 text-accent" strokeWidth={1.4} aria-hidden="true" />
@@ -373,17 +378,22 @@ export default function InvitationSection({ invitation, themeStyles }) {
               </div>
             )}
 
-            <div className="flex flex-col gap-3 border-t border-text/10 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-7">
-              <p className="font-sans text-xs text-text-muted">Location opens here first, so the gift stays on screen.</p>
-              <a
-                href={mapUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-accent/35 px-5 font-sans text-xs font-semibold text-text transition-colors hover:bg-accent/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-              >
-                Open navigation
-                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-              </a>
+            <div className="flex flex-col gap-3 px-5 pb-5 pt-4 sm:flex-row sm:items-center sm:justify-between sm:px-7 sm:pb-6">
+              <div className="flex min-w-0 items-center gap-2 font-sans text-[0.68rem] text-text-muted sm:text-xs">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true" />
+                <span>{mapLocation.exact ? 'Pin is centered on the saved location.' : 'Map is centered from the venue address.'}</span>
+              </div>
+              {mapLocation.navigationUrl && (
+                <a
+                  href={mapLocation.navigationUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-accent px-5 font-sans text-xs font-semibold text-bg transition-transform hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                >
+                  Open navigation
+                  <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                </a>
+              )}
             </div>
           </motion.div>
         </div>,
